@@ -58,6 +58,8 @@
   .step.done .dot2{background:var(--fern); border-color:var(--fern); color:#fff;}
   .step .step-label{font-size:0.68rem; color:rgba(36,54,35,0.6); text-transform:uppercase; letter-spacing:0.03em;}
   .step.done .step-label{color:var(--moss-ink); font-weight:600;}
+  .steps.cancelled::before{display:none;}
+  .steps.cancelled .step{flex:none; margin:0 auto;}
   .courier-box{background:var(--milk-sage); border-radius:14px; padding:14px 16px; font-size:0.88rem; margin-bottom:16px;}
   .courier-box div{margin-bottom:4px;}
   .item-row{display:flex; justify-content:space-between; font-size:0.85rem; padding:4px 0;}
@@ -133,17 +135,28 @@
   });
 
   function renderResult(order){
-    var currentIndex = STAGES.findIndex(function(s){ return s.key === order.fulfillmentStatus; });
-    if(currentIndex === -1) currentIndex = 0;
+    var stepsEl = document.getElementById('steps');
+    if(order.fulfillmentStatus === 'cancelled'){
+      stepsEl.className = 'steps cancelled';
+      stepsEl.innerHTML =
+        '<div class="step done">' +
+          '<div class="dot2" style="background:#a5525e; border-color:#a5525e;">✕</div>' +
+          '<div class="step-label">Order cancelled</div>' +
+        '</div>';
+    } else {
+      stepsEl.className = 'steps';
+      var currentIndex = STAGES.findIndex(function(s){ return s.key === order.fulfillmentStatus; });
+      if(currentIndex === -1) currentIndex = 0;
 
-    var stepsHtml = STAGES.map(function(stage, i){
-      var done = i <= currentIndex;
-      return '<div class="step ' + (done ? 'done' : '') + '">' +
-        '<div class="dot2">' + (done ? '✓' : (i+1)) + '</div>' +
-        '<div class="step-label">' + stage.label + '</div>' +
-      '</div>';
-    }).join('');
-    document.getElementById('steps').innerHTML = stepsHtml;
+      var stepsHtml = STAGES.map(function(stage, i){
+        var done = i <= currentIndex;
+        return '<div class="step ' + (done ? 'done' : '') + '">' +
+          '<div class="dot2">' + (done ? '✓' : (i+1)) + '</div>' +
+          '<div class="step-label">' + stage.label + '</div>' +
+        '</div>';
+      }).join('');
+      stepsEl.innerHTML = stepsHtml;
+    }
 
     var courierBox = document.getElementById('courier-box');
     if(order.courier || order.awb){

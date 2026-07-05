@@ -161,6 +161,14 @@
   .fulfillment-badge.f-shipped{background:rgba(76,120,190,0.15); color:#3a5f9e;}
   .fulfillment-badge.f-delivered{background:rgba(78,107,76,0.15); color:var(--fern);}
   .fulfillment-badge.f-accepted{background:rgba(194,150,58,0.18); color:var(--honey-oil);}
+  .fulfillment-badge.f-cancelled{background:rgba(165,82,94,0.15); color:var(--rosewater-deep);}
+  .cancel-order-btn{
+    background:rgba(165,82,94,0.1); color:var(--rosewater-deep); border:1px solid rgba(165,82,94,0.3);
+    border-radius:8px; padding:9px 16px; font-size:0.82rem; font-weight:600; cursor:pointer;
+    white-space:nowrap; margin-top:10px;
+  }
+  .cancel-order-btn:hover{background:rgba(165,82,94,0.18);}
+  .cancel-order-btn:disabled{opacity:0.5; cursor:default;}
   .badge-group{display:flex; gap:8px; flex-wrap:wrap; align-items:center;}
   .fulfillment-controls{
     margin-top:14px; padding-top:14px; border-top:1px dashed var(--line);
@@ -284,6 +292,7 @@
   <div class="tab-nav">
     <button class="tab-btn active" data-tab="orders">Orders</button>
     <button class="tab-btn" data-tab="products">Product Photos</button>
+    <button class="tab-btn" data-tab="images">Site Images</button>
     <button class="tab-btn" data-tab="settings">Store Status</button>
   </div>
 
@@ -303,6 +312,7 @@
         <option value="accepted">Accepted</option>
         <option value="shipped">Shipped</option>
         <option value="delivered">Delivered</option>
+        <option value="cancelled">Cancelled</option>
       </select>
     </div>
 
@@ -323,6 +333,12 @@
     </div>
     <div id="pm-grid" class="pm-grid">
       <div class="loading">Loading products…</div>
+    </div>
+  </div>
+
+  <div class="tab-panel" id="tab-images">
+    <div id="im-grid" class="pm-grid">
+      <div class="loading">Loading site images…</div>
     </div>
   </div>
 
@@ -371,6 +387,7 @@
         dashboard.style.display = 'block';
         renderAll();
         loadProductManager();
+        loadSiteImages();
         loadStoreSettings();
       })
       .catch(function(){
@@ -433,7 +450,8 @@
       { label:'Total orders', value: orders.length },
       { label:'Paid', value: paid.length },
       { label:'Pending', value: pending.length },
-      { label:'Revenue (paid)', value: '₹' + revenue.toLocaleString('en-IN') }
+      { label:'Revenue (paid)', value: '₹' + revenue.toLocaleString('en-IN') },
+      { label:'Cancelled', value: orders.filter(function(o){ return (o.fulfillmentStatus || 'pending') === 'cancelled'; }).length }
     ];
 
     document.getElementById('stats-row').innerHTML = stats.map(function(s){
@@ -441,7 +459,7 @@
     }).join('');
   }
 
-  var FULFILLMENT_LABELS = { pending:'Pending', accepted:'Accepted', shipped:'Shipped', delivered:'Delivered' };
+  var FULFILLMENT_LABELS = { pending:'Pending', accepted:'Accepted', shipped:'Shipped', delivered:'Delivered', cancelled:'Cancelled' };
 
   function renderOrders(orders){
     var listEl = document.getElementById('order-list');
@@ -460,9 +478,10 @@
       var c = order.customer || {};
       var safeId = 'ord_' + order.orderId.replace(/[^a-zA-Z0-9]/g, '');
 
-      var fulfillmentOptions = ['pending','accepted','shipped','delivered'].map(function(key){
+      var fulfillmentOptions = ['pending','accepted','shipped','delivered','cancelled'].map(function(key){
         return '<option value="'+key+'"'+(key === fulfillment ? ' selected' : '')+'>'+FULFILLMENT_LABELS[key]+'</option>';
       }).join('');
+      var showCancel = fulfillment !== 'cancelled' && fulfillment !== 'delivered';
 
       return '' +
         '<div class="order-card" data-order-id="'+order.orderId+'">' +
@@ -504,6 +523,7 @@
             '<button class="save-order-btn" data-save-for="'+order.orderId+'">Save</button>' +
           '</div>' +
           '<div class="save-msg" id="'+safeId+'_msg"></div>' +
+          (showCancel ? '<button type="button" class="cancel-order-btn" data-cancel-for="'+order.orderId+'">Cancel Order</button>' : '') +
         '</div>';
     }).join('');
 
@@ -553,6 +573,52 @@
             btn.textContent = 'Save';
             msgEl.className = 'save-msg err';
             msgEl.textContent = 'Could not save — please try again.';
+          });
+      });
+    });
+
+    // Wire up Cancel Order buttons after render
+    listEl.querySelectorAll('.cancel-order-btn').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        var orderId = btn.getAttribute('data-cancel-for');
+        if(!confirm('Cancel this order? The customer will automatically be emailed a cancellation notice.')) return;
+
+        var safeId = 'ord_' + orderId.replace(/[^a-zA-Z0-9]/g, '');
+        var msgEl = document.getElementById(safeId + '_msg');
+        var courierEl = document.getElementById(safeId + '_courier');
+        var awbEl = document.getElementById(safeId + '_awb');
+
+        btn.disabled = true;
+        btn.textContent = 'Cancelling…';
+
+        fetch('/.netlify/functions/update-order', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            secret: currentSecret(),
+            orderId: orderId,
+            fulfillmentStatus: 'cancelled',
+            courier: courierEl ? courierEl.value.trim() : '',
+            awb: awbEl ? awbEl.value.trim() : ''
+          })
+        })
+          .then(function(res){
+            if(!res.ok) throw new Error('cancel failed');
+            return res.json();
+          })
+          .then(function(result){
+            var idx = ALL_ORDERS.findIndex(function(o){ return o.orderId === orderId; });
+            if(idx !== -1) ALL_ORDERS[idx] = result.order;
+            renderStats(ALL_ORDERS);
+            applyFilters();
+          })
+          .catch(function(){
+            btn.disabled = false;
+            btn.textContent = 'Cancel Order';
+            if(msgEl){
+              msgEl.className = 'save-msg err';
+              msgEl.textContent = 'Could not cancel — please try again.';
+            }
           });
       });
     });
@@ -765,6 +831,110 @@
         renderProductManager();
       })
       .catch(function(){ alert('Could not delete that photo — please try again.'); });
+  }
+
+  // =====================================================================
+  // Site image manager (Hero, About Us, Why Natural, Reviews, Footer logo)
+  // =====================================================================
+  var SITE_IMAGE_SLOTS = [
+    { key:'hero', label:'Hero image', hint:'Shown beside the headline at the top of the homepage. Falls back to the default illustration when empty.' },
+    { key:'about', label:'About Us / Mission image', hint:'Shown under the "Gentle on skin. Gentle on the earth." mission section.' },
+    { key:'why', label:'Why Natural image', hint:'Shown above the "Why go natural" commitments, on the dark section.' },
+    { key:'reviews', label:'Reviews / Testimonials image', hint:'Shown above the customer review cards.' },
+    { key:'footerLogo', label:'Footer logo', hint:'Small logo mark shown next to "Flora Dew" in the site footer.' }
+  ];
+  var SITE_IMAGES = {}; // slot -> data-URL, loaded from the server
+
+  function loadSiteImages(){
+    fetch('/.netlify/functions/site-images')
+      .then(function(res){ return res.json(); })
+      .then(function(images){
+        SITE_IMAGES = images || {};
+        renderSiteImages();
+      })
+      .catch(function(){
+        document.getElementById('im-grid').innerHTML = '<div class="empty-state">Could not load site images.</div>';
+      });
+  }
+
+  function renderSiteImages(){
+    var gridEl = document.getElementById('im-grid');
+
+    gridEl.innerHTML = SITE_IMAGE_SLOTS.map(function(slot){
+      var src = SITE_IMAGES[slot.key];
+      var thumb = src
+        ? '<div class="pm-thumb" style="width:120px;height:120px;"><img src="'+src+'" alt=""><button type="button" class="pm-thumb-del" data-slot="'+slot.key+'">&times;</button></div>'
+        : '<div class="pm-thumb" style="width:120px;height:120px;display:flex;align-items:center;justify-content:center;text-align:center;background:var(--milk-sage-2);color:rgba(36,54,35,0.45);font-size:0.68rem;padding:6px;">No image set</div>';
+
+      return '' +
+        '<div class="pm-card" data-slot="'+slot.key+'">' +
+          '<div class="pm-card-head">' +
+            '<span class="pm-name">'+slot.label+'</span>' +
+          '</div>' +
+          '<p style="font-size:0.8rem; color:rgba(36,54,35,0.6); margin-bottom:12px;">'+slot.hint+'</p>' +
+          '<div class="pm-thumbs">'+thumb+'</div>' +
+          '<div class="pm-upload-row">' +
+            '<input type="file" accept="image/*" data-slot="'+slot.key+'" class="im-file-input">' +
+            '<span class="pm-upload-msg" id="im-msg-'+slot.key+'"></span>' +
+          '</div>' +
+        '</div>';
+    }).join('');
+
+    gridEl.querySelectorAll('.im-file-input').forEach(function(input){
+      input.addEventListener('change', function(){
+        if(input.files && input.files[0]) handleSiteImageUpload(input.dataset.slot, input.files[0]);
+        input.value = '';
+      });
+    });
+    gridEl.querySelectorAll('.pm-thumb-del').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        deleteSiteImage(btn.dataset.slot);
+      });
+    });
+  }
+
+  function handleSiteImageUpload(slot, file){
+    var msgEl = document.getElementById('im-msg-' + slot);
+    msgEl.className = 'pm-upload-msg';
+    msgEl.textContent = 'Uploading…';
+
+    // Footer logo is small, so keep it modest; the banner-style slots can
+    // stay a bit larger since they're shown wide across the section.
+    var maxDim = slot === 'footerLogo' ? 300 : 1400;
+    var dataUrl;
+
+    resizeImageFile(file, maxDim, 0.82).then(function(url){
+      dataUrl = url;
+      return fetch('/.netlify/functions/site-images', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ secret: currentSecret(), slot: slot, image: dataUrl })
+      }).then(function(res){ return res.json(); });
+    }).then(function(result){
+      if(!result || !result.success) throw new Error((result && result.error) || 'save failed');
+      SITE_IMAGES[slot] = dataUrl;
+      msgEl.className = 'pm-upload-msg ok';
+      msgEl.textContent = 'Saved.';
+      renderSiteImages();
+    }).catch(function(err){
+      msgEl.className = 'pm-upload-msg err';
+      msgEl.textContent = (err && err.message) || 'Upload failed — please try again.';
+    });
+  }
+
+  function deleteSiteImage(slot){
+    if(!confirm('Remove this image? The section will revert to its default look.')) return;
+    fetch('/.netlify/functions/site-images', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ secret: currentSecret(), slot: slot, action: 'delete' })
+    })
+      .then(function(res){ return res.json(); })
+      .then(function(){
+        delete SITE_IMAGES[slot];
+        renderSiteImages();
+      })
+      .catch(function(){ alert('Could not remove that image — please try again.'); });
   }
 
   // =====================================================================

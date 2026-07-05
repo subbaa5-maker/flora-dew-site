@@ -15,10 +15,38 @@ netlify/functions/create-order.js     ← creates a Razorpay order + saves the p
 netlify/functions/verify-payment.js   ← confirms payment, saves it as "paid", emails receipts
 netlify/functions/list-orders.js      ← lets you view all saved orders (simple admin view)
 netlify/functions/product-images.js   ← stores/serves up to 8 photos per product (admin uploads)
+netlify/functions/site-images.js      ← stores/serves editable Hero/About/Why/Reviews/Footer-logo images
 netlify/functions/store-settings.js   ← holiday/closure toggle read by the storefront + create-order
 ```
 
 ## What's new in this update
+- **Cancel an order from the admin panel**: in `admin.html` → **Orders**
+  tab, every order that isn't already cancelled or delivered now has a
+  **Cancel Order** button (next to Save). Clicking it asks for
+  confirmation, marks the order "Cancelled", and automatically emails the
+  customer a cancellation notice (if email is set up — Step 6). You can
+  also select "Cancelled" directly from the fulfillment-status dropdown
+  and hit Save — both do the same thing. Cancelled orders show a red
+  "Cancelled" badge, can be filtered in the fulfillment dropdown, and are
+  counted in a new "Cancelled" stat card. On `track.html`, a cancelled
+  order shows a clear "Order cancelled" message instead of the usual
+  progress bar. New function: `netlify/functions/update-order.js` now
+  accepts `cancelled` as a fulfillment status.
+- **Editable site images (Hero, About Us, Why Natural, Reviews, Footer
+  logo)**: in `admin.html` → **Site Images** tab, upload a photo for any
+  of these five sections and the live site swaps it in automatically (no
+  redeploy needed, same as Product Photos). Each section falls back to
+  its current default look until you upload something:
+  - **Hero image** — replaces the illustration next to the homepage
+    headline
+  - **About Us / Mission image** — shown under the mission statement
+  - **Why Natural image** — shown above the four commitment badges
+  - **Reviews / Testimonials image** — shown above the review cards
+  - **Footer logo** — small mark shown next to "Flora Dew" in the footer
+  Photos are resized/compressed in your browser before upload, same as
+  product photos. Click the × on a thumbnail to remove an image and
+  revert that section to its default look. New function:
+  `netlify/functions/site-images.js`.
 - **Product photos**: in `admin.html` → **Product Photos** tab, pick a
   category, then upload photos for any product (drag/select multiple at
   once). Up to **8 images per product**. Photos are automatically resized

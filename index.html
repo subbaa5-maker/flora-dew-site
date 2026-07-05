@@ -137,6 +137,9 @@
     background:var(--rosewater);
     display:inline-block;
   }
+  .footer-logo-img{display:none; width:32px; height:32px; border-radius:8px; object-fit:cover;}
+  .footer-logo-img.active{display:inline-block;}
+  .footer-logo-img.active + .dot{display:none;}
   .nav-links{
     display:flex; gap:2.2rem;
     font-size:0.92rem;
@@ -248,6 +251,14 @@
     0%,100%{transform:translateY(0);}
     50%{transform:translateY(-10px);}
   }
+  /* Admin-uploaded hero photo — hidden until one is set, then replaces
+     the default illustration */
+  .soap-stage img.hero-photo-img{display:none;}
+  .soap-stage.has-hero-photo svg{display:none;}
+  .soap-stage.has-hero-photo img.hero-photo-img{
+    display:block; width:100%; max-width:420px; height:380px;
+    border-radius:24px; object-fit:cover; box-shadow:var(--shadow-soft);
+  }
 
   /* ---------- Marquee ---------- */
   .marquee-band{
@@ -303,6 +314,13 @@
     color:rgba(36,54,35,0.72);
     max-width:52ch;
   }
+  /* Admin-uploaded About Us / Mission photo — hidden until one is set */
+  .mission-photo{display:none;}
+  .mission-photo.active{
+    display:block; margin-top:40px; border-radius:20px; overflow:hidden;
+    box-shadow:var(--shadow-soft); max-height:360px;
+  }
+  .mission-photo img{width:100%; height:100%; max-height:360px; object-fit:cover; display:block;}
 
   /* ---------- Products ---------- */
   .products{
@@ -787,6 +805,14 @@
   }
   .badge h4{font-family:'Fraunces',serif; font-size:1.15rem; font-weight:600; margin-bottom:8px;}
   .badge p{font-size:0.85rem; color:rgba(238,241,230,0.65);}
+  /* Admin-uploaded section photo, shared by Why Natural + Reviews —
+     hidden until one is set */
+  .section-photo{display:none;}
+  .section-photo.active{
+    display:block; border-radius:20px; overflow:hidden;
+    margin-bottom:34px; max-height:320px; box-shadow:var(--shadow-soft);
+  }
+  .section-photo img{width:100%; height:100%; max-height:320px; object-fit:cover; display:block;}
 
   /* ---------- Testimonials ---------- */
   .testimonials{
@@ -935,10 +961,11 @@
         </div>
       </div>
 
-      <div class="soap-stage">
+      <div class="soap-stage" id="hero-photo-stage">
         <span class="float-tag t1">Cold-pressed</span>
         <span class="float-tag t2">Skin-first</span>
         <span class="float-tag t3">Small-batch</span>
+        <img class="hero-photo-img" id="hero-photo-img" alt="Flora Dew handmade skincare">
         <svg viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Illustration of a handmade soap bar cross-section with botanical inclusions">
           <defs>
             <linearGradient id="bar" x1="0" y1="0" x2="0" y2="1">
@@ -979,14 +1006,19 @@
 
   <!-- MISSION -->
   <section class="mission" id="mission">
-    <div class="wrap mission-grid">
-      <div>
-        <div class="eyebrow">The Flora Dew Mission</div>
-        <h2>Gentle on skin. Gentle on the earth.</h2>
+    <div class="wrap">
+      <div class="mission-grid">
+        <div>
+          <div class="eyebrow">The Flora Dew Mission</div>
+          <h2>Gentle on skin. Gentle on the earth.</h2>
+        </div>
+        <div>
+          <blockquote>We are dedicated to creating <em>handcrafted</em> soaps, hair oil and lip balms using natural ingredients that are gentle on the skin and the environment.</blockquote>
+          <p class="mission-foot">Our mission is to provide chemical-free formulations that promote healthy, nourished skin — made in small batches, tested on real routines, never on animals.</p>
+        </div>
       </div>
-      <div>
-        <blockquote>We are dedicated to creating <em>handcrafted</em> soaps, hair oil and lip balms using natural ingredients that are gentle on the skin and the environment.</blockquote>
-        <p class="mission-foot">Our mission is to provide chemical-free formulations that promote healthy, nourished skin — made in small batches, tested on real routines, never on animals.</p>
+      <div class="mission-photo" id="mission-photo-wrap">
+        <img id="mission-photo-img" alt="Flora Dew — our story">
       </div>
     </div>
   </section>
@@ -1010,6 +1042,9 @@
         <h2>Why go natural</h2>
         <p>Four commitments we don't compromise on, no matter the batch size.</p>
       </div>
+      <div class="section-photo" id="why-photo-wrap">
+        <img id="why-photo-img" alt="Why Flora Dew goes natural">
+      </div>
       <div class="badge-grid">
         <div class="badge"><span class="num">01</span><h4>No parabens</h4><p>Preservative-free formulas that let real ingredients do the work.</p></div>
         <div class="badge"><span class="num">02</span><h4>No sulfates</h4><p>Cleansing agents that foam gently instead of stripping skin dry.</p></div>
@@ -1025,6 +1060,9 @@
       <div class="section-head">
         <h2>What our customers say</h2>
         <p>Real routines, real skin, real feedback.</p>
+      </div>
+      <div class="section-photo" id="reviews-photo-wrap">
+        <img id="reviews-photo-img" alt="Flora Dew customers">
       </div>
       <div class="t-grid">
         <div class="t-card">
@@ -1247,7 +1285,7 @@
   <div class="wrap">
     <div class="footer-grid">
       <div>
-        <a href="#top" class="logo" style="margin-bottom:14px;"><span class="dot"></span>Flora Dew</a>
+        <a href="#top" class="logo" style="margin-bottom:14px;"><img class="footer-logo-img" id="footer-logo-img" alt="Flora Dew logo"><span class="dot"></span>Flora Dew</a>
         <p>Handcrafted soaps, hair oils and lip balms — gentle on skin, gentle on the environment.</p>
       </div>
       <div>
@@ -1569,6 +1607,59 @@
         });
       })
       .catch(function(){ /* keep the placeholder icons if this fails */ });
+  })();
+
+  // ---------- Editable site images (uploaded from the admin dashboard) ----------
+  // Hero, About Us / Mission, Why Natural, Reviews, and the Footer logo
+  // each fall back to their built-in default look until an image is set
+  // for that slot in admin.html -> Site Images.
+  (function loadSiteImages(){
+    fetch('/.netlify/functions/site-images')
+      .then(function(res){ return res.ok ? res.json() : {}; })
+      .then(function(images){
+        images = images || {};
+
+        if(images.hero){
+          var heroStage = document.getElementById('hero-photo-stage');
+          var heroImg = document.getElementById('hero-photo-img');
+          if(heroStage && heroImg){
+            heroImg.src = images.hero;
+            heroStage.classList.add('has-hero-photo');
+          }
+        }
+        if(images.about){
+          var missionWrap = document.getElementById('mission-photo-wrap');
+          var missionImg = document.getElementById('mission-photo-img');
+          if(missionWrap && missionImg){
+            missionImg.src = images.about;
+            missionWrap.classList.add('active');
+          }
+        }
+        if(images.why){
+          var whyWrap = document.getElementById('why-photo-wrap');
+          var whyImg = document.getElementById('why-photo-img');
+          if(whyWrap && whyImg){
+            whyImg.src = images.why;
+            whyWrap.classList.add('active');
+          }
+        }
+        if(images.reviews){
+          var reviewsWrap = document.getElementById('reviews-photo-wrap');
+          var reviewsImg = document.getElementById('reviews-photo-img');
+          if(reviewsWrap && reviewsImg){
+            reviewsImg.src = images.reviews;
+            reviewsWrap.classList.add('active');
+          }
+        }
+        if(images.footerLogo){
+          var footerLogoImg = document.getElementById('footer-logo-img');
+          if(footerLogoImg){
+            footerLogoImg.src = images.footerLogo;
+            footerLogoImg.classList.add('active');
+          }
+        }
+      })
+      .catch(function(){ /* keep the defaults for every section if this fails */ });
   })();
 
   // ---------- Store open/closed (holiday) banner ----------
