@@ -6,8 +6,26 @@
 //
 // Required Netlify environment variable:
 //   ADMIN_SECRET   — pick any long random string yourself; treat it like a password.
+//
+// Optional (fixes MissingBlobsEnvironmentError on some accounts — see SETUP.md):
+//   BLOBS_SITE_ID
+//   BLOBS_TOKEN
 
 const { getStore } = require('@netlify/blobs');
+
+// Netlify's automatic Blobs configuration doesn't always kick in reliably.
+// If BLOBS_SITE_ID + BLOBS_TOKEN are set, use them explicitly; otherwise
+// fall back to auto-detection.
+function ordersStore() {
+  if (process.env.BLOBS_SITE_ID && process.env.BLOBS_TOKEN) {
+    return getStore({
+      name: 'orders',
+      siteID: process.env.BLOBS_SITE_ID,
+      token: process.env.BLOBS_TOKEN,
+    });
+  }
+  return getStore('orders');
+}
 
 exports.handler = async function (event) {
   const secret = (event.queryStringParameters || {}).secret;
@@ -16,11 +34,11 @@ exports.handler = async function (event) {
   }
 
   try {
-    const ordersStore = getStore('orders');
-    const { blobs } = await ordersStore.list();
+    const ordersStoreInstance = ordersStore();
+    const { blobs } = await ordersStoreInstance.list();
 
     const orders = await Promise.all(
-      blobs.map((b) => ordersStore.get(b.key, { type: 'json' }))
+      blobs.map((b) => ordersStoreInstance.get(b.key, { type: 'json' }))
     );
 
     orders.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
