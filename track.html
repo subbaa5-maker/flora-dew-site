@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Track Your Order — Flora Dew</title>
+<meta name="robots" content="noindex, follow">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,450;0,9..144,600;1,9..144,450;1,9..144,600&family=Work+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --moss-ink:#243623; --milk-sage:#eef1e6; --milk-sage-2:#e3e8d6;
+    --rosewater:#c4707c; --rosewater-deep:#a5525e; --honey-oil:#c2963a;
+    --fern:#4e6b4c; --paper:#f8f8f3; --line: rgba(36,54,35,0.14);
+    --shadow-soft: 0 20px 40px -24px rgba(36,54,35,0.35);
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{
+    background:var(--milk-sage); color:var(--moss-ink);
+    font-family:'Work Sans', sans-serif; line-height:1.5;
+    min-height:100vh; display:flex; align-items:center; justify-content:center;
+    padding:24px;
+  }
+  h1,h2{font-family:'Fraunces', serif; font-weight:450; letter-spacing:-0.01em;}
+  a{color:var(--fern);}
+  .card{
+    background:var(--paper); border-radius:22px;
+    padding:36px clamp(22px,5vw,44px); width:min(480px, 100%);
+    box-shadow:var(--shadow-soft);
+  }
+  .logo{display:flex; align-items:center; gap:8px; margin-bottom:20px; font-family:'Fraunces',serif; font-size:1.15rem; font-weight:600;}
+  .logo .dot{width:9px;height:9px;border-radius:50%;background:var(--rosewater);}
+  h1{font-size:1.5rem; margin-bottom:6px;}
+  .sub{font-size:0.88rem; color:rgba(36,54,35,0.65); margin-bottom:22px;}
+  .form-field{margin-bottom:14px;}
+  .form-field label{display:block; font-size:0.76rem; font-weight:600; text-transform:uppercase; letter-spacing:0.04em; color:rgba(36,54,35,0.6); margin-bottom:6px;}
+  .form-field input{
+    width:100%; border:1px solid var(--line); background:#fff;
+    border-radius:10px; padding:12px 14px; font-family:inherit; font-size:0.92rem;
+  }
+  .form-field input:focus{outline:none; border-color:var(--fern);}
+  button{
+    width:100%; background:var(--moss-ink); color:var(--milk-sage);
+    border:none; border-radius:100px; padding:14px; font-size:0.95rem;
+    font-weight:600; cursor:pointer; margin-top:6px;
+  }
+  button:disabled{opacity:0.5;}
+  .msg{font-size:0.85rem; margin-top:14px; display:none;}
+  .msg.error{color:var(--rosewater-deep); display:block;}
+
+  /* Result */
+  .result{display:none; margin-top:24px; padding-top:22px; border-top:1px solid var(--line);}
+  .result.show{display:block;}
+  .steps{display:flex; justify-content:space-between; margin:20px 0 24px; position:relative;}
+  .steps::before{content:''; position:absolute; top:13px; left:6%; right:6%; height:2px; background:var(--line); z-index:0;}
+  .step{flex:1; text-align:center; position:relative; z-index:1;}
+  .step .dot2{width:26px; height:26px; border-radius:50%; background:#fff; border:2px solid var(--line); margin:0 auto 8px; display:flex; align-items:center; justify-content:center; font-size:0.75rem; font-weight:700; color:rgba(36,54,35,0.4);}
+  .step.done .dot2{background:var(--fern); border-color:var(--fern); color:#fff;}
+  .step .step-label{font-size:0.68rem; color:rgba(36,54,35,0.6); text-transform:uppercase; letter-spacing:0.03em;}
+  .step.done .step-label{color:var(--moss-ink); font-weight:600;}
+  .courier-box{background:var(--milk-sage); border-radius:14px; padding:14px 16px; font-size:0.88rem; margin-bottom:16px;}
+  .courier-box div{margin-bottom:4px;}
+  .item-row{display:flex; justify-content:space-between; font-size:0.85rem; padding:4px 0;}
+  .item-total{font-weight:700; border-top:1px solid var(--line); margin-top:6px; padding-top:8px;}
+  .back-link{display:block; text-align:center; margin-top:20px; font-size:0.85rem;}
+</style>
+</head>
+<body>
+
+<div class="card">
+  <a href="index.html" class="logo"><span class="dot"></span>Flora Dew</a>
+  <h1>Track your order</h1>
+  <p class="sub">Enter your Order ID and the email you used at checkout.</p>
+
+  <form id="track-form">
+    <div class="form-field">
+      <label for="t-order-id">Order ID</label>
+      <input type="text" id="t-order-id" placeholder="order_XXXXXXXXXXXXXX" required>
+    </div>
+    <div class="form-field">
+      <label for="t-email">Email</label>
+      <input type="email" id="t-email" placeholder="you@example.com" required>
+    </div>
+    <button type="submit" id="track-btn">Track order</button>
+    <div class="msg error" id="track-error">We couldn't find a matching order — double check your Order ID and email.</div>
+  </form>
+
+  <div class="result" id="result">
+    <div class="steps" id="steps"></div>
+    <div class="courier-box" id="courier-box" style="display:none;"></div>
+    <div id="items-box"></div>
+  </div>
+
+  <a href="index.html" class="back-link">← Back to Flora Dew</a>
+</div>
+
+<script>
+  var STAGES = [
+    { key: 'pending', label: 'Pending' },
+    { key: 'accepted', label: 'Accepted' },
+    { key: 'shipped', label: 'Shipped' },
+    { key: 'delivered', label: 'Delivered' }
+  ];
+
+  document.getElementById('track-form').addEventListener('submit', function(e){
+    e.preventDefault();
+    var orderId = document.getElementById('t-order-id').value.trim();
+    var email = document.getElementById('t-email').value.trim();
+    var btn = document.getElementById('track-btn');
+    var errEl = document.getElementById('track-error');
+    var resultEl = document.getElementById('result');
+
+    errEl.style.display = 'none';
+    resultEl.classList.remove('show');
+    btn.disabled = true;
+    btn.textContent = 'Checking…';
+
+    fetch('/.netlify/functions/track-order?orderId=' + encodeURIComponent(orderId) + '&email=' + encodeURIComponent(email))
+      .then(function(res){
+        if(!res.ok) throw new Error('not found');
+        return res.json();
+      })
+      .then(function(order){
+        btn.disabled = false;
+        btn.textContent = 'Track order';
+        renderResult(order);
+      })
+      .catch(function(){
+        btn.disabled = false;
+        btn.textContent = 'Track order';
+        errEl.style.display = 'block';
+      });
+  });
+
+  function renderResult(order){
+    var currentIndex = STAGES.findIndex(function(s){ return s.key === order.fulfillmentStatus; });
+    if(currentIndex === -1) currentIndex = 0;
+
+    var stepsHtml = STAGES.map(function(stage, i){
+      var done = i <= currentIndex;
+      return '<div class="step ' + (done ? 'done' : '') + '">' +
+        '<div class="dot2">' + (done ? '✓' : (i+1)) + '</div>' +
+        '<div class="step-label">' + stage.label + '</div>' +
+      '</div>';
+    }).join('');
+    document.getElementById('steps').innerHTML = stepsHtml;
+
+    var courierBox = document.getElementById('courier-box');
+    if(order.courier || order.awb){
+      courierBox.style.display = 'block';
+      courierBox.innerHTML =
+        (order.courier ? '<div><strong>Courier:</strong> ' + order.courier + '</div>' : '') +
+        (order.awb ? '<div><strong>Tracking / AWB:</strong> ' + order.awb + '</div>' : '');
+    } else {
+      courierBox.style.display = 'none';
+    }
+
+    var itemRows = order.items.map(function(it){
+      return '<div class="item-row"><span>' + it.name + ' (' + it.variant + ') × ' + it.qty + '</span><span>₹' + (it.price * it.qty) + '</span></div>';
+    }).join('');
+    document.getElementById('items-box').innerHTML =
+      itemRows + '<div class="item-row item-total"><span>Total</span><span>₹' + order.total + '</span></div>';
+
+    document.getElementById('result').classList.add('show');
+  }
+</script>
+
+</body>
+</html>

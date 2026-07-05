@@ -153,6 +153,34 @@
   }
   .status-paid{background:rgba(78,107,76,0.15); color:var(--fern);}
   .status-pending{background:rgba(194,150,58,0.18); color:var(--honey-oil);}
+  .fulfillment-badge{
+    font-size:0.72rem; font-weight:700; text-transform:uppercase; letter-spacing:0.04em;
+    padding:5px 12px; border-radius:100px;
+    background:rgba(36,54,35,0.08); color:var(--moss-ink);
+  }
+  .fulfillment-badge.f-shipped{background:rgba(76,120,190,0.15); color:#3a5f9e;}
+  .fulfillment-badge.f-delivered{background:rgba(78,107,76,0.15); color:var(--fern);}
+  .fulfillment-badge.f-accepted{background:rgba(194,150,58,0.18); color:var(--honey-oil);}
+  .badge-group{display:flex; gap:8px; flex-wrap:wrap; align-items:center;}
+  .fulfillment-controls{
+    margin-top:14px; padding-top:14px; border-top:1px dashed var(--line);
+    display:grid; grid-template-columns:1fr 1fr 1fr auto; gap:10px; align-items:end;
+  }
+  @media (max-width:720px){ .fulfillment-controls{grid-template-columns:1fr 1fr;} }
+  .fulfillment-controls label{display:block; font-size:0.7rem; text-transform:uppercase; letter-spacing:0.04em; color:rgba(36,54,35,0.55); margin-bottom:5px;}
+  .fulfillment-controls select, .fulfillment-controls input{
+    width:100%; border:1px solid var(--line); background:#fff;
+    border-radius:8px; padding:8px 10px; font-family:inherit; font-size:0.85rem;
+  }
+  .save-order-btn{
+    background:var(--moss-ink); color:var(--milk-sage); border:none;
+    border-radius:8px; padding:9px 16px; font-size:0.82rem; font-weight:600; cursor:pointer;
+    white-space:nowrap;
+  }
+  .save-order-btn:disabled{opacity:0.5;}
+  .save-msg{font-size:0.75rem; margin-top:8px; display:none;}
+  .save-msg.ok{color:var(--fern); display:block;}
+  .save-msg.err{color:var(--rosewater-deep); display:block;}
   .order-body{display:grid; grid-template-columns:1.3fr 1fr; gap:20px;}
   @media (max-width:640px){ .order-body{grid-template-columns:1fr;} }
   .order-items{font-size:0.88rem;}
@@ -200,9 +228,16 @@
   <div class="controls">
     <input type="text" id="search-input" placeholder="Search by name, phone, email, or order ID…">
     <select id="status-filter">
-      <option value="all">All statuses</option>
+      <option value="all">All payment statuses</option>
       <option value="paid">Paid</option>
+      <option value="pending">Pending payment</option>
+    </select>
+    <select id="fulfillment-filter">
+      <option value="all">All fulfillment stages</option>
       <option value="pending">Pending</option>
+      <option value="accepted">Accepted</option>
+      <option value="shipped">Shipped</option>
+      <option value="delivered">Delivered</option>
     </select>
   </div>
 
@@ -295,6 +330,8 @@
     }).join('');
   }
 
+  var FULFILLMENT_LABELS = { pending:'Pending', accepted:'Accepted', shipped:'Shipped', delivered:'Delivered' };
+
   function renderOrders(orders){
     var listEl = document.getElementById('order-list');
     if(orders.length === 0){
@@ -308,16 +345,25 @@
         return '<div class="item-row"><span>'+it.name+' ('+it.variant+') × '+it.qty+'</span><span>₹'+(it.price*it.qty)+'</span></div>';
       }).join('');
       var statusClass = order.status === 'paid' ? 'status-paid' : 'status-pending';
+      var fulfillment = order.fulfillmentStatus || 'pending';
       var c = order.customer || {};
+      var safeId = 'ord_' + order.orderId.replace(/[^a-zA-Z0-9]/g, '');
+
+      var fulfillmentOptions = ['pending','accepted','shipped','delivered'].map(function(key){
+        return '<option value="'+key+'"'+(key === fulfillment ? ' selected' : '')+'>'+FULFILLMENT_LABELS[key]+'</option>';
+      }).join('');
 
       return '' +
-        '<div class="order-card">' +
+        '<div class="order-card" data-order-id="'+order.orderId+'">' +
           '<div class="order-top">' +
             '<div>' +
               '<div class="order-customer">'+(c.name || 'Unknown customer')+'</div>' +
               '<div class="order-meta">'+fmtDate(order.paidAt || order.createdAt)+'</div>' +
             '</div>' +
-            '<span class="status-badge '+statusClass+'">'+order.status+'</span>' +
+            '<div class="badge-group">' +
+              '<span class="status-badge '+statusClass+'">'+order.status+'</span>' +
+              '<span class="fulfillment-badge f-'+fulfillment+'">'+FULFILLMENT_LABELS[fulfillment]+'</span>' +
+            '</div>' +
           '</div>' +
           '<div class="order-body">' +
             '<div class="order-items">' +
@@ -331,16 +377,84 @@
             '</div>' +
           '</div>' +
           '<div class="order-ids">Order: '+order.orderId+(order.paymentId ? ' · Payment: '+order.paymentId : '')+'</div>' +
+          '<div class="fulfillment-controls">' +
+            '<div>' +
+              '<label>Fulfillment status</label>' +
+              '<select id="'+safeId+'_status">'+fulfillmentOptions+'</select>' +
+            '</div>' +
+            '<div>' +
+              '<label>Courier name</label>' +
+              '<input type="text" id="'+safeId+'_courier" value="'+(order.courier || '')+'" placeholder="e.g. Delhivery">' +
+            '</div>' +
+            '<div>' +
+              '<label>AWB / Tracking No.</label>' +
+              '<input type="text" id="'+safeId+'_awb" value="'+(order.awb || '')+'" placeholder="e.g. 123456789012">' +
+            '</div>' +
+            '<button class="save-order-btn" data-save-for="'+order.orderId+'">Save</button>' +
+          '</div>' +
+          '<div class="save-msg" id="'+safeId+'_msg"></div>' +
         '</div>';
     }).join('');
+
+    // Wire up Save buttons after render
+    listEl.querySelectorAll('.save-order-btn').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        var orderId = btn.getAttribute('data-save-for');
+        var safeId = 'ord_' + orderId.replace(/[^a-zA-Z0-9]/g, '');
+        var fulfillmentStatus = document.getElementById(safeId + '_status').value;
+        var courier = document.getElementById(safeId + '_courier').value.trim();
+        var awb = document.getElementById(safeId + '_awb').value.trim();
+        var msgEl = document.getElementById(safeId + '_msg');
+
+        btn.disabled = true;
+        btn.textContent = 'Saving…';
+        msgEl.className = 'save-msg';
+        msgEl.textContent = '';
+
+        fetch('/.netlify/functions/update-order', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            secret: currentSecret(),
+            orderId: orderId,
+            fulfillmentStatus: fulfillmentStatus,
+            courier: courier,
+            awb: awb
+          })
+        })
+          .then(function(res){
+            if(!res.ok) throw new Error('save failed');
+            return res.json();
+          })
+          .then(function(result){
+            btn.disabled = false;
+            btn.textContent = 'Save';
+            msgEl.className = 'save-msg ok';
+            msgEl.textContent = 'Saved' + (fulfillmentStatus === 'shipped' && courier && awb ? ' — shipping email sent to customer.' : '.');
+
+            // Update in-memory copy so filters/stats/badges reflect the change
+            var idx = ALL_ORDERS.findIndex(function(o){ return o.orderId === orderId; });
+            if(idx !== -1) ALL_ORDERS[idx] = result.order;
+            renderStats(ALL_ORDERS);
+          })
+          .catch(function(){
+            btn.disabled = false;
+            btn.textContent = 'Save';
+            msgEl.className = 'save-msg err';
+            msgEl.textContent = 'Could not save — please try again.';
+          });
+      });
+    });
   }
 
   function applyFilters(){
     var q = document.getElementById('search-input').value.trim().toLowerCase();
     var status = document.getElementById('status-filter').value;
+    var fulfillment = document.getElementById('fulfillment-filter').value;
 
     var filtered = ALL_ORDERS.filter(function(order){
       if(status !== 'all' && order.status !== status) return false;
+      if(fulfillment !== 'all' && (order.fulfillmentStatus || 'pending') !== fulfillment) return false;
       if(!q) return true;
       var c = order.customer || {};
       var haystack = [c.name, c.phone, c.email, order.orderId, order.paymentId].join(' ').toLowerCase();
@@ -357,6 +471,7 @@
 
   document.getElementById('search-input').addEventListener('input', applyFilters);
   document.getElementById('status-filter').addEventListener('change', applyFilters);
+  document.getElementById('fulfillment-filter').addEventListener('change', applyFilters);
 
   document.getElementById('export-btn').addEventListener('click', function(){
     if(ALL_ORDERS.length === 0) return;

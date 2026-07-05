@@ -15,7 +15,57 @@ netlify/functions/verify-payment.js   ← confirms payment, saves it as "paid", 
 netlify/functions/list-orders.js      ← lets you view all saved orders (simple admin view)
 ```
 
-## What's new vs. the last version
+## What's new in this update
+- **Checkout form**: pincode now auto-fills city + state (India Post public
+  API) as soon as you type a valid 6-digit pincode; state is now a proper
+  dropdown of all Indian states/UTs.
+- **Customer order tracking**: a new page, `track.html`, lets any customer
+  check their order status by entering their Order ID + the email they
+  checked out with — no login needed. It shows a Pending → Accepted →
+  Shipped → Delivered progress bar, plus courier + tracking number once
+  shipped. Linked from the site footer and from the post-payment success
+  message.
+- **Admin dashboard fulfillment controls**: each order in `admin.html` now
+  has an editable fulfillment status (Pending/Accepted/Shipped/Delivered)
+  plus courier name + AWB/tracking number fields, with a Save button.
+- **Automatic "shipped" email**: the first time you mark an order Shipped
+  with a courier + AWB filled in, the customer is automatically emailed
+  their tracking details (requires email set up — Step 6).
+- Two new functions: `netlify/functions/update-order.js` (admin-only,
+  updates fulfillment status) and `netlify/functions/track-order.js`
+  (public, customer-verified lookup).
+
+## Setting up a real inbox at your domain (e.g. hello@floradew.in)
+Right now, `hello@floradew.in` is used as a "from"/"reply-to" address in
+emails but isn't necessarily a real inbox you can log into. To actually
+send/receive mail as `you@floradew.in`, you need an email hosting provider
+— Netlify only hosts your website, not email. Two common free/cheap options:
+
+**Option A — Zoho Mail (free tier, recommended for a small business)**
+1. Go to https://www.zoho.com/mail/ → sign up for the **Free plan** (up to
+   5 users) using `floradew.in`
+2. Zoho gives you DNS records to add (MX, TXT for verification, and
+   optionally SPF/DKIM for deliverability)
+3. Add those records wherever your domain's DNS lives:
+   - If you're on **Netlify DNS** (Step 3 from the domain setup): Netlify
+     site → **Domain management → DNS records → Add a record**, entering
+     exactly what Zoho gives you
+   - If you're on your registrar's DNS: add them there instead
+4. Once verified, you can log into Zoho's webmail (or set it up in your
+   phone's Mail app) to actually send/receive as `hello@floradew.in`
+
+**Option B — Email forwarding only (simpler, no real inbox)**
+If you just want mail sent to `hello@floradew.in` to land in your existing
+personal Gmail, some registrars (Namecheap, Zoho itself, ImprovMX) offer
+free forwarding-only setups — you can't *send* as that address, only
+receive and have it redirected. Search "[your registrar name] free email
+forwarding" for exact steps.
+
+Either way, this is separate from Step 6 (Resend) below — Resend sends
+*automated* transactional emails (receipts, shipping updates) from your
+site; Zoho/forwarding is for a real inbox humans check.
+
+
 - **Checkout now collects real customer details** — name, phone, email,
   and full delivery address — in a form before payment, so you can actually
   ship orders.
@@ -108,6 +158,30 @@ day-to-day fulfillment until you want a nicer dashboard.
    done) both you and the test customer get an email
 5. Check Step 7's URL — the order should show up with `"status": "paid"`
 
+## Troubleshooting: "Could not list orders" / MissingBlobsEnvironmentError
+On some accounts, Netlify's automatic Blobs configuration doesn't reliably
+kick in for functions, causing a `MissingBlobsEnvironmentError` in the
+function logs even though everything else is set up correctly. The fix is
+to configure it explicitly:
+
+1. **Get your Site ID**: your site's dashboard → **Project configuration →
+   General → Project details** → copy the **Site ID** (looks like
+   `a1b2c3d4-...`)
+2. **Create a Personal Access Token**: click your avatar (top-right) →
+   **User settings → Applications → Personal access tokens → New access
+   token** → name it anything (e.g. "Flora Dew Blobs") → generate → **copy
+   it immediately** (it's only shown once)
+3. In your site → **Project configuration → Environment variables**, add:
+   - `BLOBS_SITE_ID` = the Site ID from step 1
+   - `BLOBS_TOKEN` = the Personal Access Token from step 2
+4. Redeploy (push any change to GitHub, or use **Deploys → Trigger deploy**
+   if your site shows that option)
+5. Retest the `list-orders` URL from Step 7 above
+
+The functions already have this fallback built in — they'll use
+`BLOBS_SITE_ID`/`BLOBS_TOKEN` automatically once set, and only rely on
+auto-detection if those aren't present.
+
 ## Step 9 — SEO: point it at your real domain
 The SEO tags, sitemap, and structured data currently use
 `https://www.floradew.in` as a placeholder domain (matching the site's
@@ -137,10 +211,13 @@ existing contact email `hello@floradew.in`). Once your real domain is live:
 ## Still not included (say the word and I'll build it next)
 - **Inventory/stock tracking** — nothing currently checks or reduces stock
   counts per variant.
-- **Order status updates to the customer** (e.g. "shipped" email) — right
-  now only the initial payment receipt is sent.
-- **A polished admin dashboard** — Step 7 gives you raw JSON; a proper page
-  with a table/search/filter is a natural next step once order volume grows.
+- **Courier tracking-link auto-detection** — the tracking page shows the
+  courier name and AWB number as text; it doesn't yet auto-generate a
+  clickable tracking URL per courier (e.g. Delhivery/BlueDart/India Post
+  have different tracking URL formats).
+- **"Delivered" confirmation email** — currently only "confirmed" and
+  "shipped" trigger customer emails; a delivered notification could be
+  added the same way.
 
 ## Ongoing deploys (optional but recommended)
 Dragging a folder in each time works, but connecting Netlify to a GitHub

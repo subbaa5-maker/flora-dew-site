@@ -619,6 +619,61 @@
     margin-top:10px; text-align:center;
   }
 
+  /* ---------- FAQ ---------- */
+  .faq{
+    padding:clamp(70px,10vw,110px) 0;
+  }
+  .faq-list{
+    max-width:800px;
+  }
+  .faq-item{
+    border-bottom:1px solid var(--line);
+  }
+  .faq-q{
+    width:100%;
+    background:none;
+    border:none;
+    text-align:left;
+    padding:22px 0;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:20px;
+    font-family:'Fraunces', serif;
+    font-size:1.08rem;
+    font-weight:450;
+    color:var(--moss-ink);
+  }
+  .faq-q .plus{
+    flex-shrink:0;
+    width:26px; height:26px;
+    border-radius:50%;
+    border:1px solid var(--line);
+    display:flex; align-items:center; justify-content:center;
+    font-size:1.1rem;
+    transition:transform 0.3s ease, background 0.3s ease;
+  }
+  .faq-item.open .faq-q .plus{
+    transform:rotate(45deg);
+    background:var(--fern);
+    color:var(--milk-sage);
+    border-color:var(--fern);
+  }
+  .faq-a{
+    max-height:0;
+    overflow:hidden;
+    transition:max-height 0.35s ease, padding 0.35s ease;
+  }
+  .faq-item.open .faq-a{
+    max-height:280px;
+    padding-bottom:22px;
+  }
+  .faq-a p{
+    font-size:0.93rem;
+    color:rgba(36,54,35,0.72);
+    max-width:64ch;
+  }
+
   /* ---------- Contact ---------- */
   .contact{
     padding:clamp(70px,10vw,110px) 0;
@@ -741,7 +796,7 @@
   }
   .footer-grid{
     display:grid;
-    grid-template-columns:1.4fr 1fr 1fr 1fr;
+    grid-template-columns:1.4fr 1fr 1fr 1fr 1fr;
     gap:30px;
     padding-bottom:36px;
   }
@@ -800,6 +855,7 @@
       <a href="#mission">Our Mission</a>
       <a href="#why">Why Natural</a>
       <a href="#reviews">Reviews</a>
+      <a href="#faq">FAQ</a>
       <a href="#contact">Contact</a>
     </div>
     <div style="display:flex; align-items:center; gap:12px;">
@@ -948,6 +1004,50 @@
     <a href="#products" class="btn-primary">Shop the collection →</a>
   </div>
 
+  <!-- FAQ -->
+  <section class="faq" id="faq">
+    <div class="wrap">
+      <div class="section-head">
+        <h2>Frequently asked questions</h2>
+        <p>Everything people usually ask before their first order.</p>
+      </div>
+      <div class="faq-list" id="faq-list">
+        <div class="faq-item">
+          <button class="faq-q"><span>Are Flora Dew products really chemical-free?</span><span class="plus">+</span></button>
+          <div class="faq-a"><p>Yes. Our soaps, hair oil, lip balms and lipstick are made without parabens or sulfates, using natural ingredients like neem, sandalwood, activated charcoal, aloe vera, shea butter and cold-pressed oils. Every batch is handmade in small quantities rather than mass-produced.</p></div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-q"><span>Are your products suitable for sensitive or acne-prone skin?</span><span class="plus">+</span></button>
+          <div class="faq-a"><p>Many customers with sensitive or acne-prone skin use our neem, charcoal and aloe vera soaps specifically for that reason. That said, everyone's skin reacts differently — we recommend a patch test on a small area first, especially if you have known allergies.</p></div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-q"><span>How long does delivery take?</span><span class="plus">+</span></button>
+          <div class="faq-a"><p>Orders are delivered within 3–5 business days from when your order is confirmed, anywhere in India, with free shipping on every order. See our <a href="shipping-policy.html">Shipping Policy</a> for details.</p></div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-q"><span>What payment methods do you accept?</span><span class="plus">+</span></button>
+          <div class="faq-a"><p>We accept UPI, credit/debit cards and net banking, processed securely through Razorpay. Your card and UPI details are handled directly by Razorpay — we never see or store them.</p></div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-q"><span>Can I return a product if I don't like it?</span><span class="plus">+</span></button>
+          <div class="faq-a"><p>Because our products are personal-care items used on skin, hair and lips, we can't accept returns once an order is delivered or opened, except in cases of damage, defects, wrong items or missing items. Full details are in our <a href="refund-policy.html">Return &amp; Refund Policy</a>.</p></div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-q"><span>Do your soaps and oils have a shelf life?</span><span class="plus">+</span></button>
+          <div class="faq-a"><p>Yes — since our products contain natural ingredients and no synthetic preservatives, we make them in small batches so you receive fresh stock. We recommend using soaps and oils within a reasonable time of purchase and storing them in a cool, dry place.</p></div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-q"><span>Can I track my order?</span><span class="plus">+</span></button>
+          <div class="faq-a"><p>Yes — once your order is confirmed, you'll get an Order ID by email. Use it on our <a href="track.html">Track Order</a> page along with your email address to check its status anytime.</p></div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-q"><span>Do you ship across all of India?</span><span class="plus">+</span></button>
+          <div class="faq-a"><p>Yes, we currently deliver pan-India. A small number of remote pincodes may take an extra day or two beyond our usual 3–5 business day window — we'll let you know if that applies to your order.</p></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <!-- CONTACT -->
   <section class="contact" id="contact">
     <div class="wrap contact-grid">
@@ -987,7 +1087,8 @@
   <div class="cart-foot">
     <div class="cart-subtotal"><span>Subtotal</span><strong id="cart-subtotal">₹0</strong></div>
     <button class="checkout-btn" id="checkout-btn" disabled>Checkout with Razorpay</button>
-    <p class="checkout-note">Secure UPI, cards & netbanking via Razorpay</p>
+    <p class="checkout-note">Secure UPI, cards &amp; netbanking via Razorpay</p>
+    <p class="checkout-note">By placing an order you agree to our <a href="terms.html" style="color:var(--fern); font-weight:600;">Terms</a>, <a href="refund-policy.html" style="color:var(--fern); font-weight:600;">Return Policy</a> &amp; <a href="shipping-policy.html" style="color:var(--fern); font-weight:600;">Shipping Policy</a>.</p>
   </div>
 </aside>
 
@@ -1022,20 +1123,61 @@
         <div class="field-err">Please enter your delivery address.</div>
       </div>
       <div class="form-row">
-        <div class="form-field" id="field-city">
-          <label for="cf-city">City</label>
-          <input type="text" id="cf-city" autocomplete="address-level2" required>
-          <div class="field-err">Please enter your city.</div>
+        <div class="form-field" id="field-pincode">
+          <label for="cf-pincode">Pincode</label>
+          <input type="text" id="cf-pincode" autocomplete="postal-code" inputmode="numeric" placeholder="6-digit" maxlength="6" required>
+          <div class="field-err">Enter a valid 6-digit pincode.</div>
         </div>
         <div class="form-field" id="field-state">
           <label for="cf-state">State</label>
-          <input type="text" id="cf-state" autocomplete="address-level1" required>
-          <div class="field-err">Please enter your state.</div>
+          <select id="cf-state" autocomplete="address-level1" required>
+            <option value="">Select state</option>
+            <option>Andhra Pradesh</option>
+            <option>Arunachal Pradesh</option>
+            <option>Assam</option>
+            <option>Bihar</option>
+            <option>Chhattisgarh</option>
+            <option>Goa</option>
+            <option>Gujarat</option>
+            <option>Haryana</option>
+            <option>Himachal Pradesh</option>
+            <option>Jharkhand</option>
+            <option>Karnataka</option>
+            <option>Kerala</option>
+            <option>Madhya Pradesh</option>
+            <option>Maharashtra</option>
+            <option>Manipur</option>
+            <option>Meghalaya</option>
+            <option>Mizoram</option>
+            <option>Nagaland</option>
+            <option>Odisha</option>
+            <option>Punjab</option>
+            <option>Rajasthan</option>
+            <option>Sikkim</option>
+            <option>Tamil Nadu</option>
+            <option>Telangana</option>
+            <option>Tripura</option>
+            <option>Uttar Pradesh</option>
+            <option>Uttarakhand</option>
+            <option>West Bengal</option>
+            <option>Andaman and Nicobar Islands</option>
+            <option>Chandigarh</option>
+            <option>Dadra and Nagar Haveli and Daman and Diu</option>
+            <option>Delhi</option>
+            <option>Jammu and Kashmir</option>
+            <option>Ladakh</option>
+            <option>Lakshadweep</option>
+            <option>Puducherry</option>
+          </select>
+          <div class="field-err">Please select your state.</div>
         </div>
-        <div class="form-field" id="field-pincode">
-          <label for="cf-pincode">Pincode</label>
-          <input type="text" id="cf-pincode" autocomplete="postal-code" inputmode="numeric" placeholder="6-digit" required>
-          <div class="field-err">Enter a valid 6-digit pincode.</div>
+      </div>
+      <div class="form-row">
+        <div class="form-field" id="field-city">
+          <label for="cf-city">City / Town</label>
+          <input type="text" id="cf-city" list="city-suggestions" autocomplete="address-level2" placeholder="Enter pincode to auto-fill" required>
+          <datalist id="city-suggestions"></datalist>
+          <div class="field-err">Please enter your city.</div>
         </div>
       </div>
 
@@ -1070,9 +1212,15 @@
       </div>
       <div>
         <h5>Support</h5>
-        <a href="#">Track Order</a>
-        <a href="#">Shipping Info</a>
-        <a href="#">Contact Us</a>
+        <a href="track.html">Track Order</a>
+        <a href="shipping-policy.html">Shipping Policy</a>
+        <a href="refund-policy.html">Return &amp; Refund Policy</a>
+        <a href="#contact">Contact Us</a>
+      </div>
+      <div>
+        <h5>Legal</h5>
+        <a href="terms.html">Terms &amp; Conditions</a>
+        <a href="privacy-policy.html">Privacy Policy</a>
       </div>
     </div>
     <div class="footer-bottom">
@@ -1108,7 +1256,21 @@
       "name":"Flora Dew",
       "url":"https://www.floradew.in/"
     };
-    [orgSchema, siteSchema].forEach(function(obj){
+    var faqSchema = {
+      "@context":"https://schema.org",
+      "@type":"FAQPage",
+      "mainEntity":[
+        {"@type":"Question","name":"Are Flora Dew products really chemical-free?","acceptedAnswer":{"@type":"Answer","text":"Yes. Our soaps, hair oil, lip balms and lipstick are made without parabens or sulfates, using natural ingredients like neem, sandalwood, activated charcoal, aloe vera, shea butter and cold-pressed oils. Every batch is handmade in small quantities rather than mass-produced."}},
+        {"@type":"Question","name":"Are your products suitable for sensitive or acne-prone skin?","acceptedAnswer":{"@type":"Answer","text":"Many customers with sensitive or acne-prone skin use our neem, charcoal and aloe vera soaps specifically for that reason. We still recommend a patch test on a small area first, especially if you have known allergies."}},
+        {"@type":"Question","name":"How long does delivery take?","acceptedAnswer":{"@type":"Answer","text":"Orders are delivered within 3-5 business days from when your order is confirmed, anywhere in India, with free shipping on every order."}},
+        {"@type":"Question","name":"What payment methods do you accept?","acceptedAnswer":{"@type":"Answer","text":"We accept UPI, credit/debit cards and net banking, processed securely through Razorpay."}},
+        {"@type":"Question","name":"Can I return a product if I don't like it?","acceptedAnswer":{"@type":"Answer","text":"Because our products are personal-care items used on skin, hair and lips, we can't accept returns once an order is delivered or opened, except in cases of damage, defects, wrong items or missing items."}},
+        {"@type":"Question","name":"Do your soaps and oils have a shelf life?","acceptedAnswer":{"@type":"Answer","text":"Yes. Since our products contain natural ingredients and no synthetic preservatives, we make them in small batches so you receive fresh stock, and recommend using them within a reasonable time of purchase, stored in a cool, dry place."}},
+        {"@type":"Question","name":"Can I track my order?","acceptedAnswer":{"@type":"Answer","text":"Yes, once your order is confirmed you'll get an Order ID by email, which you can use on our Track Order page along with your email address."}},
+        {"@type":"Question","name":"Do you ship across all of India?","acceptedAnswer":{"@type":"Answer","text":"Yes, we currently deliver pan-India, with a small number of remote pincodes occasionally taking an extra day or two beyond our usual 3-5 business day window."}}
+      ]
+    };
+    [orgSchema, siteSchema, faqSchema].forEach(function(obj){
       var s = document.createElement('script');
       s.type = 'application/ld+json';
       s.text = JSON.stringify(obj);
@@ -1191,6 +1353,18 @@
     {id:'balm', label:'Lip Balms'},
     {id:'lipstick', label:'Lip Colour'}
   ];
+
+  // ---------- FAQ accordion ----------
+  (function(){
+    var items = document.querySelectorAll('#faq-list .faq-item');
+    items.forEach(function(item){
+      item.querySelector('.faq-q').addEventListener('click', function(){
+        var wasOpen = item.classList.contains('open');
+        items.forEach(function(i){ i.classList.remove('open'); });
+        if(!wasOpen) item.classList.add('open');
+      });
+    });
+  })();
 
   (function renderShop(){
     var tabsEl = document.getElementById('shop-tabs');
@@ -1390,10 +1564,52 @@
 
   // ---------- Razorpay checkout ----------
   // TODO: replace with your live/test Razorpay Key ID (public, safe to expose client-side)
-  var RAZORPAY_KEY_ID = 'rzp_test_T9WrTgqzLwOq2z';
+  var RAZORPAY_KEY_ID = 'rzp_test_XXXXXXXXXXXX';
 
   var modalOverlay = document.getElementById('checkout-modal-overlay');
   var checkoutForm = document.getElementById('checkout-form');
+
+  // ---- Pincode -> auto-fill city & state (India Post public API) ----
+  (function(){
+    var pincodeInput = document.getElementById('cf-pincode');
+    var cityInput = document.getElementById('cf-city');
+    var stateSelect = document.getElementById('cf-state');
+    var citySuggestions = document.getElementById('city-suggestions');
+
+    pincodeInput.addEventListener('input', function(){
+      pincodeInput.value = pincodeInput.value.replace(/\D/g, '').slice(0, 6);
+      if(pincodeInput.value.length !== 6) return;
+
+      fetch('https://api.postalpincode.in/pincode/' + pincodeInput.value)
+        .then(function(res){ return res.json(); })
+        .then(function(data){
+          var result = data && data[0];
+          if(!result || result.Status !== 'Success' || !result.PostOffice || result.PostOffice.length === 0) return;
+
+          var offices = result.PostOffice;
+          var stateName = offices[0].State;
+
+          // Match the returned state name to one of our dropdown options (case-insensitive)
+          for(var i = 0; i < stateSelect.options.length; i++){
+            if(stateSelect.options[i].value.toLowerCase() === (stateName || '').toLowerCase()){
+              stateSelect.value = stateSelect.options[i].value;
+              break;
+            }
+          }
+
+          // Populate city suggestions with every locality sharing this pincode
+          citySuggestions.innerHTML = offices.map(function(o){
+            return '<option value="' + o.Name + '">';
+          }).join('');
+
+          // Auto-fill city with the district (most recognizable name) if empty
+          if(!cityInput.value.trim()){
+            cityInput.value = offices[0].District || offices[0].Name || '';
+          }
+        })
+        .catch(function(){ /* silently ignore — user can still type manually */ });
+    });
+  })();
 
   function openCheckoutModal(){
     if(CART.length === 0) return;
@@ -1498,7 +1714,7 @@
                   renderCart();
                   closeCheckoutModal();
                   checkoutForm.reset();
-                  alert('Payment successful! Thank you, ' + customer.name + ' — a confirmation has been sent to ' + customer.email + '.');
+                  alert('Payment successful! Thank you, ' + customer.name + '.\n\nOrder ID: ' + order.id + '\n\nTrack your order anytime at:\nfloradew.in/track.html\n(using this Order ID + your email)');
                 } else {
                   alert('Payment could not be verified. Please contact us if you were charged.');
                 }
