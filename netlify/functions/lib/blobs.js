@@ -27,6 +27,19 @@ function productImagesStore() {
   return namedStore('product-images');
 }
 
+// Stores the product catalog (name, category, description, price/size
+// variants, icon) as one JSON array under the key "all".
+function productsStore() {
+  return namedStore('products');
+}
+
+// Stores the list of catalogue/category "buckets" products can belong to
+// (id + display label, in display order) as one JSON array under the
+// key "all".
+function categoriesStore() {
+  return namedStore('categories');
+}
+
 // Stores shop-wide settings (e.g. holiday / temporary closure).
 function settingsStore() {
   return namedStore('settings');
@@ -39,4 +52,4 @@ function siteImagesStore() {
   return namedStore('site-images');
 }
 
-module.exports = { ordersStore, productImagesStore, settingsStore, siteImagesStore };
+module.exports = { ordersStore, productImagesStore, productsStore, categoriesStore, settingsStore, siteImagesStore };
