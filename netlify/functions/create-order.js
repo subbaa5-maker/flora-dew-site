@@ -19,6 +19,20 @@
 const Razorpay = require('razorpay');
 const { getStore } = require('@netlify/blobs');
 
+// Netlify's automatic Blobs configuration doesn't always kick in reliably.
+// If BLOBS_SITE_ID + BLOBS_TOKEN are set (see SETUP.md), use them explicitly;
+// otherwise fall back to auto-detection.
+function ordersStore() {
+  if (process.env.BLOBS_SITE_ID && process.env.BLOBS_TOKEN) {
+    return getStore({
+      name: 'orders',
+      siteID: process.env.BLOBS_SITE_ID,
+      token: process.env.BLOBS_TOKEN,
+    });
+  }
+  return getStore('orders');
+}
+
 exports.handler = async function (event) {
   if (event.httpMethod !== 'POST') {
     return { statusCode: 405, body: 'Method Not Allowed' };
@@ -59,8 +73,8 @@ exports.handler = async function (event) {
 
     // Save the pending order so verify-payment.js has a trusted source of
     // truth for what was actually ordered and by whom.
-    const ordersStore = getStore('orders');
-    await ordersStore.setJSON(order.id, {
+    const ordersStoreInstance = ordersStore();
+    await ordersStoreInstance.setJSON(order.id, {
       orderId: order.id,
       status: 'pending',
       amount: amount,
