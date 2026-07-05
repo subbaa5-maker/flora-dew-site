@@ -7,6 +7,8 @@
 <meta name="robots" content="noindex, nofollow">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,450;0,9..144,600;1,9..144,450;1,9..144,600&family=Work+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js"></script>
 <style>
   :root{
     --moss-ink:#243623;
@@ -232,6 +234,39 @@
   .pm-upload-msg{font-size:0.78rem; margin-left:4px;}
   .pm-upload-msg.err{color:var(--rosewater-deep);}
   .pm-upload-msg.ok{color:var(--fern);}
+  .pm-dim-hint{font-size:0.76rem; color:rgba(36,54,35,0.5); margin-top:6px; width:100%;}
+  .pm-section-note{
+    font-size:0.82rem; color:rgba(36,54,35,0.65); background:var(--paper);
+    border:1px solid var(--line); border-radius:12px; padding:12px 16px; margin-bottom:16px;
+  }
+
+  /* ---------- Crop modal ---------- */
+  .crop-modal-overlay{
+    position:fixed; inset:0; background:rgba(36,54,35,0.78); z-index:1000;
+    display:none; align-items:center; justify-content:center; padding:20px;
+  }
+  .crop-modal-overlay.active{display:flex;}
+  .crop-modal{
+    background:#fff; border-radius:18px; padding:22px clamp(18px,4vw,28px);
+    width:min(560px, 100%); max-height:92vh; overflow-y:auto;
+    box-shadow:var(--shadow-soft);
+  }
+  .crop-modal h3{font-size:1.1rem; margin-bottom:4px;}
+  .crop-hint{font-size:0.8rem; color:rgba(36,54,35,0.6); margin-bottom:14px;}
+  .crop-modal-img-wrap{
+    max-height:min(48vh, 420px); overflow:hidden; margin-bottom:14px;
+    background:#1b241a; border-radius:10px;
+  }
+  .crop-modal-img-wrap img{display:block; max-width:100%;}
+  .crop-ratio-row{display:flex; gap:8px; flex-wrap:wrap; margin-bottom:16px;}
+  .crop-ratio-btn{
+    border:1px solid var(--line); background:#fff; color:var(--moss-ink);
+    border-radius:100px; padding:6px 14px; font-size:0.76rem; font-weight:600; cursor:pointer;
+  }
+  .crop-ratio-btn.active{background:var(--moss-ink); color:var(--milk-sage); border-color:var(--moss-ink);}
+  .crop-modal-actions{display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap;}
+  .crop-modal-actions .btn{white-space:nowrap;}
+  .crop-progress{font-size:0.76rem; color:rgba(36,54,35,0.5); margin-top:10px; margin-bottom:0;}
 
   /* ---------- Store status panel ---------- */
   .settings-card{background:var(--paper); border-radius:16px; padding:24px 26px; box-shadow:var(--shadow-soft); max-width:520px;}
@@ -322,6 +357,7 @@
   </div>
 
   <div class="tab-panel" id="tab-products">
+    <div class="pm-section-note">Best results: square or 4:3 photos, at least 1000px on the shortest side. You'll be able to crop each photo right after choosing it.</div>
     <div class="pm-controls">
       <select id="pm-category-filter">
         <option value="all">All categories</option>
@@ -359,6 +395,23 @@
       <button class="btn btn-primary" id="save-settings-btn">Save store status</button>
       <div class="settings-save-msg" id="settings-save-msg"></div>
     </div>
+  </div>
+</div>
+
+<div class="crop-modal-overlay" id="crop-modal-overlay">
+  <div class="crop-modal">
+    <h3>Adjust photo</h3>
+    <p class="crop-hint" id="crop-modal-hint"></p>
+    <div class="crop-modal-img-wrap"><img id="crop-modal-img" alt=""></div>
+    <div class="crop-ratio-row" id="crop-ratio-row"></div>
+    <div class="crop-modal-actions">
+      <button type="button" class="btn" id="crop-skip-btn">Use original (skip crop)</button>
+      <div style="display:flex; gap:8px;">
+        <button type="button" class="btn" id="crop-cancel-btn">Cancel</button>
+        <button type="button" class="btn btn-primary" id="crop-apply-btn">Crop &amp; continue</button>
+      </div>
+    </div>
+    <p class="crop-progress" id="crop-progress"></p>
   </div>
 </div>
 
@@ -753,28 +806,152 @@
 
   document.getElementById('pm-category-filter').addEventListener('change', renderProductManager);
 
-  // Resize + compress an image file in-browser before upload, so blobs
-  // stay small and uploads stay fast — most phone photos are 3-6 MB
+  // Resize + compress an already-loaded data-URL image in-browser, so
+  // blobs stay small and uploads stay fast — most phone photos are 3-6 MB
   // straight out of the camera, far larger than needed for the web.
-  function resizeImageFile(file, maxDim, quality){
+  function resizeDataUrl(dataUrl, maxDim, quality){
     return new Promise(function(resolve, reject){
       var img = new Image();
-      var reader = new FileReader();
-      reader.onload = function(){
-        img.onload = function(){
-          var w = img.width, h = img.height;
-          if(w > h && w > maxDim){ h = Math.round(h * (maxDim / w)); w = maxDim; }
-          else if(h > maxDim){ w = Math.round(w * (maxDim / h)); h = maxDim; }
-          var canvas = document.createElement('canvas');
-          canvas.width = w; canvas.height = h;
-          canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-          resolve(canvas.toDataURL('image/jpeg', quality));
-        };
-        img.onerror = reject;
-        img.src = reader.result;
+      img.onload = function(){
+        var w = img.width, h = img.height;
+        if(w > h && w > maxDim){ h = Math.round(h * (maxDim / w)); w = maxDim; }
+        else if(h > maxDim){ w = Math.round(w * (maxDim / h)); h = maxDim; }
+        var canvas = document.createElement('canvas');
+        canvas.width = w; canvas.height = h;
+        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+        resolve(canvas.toDataURL('image/jpeg', quality));
       };
+      img.onerror = reject;
+      img.src = dataUrl;
+    });
+  }
+
+  function readFileAsDataUrl(file){
+    return new Promise(function(resolve, reject){
+      var reader = new FileReader();
+      reader.onload = function(){ resolve(reader.result); };
       reader.onerror = reject;
       reader.readAsDataURL(file);
+    });
+  }
+
+  // =====================================================================
+  // Crop modal — shared by product photos and site images. Lets the admin
+  // reposition/zoom/crop a photo before it's resized, compressed, and
+  // uploaded. "Use original" skips straight to the resize step.
+  // =====================================================================
+  var CROP_RATIOS = [
+    { label:'Free', value:NaN },
+    { label:'Square 1:1', value:1 },
+    { label:'Landscape 4:3', value:4/3 },
+    { label:'Banner 2.4:1', value:2.4 },
+    { label:'Wide 16:9', value:16/9 }
+  ];
+  var cropOverlayEl = document.getElementById('crop-modal-overlay');
+  var cropImgEl = document.getElementById('crop-modal-img');
+  var cropRatioRowEl = document.getElementById('crop-ratio-row');
+  var cropHintEl = document.getElementById('crop-modal-hint');
+  var cropProgressEl = document.getElementById('crop-progress');
+  var cropInstance = null;
+  var cropResolver = null;
+
+  function updateActiveRatioBtn(ratio){
+    cropRatioRowEl.querySelectorAll('.crop-ratio-btn').forEach(function(btn){
+      var v = parseFloat(btn.dataset.ratio);
+      var match = (isNaN(v) && (ratio === null || isNaN(ratio))) || v === ratio;
+      btn.classList.toggle('active', match);
+    });
+  }
+
+  function closeCropModal(){
+    cropOverlayEl.classList.remove('active');
+    if(cropInstance){ cropInstance.destroy(); cropInstance = null; }
+    cropImgEl.onload = null;
+    cropImgEl.src = '';
+  }
+
+  // Opens the crop UI for a raw data-URL. Resolves with
+  // { dataUrl, cropped:true } after cropping, { dataUrl, cropped:false }
+  // if the admin chooses to skip cropping, or null if cancelled.
+  function openCropModal(rawDataUrl, opts){
+    opts = opts || {};
+    return new Promise(function(resolve){
+      cropResolver = resolve;
+      cropHintEl.textContent = opts.hint || '';
+      cropProgressEl.textContent = opts.progress || '';
+      cropOverlayEl.classList.add('active');
+
+      cropRatioRowEl.innerHTML = CROP_RATIOS.map(function(r){
+        return '<button type="button" class="crop-ratio-btn" data-ratio="'+r.value+'">'+r.label+'</button>';
+      }).join('');
+      cropRatioRowEl.querySelectorAll('.crop-ratio-btn').forEach(function(btn){
+        btn.addEventListener('click', function(){
+          var val = parseFloat(btn.dataset.ratio);
+          if(cropInstance) cropInstance.setAspectRatio(isNaN(val) ? NaN : val);
+          updateActiveRatioBtn(isNaN(val) ? NaN : val);
+        });
+      });
+
+      var defaultRatio = opts.defaultRatio === undefined ? NaN : opts.defaultRatio;
+
+      function initCropper(){
+        if(cropInstance) cropInstance.destroy();
+        cropInstance = new Cropper(cropImgEl, {
+          aspectRatio: defaultRatio,
+          viewMode: 1,
+          autoCropArea: 0.9,
+          background: false,
+          checkCrossOrigin: false
+        });
+        updateActiveRatioBtn(defaultRatio);
+      }
+
+      cropImgEl.onload = initCropper;
+      cropImgEl.src = rawDataUrl;
+    });
+  }
+
+  document.getElementById('crop-apply-btn').addEventListener('click', function(){
+    if(!cropInstance || !cropResolver) return;
+    var canvas = cropInstance.getCroppedCanvas({ imageSmoothingQuality:'high' });
+    var dataUrl = canvas.toDataURL('image/jpeg', 0.95);
+    var resolve = cropResolver;
+    cropResolver = null;
+    closeCropModal();
+    resolve({ dataUrl: dataUrl, cropped: true });
+  });
+
+  document.getElementById('crop-skip-btn').addEventListener('click', function(){
+    var resolve = cropResolver;
+    var original = cropImgEl.src;
+    cropResolver = null;
+    closeCropModal();
+    if(resolve) resolve({ dataUrl: original, cropped: false });
+  });
+
+  document.getElementById('crop-cancel-btn').addEventListener('click', function(){
+    var resolve = cropResolver;
+    cropResolver = null;
+    closeCropModal();
+    if(resolve) resolve(null);
+  });
+
+  // Full pipeline for one file: read -> (optional) crop -> resize/compress.
+  // Resolves to null if the admin cancels the crop step for this file.
+  // Falls back to skipping the crop UI if Cropper.js failed to load.
+  function cropAndResizeFile(file, opts){
+    opts = opts || {};
+    var maxDim = opts.maxDim || 1000;
+    var quality = opts.quality || 0.8;
+
+    return readFileAsDataUrl(file).then(function(rawDataUrl){
+      if(typeof Cropper === 'undefined'){
+        return resizeDataUrl(rawDataUrl, maxDim, quality);
+      }
+      return openCropModal(rawDataUrl, opts).then(function(result){
+        if(!result) return null;
+        return resizeDataUrl(result.dataUrl, maxDim, quality);
+      });
     });
   }
 
@@ -793,25 +970,37 @@
       msgEl.textContent = 'Uploading…';
     }
 
-    // Upload one at a time to keep request sizes small and predictable.
+    // Crop, then upload, one photo at a time — this keeps request sizes
+    // small/predictable and lets the admin adjust each crop in turn.
     var chain = Promise.resolve();
-    fileList.forEach(function(file){
+    var uploadedCount = 0;
+    fileList.forEach(function(file, i){
       chain = chain.then(function(){
-        return resizeImageFile(file, 1000, 0.8).then(function(dataUrl){
-          return fetch('/.netlify/functions/product-images', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ secret: currentSecret(), productId: productId, image: dataUrl })
-          }).then(function(res){ return res.json(); });
+        return cropAndResizeFile(file, {
+          defaultRatio: 4/3,
+          hint: 'Suggested crop for product photos: square or 4:3 landscape.',
+          progress: fileList.length > 1 ? ('Photo ' + (i+1) + ' of ' + fileList.length) : ''
         });
+      }).then(function(dataUrl){
+        if(!dataUrl) return null; // this file's crop was cancelled — skip it
+        return fetch('/.netlify/functions/product-images', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ secret: currentSecret(), productId: productId, image: dataUrl })
+        }).then(function(res){ return res.json(); });
       }).then(function(result){
-        if(result && result.images) PRODUCT_IMAGES[productId] = result.images;
+        if(result && result.images){ PRODUCT_IMAGES[productId] = result.images; uploadedCount++; }
       });
     });
 
     chain.then(function(){
-      msgEl.className = 'pm-upload-msg ok';
-      msgEl.textContent = 'Saved.';
+      if(uploadedCount === 0){
+        msgEl.className = 'pm-upload-msg';
+        msgEl.textContent = '';
+      } else {
+        msgEl.className = 'pm-upload-msg ok';
+        msgEl.textContent = 'Saved.';
+      }
       renderProductManager();
     }).catch(function(){
       msgEl.className = 'pm-upload-msg err';
@@ -837,11 +1026,11 @@
   // Site image manager (Hero, About Us, Why Natural, Reviews, Footer logo)
   // =====================================================================
   var SITE_IMAGE_SLOTS = [
-    { key:'hero', label:'Hero image', hint:'Shown beside the headline at the top of the homepage. Falls back to the default illustration when empty.' },
-    { key:'about', label:'About Us / Mission image', hint:'Shown under the "Gentle on skin. Gentle on the earth." mission section.' },
-    { key:'why', label:'Why Natural image', hint:'Shown above the "Why go natural" commitments, on the dark section.' },
-    { key:'reviews', label:'Reviews / Testimonials image', hint:'Shown above the customer review cards.' },
-    { key:'footerLogo', label:'Footer logo', hint:'Small logo mark shown next to "Flora Dew" in the site footer.' }
+    { key:'hero', label:'Hero image', hint:'Shown beside the headline at the top of the homepage. Falls back to the default illustration when empty.', dim:'Recommended: about 900\u00d7800px, square or near-square.', ratio:1, maxDim:1400 },
+    { key:'about', label:'About Us / Mission image', hint:'Shown under the "Gentle on skin. Gentle on the earth." mission section.', dim:'Recommended: about 1600\u00d7650px, wide banner shape.', ratio:2.4, maxDim:1400 },
+    { key:'why', label:'Why Natural image', hint:'Shown above the "Why go natural" commitments, on the dark section.', dim:'Recommended: about 1600\u00d7650px, wide banner shape.', ratio:2.4, maxDim:1400 },
+    { key:'reviews', label:'Reviews / Testimonials image', hint:'Shown above the customer review cards.', dim:'Recommended: about 1600\u00d7650px, wide banner shape.', ratio:2.4, maxDim:1400 },
+    { key:'footerLogo', label:'Footer logo', hint:'Small logo mark shown next to "Flora Dew" in the site footer.', dim:'Recommended: 200\u00d7200px, square, simple mark.', ratio:1, maxDim:300 }
   ];
   var SITE_IMAGES = {}; // slot -> data-URL, loaded from the server
 
@@ -876,6 +1065,7 @@
           '<div class="pm-upload-row">' +
             '<input type="file" accept="image/*" data-slot="'+slot.key+'" class="im-file-input">' +
             '<span class="pm-upload-msg" id="im-msg-'+slot.key+'"></span>' +
+            '<span class="pm-dim-hint">'+slot.dim+'</span>' +
           '</div>' +
         '</div>';
     }).join('');
@@ -895,23 +1085,29 @@
 
   function handleSiteImageUpload(slot, file){
     var msgEl = document.getElementById('im-msg-' + slot);
+    var slotMeta = SITE_IMAGE_SLOTS.filter(function(s){ return s.key === slot; })[0] || {};
     msgEl.className = 'pm-upload-msg';
-    msgEl.textContent = 'Uploading…';
+    msgEl.textContent = 'Opening editor…';
 
-    // Footer logo is small, so keep it modest; the banner-style slots can
-    // stay a bit larger since they're shown wide across the section.
-    var maxDim = slot === 'footerLogo' ? 300 : 1400;
     var dataUrl;
 
-    resizeImageFile(file, maxDim, 0.82).then(function(url){
+    cropAndResizeFile(file, {
+      defaultRatio: slotMeta.ratio,
+      maxDim: slotMeta.maxDim || 1400,
+      quality: 0.82,
+      hint: slotMeta.dim || ''
+    }).then(function(url){
+      if(!url){ msgEl.className = 'pm-upload-msg'; msgEl.textContent = ''; return null; }
       dataUrl = url;
+      msgEl.textContent = 'Uploading…';
       return fetch('/.netlify/functions/site-images', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ secret: currentSecret(), slot: slot, image: dataUrl })
       }).then(function(res){ return res.json(); });
     }).then(function(result){
-      if(!result || !result.success) throw new Error((result && result.error) || 'save failed');
+      if(!result) return; // cancelled, nothing to save
+      if(!result.success) throw new Error(result.error || 'save failed');
       SITE_IMAGES[slot] = dataUrl;
       msgEl.className = 'pm-upload-msg ok';
       msgEl.textContent = 'Saved.';
