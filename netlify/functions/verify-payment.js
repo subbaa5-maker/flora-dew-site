@@ -24,6 +24,18 @@
 const crypto = require('crypto');
 const { getStore } = require('@netlify/blobs');
 
+// See create-order.js — explicit config fallback for Netlify Blobs auto-detection issues.
+function ordersStore() {
+  if (process.env.BLOBS_SITE_ID && process.env.BLOBS_TOKEN) {
+    return getStore({
+      name: 'orders',
+      siteID: process.env.BLOBS_SITE_ID,
+      token: process.env.BLOBS_TOKEN,
+    });
+  }
+  return getStore('orders');
+}
+
 async function sendEmail({ to, subject, html }) {
   if (!process.env.RESEND_API_KEY) return; // emailing is optional until configured
   try {
@@ -88,8 +100,8 @@ exports.handler = async function (event) {
       };
     }
 
-    const ordersStore = getStore('orders');
-    const order = await ordersStore.get(razorpay_order_id, { type: 'json' });
+    const ordersStoreInstance = ordersStore();
+    const order = await ordersStoreInstance.get(razorpay_order_id, { type: 'json' });
 
     if (!order) {
       // Signature was valid but we have no record of this order — still
@@ -105,7 +117,7 @@ exports.handler = async function (event) {
     order.status = 'paid';
     order.paymentId = razorpay_payment_id;
     order.paidAt = new Date().toISOString();
-    await ordersStore.setJSON(razorpay_order_id, order);
+    await ordersStoreInstance.setJSON(razorpay_order_id, order);
 
     const total = order.items.reduce((sum, it) => sum + it.price * it.qty, 0);
     const rows = renderOrderRows(order.items);
