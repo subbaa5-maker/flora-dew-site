@@ -1,0 +1,1548 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Flora Dew — Handmade Natural Soaps, Hair Oils & Lip Balms | Chemical-Free Ayurvedic Skincare India</title>
+<meta name="description" content="Shop handmade natural soaps, Ayurvedic hair oils, lip balms & semi-matte lipsticks from Flora Dew. Chemical-free, paraben-free, cruelty-free skincare made in small batches in India. Free delivery, secure checkout.">
+<meta name="keywords" content="handmade soap India, natural soap online, Ayurvedic hair oil, chemical free skincare, paraben free soap, natural lip balm, semi-matte lipstick, cruelty free cosmetics India, Flora Dew">
+<meta name="author" content="Flora Dew">
+<meta name="robots" content="index, follow, max-image-preview:large">
+<link rel="canonical" href="https://www.floradew.in/">
+<meta name="theme-color" content="#243623">
+
+<!-- Open Graph -->
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Flora Dew">
+<meta property="og:title" content="Flora Dew — Handmade Natural Soaps, Hair Oils & Lip Balms">
+<meta property="og:description" content="Chemical-free, cruelty-free skincare handmade in small batches — bathing soaps, Ayurvedic hair oils, lip balms and semi-matte lipsticks. Free delivery across India.">
+<meta property="og:url" content="https://www.floradew.in/">
+<meta property="og:image" content="https://www.floradew.in/og-image.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:locale" content="en_IN">
+
+<!-- Twitter Card -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Flora Dew — Handmade Natural Soaps, Hair Oils & Lip Balms">
+<meta name="twitter:description" content="Chemical-free, cruelty-free skincare handmade in small batches. Shop soaps, hair oils, lip balms & lipsticks with free delivery across India.">
+<meta name="twitter:image" content="https://www.floradew.in/og-image.jpg">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,450;0,9..144,600;1,9..144,450;1,9..144,600&family=Work+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<style>
+  :root{
+    --moss-ink:#243623;
+    --milk-sage:#eef1e6;
+    --milk-sage-2:#e3e8d6;
+    --rosewater:#c4707c;
+    --rosewater-deep:#a5525e;
+    --honey-oil:#c2963a;
+    --fern:#4e6b4c;
+    --paper:#f8f8f3;
+    --line: rgba(36,54,35,0.14);
+    --shadow-soft: 0 20px 40px -24px rgba(36,54,35,0.35);
+  }
+
+  *{margin:0;padding:0;box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    background:var(--milk-sage);
+    color:var(--moss-ink);
+    font-family:'Work Sans', sans-serif;
+    font-weight:400;
+    line-height:1.5;
+    overflow-x:hidden;
+  }
+  @media (prefers-reduced-motion: reduce){
+    html{scroll-behavior:auto;}
+    *{animation-duration:0.001ms !important; animation-iteration-count:1 !important; transition-duration:0.001ms !important;}
+  }
+
+  h1,h2,h3,.display{
+    font-family:'Fraunces', serif;
+    font-weight:450;
+    letter-spacing:-0.01em;
+    line-height:1.05;
+  }
+  .eyebrow{
+    font-family:'Work Sans', sans-serif;
+    text-transform:uppercase;
+    letter-spacing:0.16em;
+    font-size:0.72rem;
+    font-weight:600;
+    color:var(--rosewater-deep);
+  }
+
+  a{color:inherit; text-decoration:none;}
+  img,svg{display:block; max-width:100%;}
+  button{font-family:inherit; cursor:pointer;}
+
+  :focus-visible{
+    outline:2.5px solid var(--fern);
+    outline-offset:3px;
+    border-radius:2px;
+  }
+
+  .wrap{
+    max-width:1180px;
+    margin:0 auto;
+    padding:0 clamp(20px,5vw,56px);
+  }
+
+  /* ---------- Dew cursor (desktop only, decorative) ---------- */
+  #dew{
+    position:fixed;
+    width:22px;height:22px;
+    border-radius:50% 50% 50% 4%;
+    background:radial-gradient(circle at 30% 30%, rgba(255,255,255,0.9), rgba(196,112,124,0.55) 60%, rgba(78,107,76,0.3));
+    transform:translate(-50%,-50%) rotate(-45deg);
+    pointer-events:none;
+    z-index:9999;
+    mix-blend-mode:multiply;
+    opacity:0;
+    transition:opacity 0.4s ease;
+    filter:blur(0.2px);
+  }
+
+  /* ---------- Nav ---------- */
+  header{
+    position:sticky; top:0; z-index:500;
+    background:rgba(238,241,230,0.85);
+    backdrop-filter:blur(10px);
+    border-bottom:1px solid var(--line);
+  }
+  .topbar{
+    background:var(--moss-ink);
+    color:var(--milk-sage-2);
+    text-align:center;
+    font-size:0.78rem;
+    letter-spacing:0.03em;
+    padding:8px 12px;
+  }
+  nav{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:18px clamp(20px,5vw,56px);
+    max-width:1180px; margin:0 auto;
+  }
+  .logo{
+    font-family:'Fraunces', serif;
+    font-size:1.5rem;
+    font-weight:600;
+    display:flex; align-items:center; gap:8px;
+  }
+  .logo .dot{
+    width:9px;height:9px;border-radius:50%;
+    background:var(--rosewater);
+    display:inline-block;
+  }
+  .nav-links{
+    display:flex; gap:2.2rem;
+    font-size:0.92rem;
+    font-weight:500;
+  }
+  .nav-links a{position:relative; padding:4px 0;}
+  .nav-links a::after{
+    content:"";
+    position:absolute; left:0; bottom:0;
+    width:0; height:1.5px;
+    background:var(--rosewater-deep);
+    transition:width 0.3s ease;
+  }
+  .nav-links a:hover::after{width:100%;}
+  .nav-cta{
+    border:1px solid var(--moss-ink);
+    padding:9px 20px;
+    border-radius:100px;
+    font-size:0.85rem;
+    font-weight:600;
+    transition:background 0.25s ease, color 0.25s ease;
+  }
+  .nav-cta:hover{background:var(--moss-ink); color:var(--milk-sage);}
+  .burger{display:none;}
+
+  /* ---------- Hero ---------- */
+  .hero{
+    position:relative;
+    padding:clamp(50px,9vw,100px) 0 clamp(60px,8vw,110px);
+    overflow:hidden;
+  }
+  .hero-grid{
+    display:grid;
+    grid-template-columns:1.05fr 0.95fr;
+    gap:clamp(30px,5vw,60px);
+    align-items:center;
+  }
+  .hero-eyebrow{margin-bottom:18px;}
+  .hero h1{
+    font-size:clamp(2.6rem,5.4vw,4.3rem);
+    max-width:11ch;
+  }
+  .hero h1 em{
+    font-style:italic;
+    color:var(--rosewater-deep);
+  }
+  .hero p.lede{
+    margin-top:22px;
+    font-size:1.12rem;
+    max-width:44ch;
+    color:rgba(36,54,35,0.78);
+  }
+  .hero-actions{
+    display:flex; gap:14px; margin-top:34px; flex-wrap:wrap;
+  }
+  .btn-primary{
+    background:var(--moss-ink);
+    color:var(--milk-sage);
+    padding:14px 28px;
+    border-radius:100px;
+    font-weight:600;
+    font-size:0.95rem;
+    border:1px solid var(--moss-ink);
+    transition:transform 0.25s ease, box-shadow 0.25s ease;
+    display:inline-flex; align-items:center; gap:10px;
+  }
+  .btn-primary:hover{transform:translateY(-2px); box-shadow:var(--shadow-soft);}
+  .btn-ghost{
+    padding:14px 24px;
+    border-radius:100px;
+    font-weight:600;
+    font-size:0.95rem;
+    border:1px solid var(--line);
+    transition:border-color 0.25s ease, background 0.25s ease;
+  }
+  .btn-ghost:hover{border-color:var(--moss-ink); background:rgba(255,255,255,0.4);}
+
+  .hero-stats{
+    display:flex; gap:clamp(20px,4vw,40px);
+    margin-top:48px;
+    flex-wrap:wrap;
+  }
+  .hero-stats div{border-left:1.5px solid var(--line); padding-left:14px;}
+  .hero-stats strong{display:block; font-family:'Fraunces',serif; font-size:1.5rem; font-weight:600;}
+  .hero-stats span{font-size:0.8rem; color:rgba(36,54,35,0.65);}
+
+  /* Soap cross-section signature visual */
+  .soap-stage{
+    position:relative;
+    display:flex; align-items:center; justify-content:center;
+    min-height:380px;
+  }
+  .soap-stage svg{width:100%; height:auto; max-width:420px;}
+  .float-tag{
+    position:absolute;
+    background:var(--paper);
+    border:1px solid var(--line);
+    border-radius:100px;
+    padding:7px 14px;
+    font-size:0.76rem;
+    font-weight:600;
+    box-shadow:var(--shadow-soft);
+    animation:bob 6s ease-in-out infinite;
+  }
+  .float-tag.t1{top:6%; left:-4%; animation-delay:0s;}
+  .float-tag.t2{bottom:14%; right:-6%; animation-delay:1.4s;}
+  .float-tag.t3{bottom:2%; left:4%; animation-delay:2.8s;}
+  @keyframes bob{
+    0%,100%{transform:translateY(0);}
+    50%{transform:translateY(-10px);}
+  }
+
+  /* ---------- Marquee ---------- */
+  .marquee-band{
+    background:var(--moss-ink);
+    color:var(--milk-sage-2);
+    overflow:hidden;
+    padding:16px 0;
+    white-space:nowrap;
+  }
+  .marquee-track{
+    display:inline-flex;
+    animation:scroll-left 32s linear infinite;
+  }
+  .marquee-track span{
+    font-family:'Fraunces', serif;
+    font-style:italic;
+    font-size:1.15rem;
+    padding:0 2.2rem;
+    display:inline-flex; align-items:center; gap:2.2rem;
+    color:var(--milk-sage-2);
+  }
+  .marquee-track span::after{content:"✦"; color:var(--rosewater); font-style:normal;}
+  @keyframes scroll-left{
+    0%{transform:translateX(0);}
+    100%{transform:translateX(-50%);}
+  }
+
+  /* ---------- Mission ---------- */
+  .mission{
+    padding:clamp(70px,10vw,120px) 0;
+    position:relative;
+  }
+  .mission-grid{
+    display:grid;
+    grid-template-columns:0.4fr 1fr;
+    gap:clamp(20px,5vw,60px);
+  }
+  .mission h2{
+    font-size:clamp(1.9rem,3.4vw,2.6rem);
+    max-width:9ch;
+  }
+  blockquote{
+    font-family:'Fraunces', serif;
+    font-size:clamp(1.3rem,2.6vw,1.85rem);
+    font-weight:450;
+    line-height:1.4;
+    max-width:34ch;
+  }
+  blockquote em{font-style:italic; color:var(--rosewater-deep);}
+  .mission-foot{
+    margin-top:26px;
+    font-size:0.95rem;
+    color:rgba(36,54,35,0.72);
+    max-width:52ch;
+  }
+
+  /* ---------- Products ---------- */
+  .products{
+    padding:clamp(50px,8vw,90px) 0 clamp(80px,10vw,120px);
+  }
+  .section-head{
+    display:flex; justify-content:space-between; align-items:flex-end;
+    margin-bottom:clamp(30px,5vw,54px);
+    gap:20px; flex-wrap:wrap;
+  }
+  .section-head h2{font-size:clamp(1.9rem,3.6vw,2.7rem); max-width:14ch;}
+  .section-head p{max-width:38ch; color:rgba(36,54,35,0.7); font-size:0.98rem;}
+
+  .product-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fill, minmax(250px,1fr));
+    gap:20px;
+  }
+  .product-card{
+    background:var(--paper);
+    border:1px solid var(--line);
+    border-radius:22px 22px 8px 8px;
+    padding:26px 24px 24px;
+    position:relative;
+    overflow:hidden;
+    transition:transform 0.35s ease, box-shadow 0.35s ease;
+    min-height:380px;
+    display:flex; flex-direction:column;
+  }
+  .product-card:hover{transform:translateY(-6px); box-shadow:var(--shadow-soft);}
+  .product-card .icon-stage{
+    height:150px; display:flex; align-items:center; justify-content:center;
+    margin-bottom:18px;
+  }
+  .product-card .icon-stage svg{width:120px; height:120px;}
+  .product-card h3{font-size:1.5rem; margin-bottom:8px;}
+  .product-card p.desc{font-size:0.92rem; color:rgba(36,54,35,0.72); flex-grow:1;}
+  .ingredient-row{
+    display:flex; flex-wrap:wrap; gap:6px;
+    margin-top:18px;
+  }
+  .ingredient-row span{
+    font-size:0.72rem;
+    border:1px solid var(--line);
+    border-radius:100px;
+    padding:4px 10px;
+    color:rgba(36,54,35,0.75);
+    background:rgba(255,255,255,0.5);
+  }
+  .card-tag{
+    position:absolute; top:20px; right:20px;
+    font-size:0.68rem; font-weight:700;
+    letter-spacing:0.08em; text-transform:uppercase;
+    color:var(--rosewater-deep);
+  }
+
+  /* ---------- Shop tabs & variant pills ---------- */
+  .shop-tabs{
+    display:flex; gap:8px; flex-wrap:wrap;
+    margin-bottom:32px;
+  }
+  .shop-tab{
+    background:transparent;
+    border:1px solid var(--line);
+    border-radius:100px;
+    padding:9px 18px;
+    font-size:0.85rem;
+    font-weight:600;
+    color:rgba(36,54,35,0.65);
+    transition:all 0.25s ease;
+  }
+  .shop-tab:hover{border-color:var(--moss-ink); color:var(--moss-ink);}
+  .shop-tab.active{
+    background:var(--moss-ink);
+    border-color:var(--moss-ink);
+    color:var(--milk-sage);
+  }
+  .product-card.hidden{display:none;}
+  .variant-pills{
+    display:flex; flex-wrap:wrap; gap:6px;
+    margin-top:16px;
+  }
+  .variant-pill{
+    font-size:0.72rem;
+    font-weight:600;
+    border:1px solid var(--line);
+    border-radius:100px;
+    padding:5px 11px;
+    background:rgba(255,255,255,0.6);
+    color:rgba(36,54,35,0.7);
+    transition:all 0.2s ease;
+  }
+  .variant-pill.active{
+    background:var(--fern);
+    border-color:var(--fern);
+    color:var(--milk-sage);
+  }
+  .price-row{
+    display:flex; align-items:baseline; gap:8px;
+    margin-top:16px;
+  }
+  .price-now{
+    font-family:'Fraunces', serif;
+    font-size:1.35rem;
+    font-weight:600;
+  }
+  .price-mrp{
+    font-size:0.85rem;
+    text-decoration:line-through;
+    color:rgba(36,54,35,0.4);
+  }
+  .price-off{
+    font-size:0.72rem;
+    font-weight:700;
+    color:var(--rosewater-deep);
+    background:rgba(196,112,124,0.14);
+    padding:2px 8px;
+    border-radius:100px;
+  }
+  .add-cart-btn{
+    margin-top:16px;
+    width:100%;
+    background:var(--moss-ink);
+    color:var(--milk-sage);
+    border:1px solid var(--moss-ink);
+    border-radius:100px;
+    padding:11px 16px;
+    font-size:0.85rem;
+    font-weight:600;
+    transition:background 0.25s ease, transform 0.2s ease;
+  }
+  .add-cart-btn:hover{background:var(--fern); border-color:var(--fern);}
+  .add-cart-btn.added{background:var(--fern); border-color:var(--fern);}
+
+  /* ---------- Cart icon + drawer ---------- */
+  .cart-btn{
+    position:relative;
+    display:inline-flex; align-items:center; gap:8px;
+    border:1px solid var(--moss-ink);
+    border-radius:100px;
+    padding:9px 16px;
+    font-size:0.85rem;
+    font-weight:600;
+    background:transparent;
+  }
+  .cart-btn svg{width:17px; height:17px;}
+  .cart-count{
+    position:absolute; top:-7px; right:-7px;
+    background:var(--rosewater-deep);
+    color:#fff;
+    font-size:0.68rem;
+    font-weight:700;
+    min-width:18px; height:18px;
+    border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    padding:0 3px;
+  }
+  .cart-overlay{
+    position:fixed; inset:0;
+    background:rgba(36,54,35,0.4);
+    z-index:900;
+    opacity:0; pointer-events:none;
+    transition:opacity 0.3s ease;
+  }
+  .cart-overlay.open{opacity:1; pointer-events:auto;}
+  .cart-drawer{
+    position:fixed; top:0; right:0; bottom:0;
+    width:min(400px, 92vw);
+    background:var(--paper);
+    z-index:901;
+    transform:translateX(100%);
+    transition:transform 0.35s ease;
+    display:flex; flex-direction:column;
+    box-shadow:-20px 0 50px rgba(36,54,35,0.25);
+  }
+  .cart-drawer.open{transform:translateX(0);}
+  .cart-head{
+    display:flex; justify-content:space-between; align-items:center;
+    padding:22px 24px; border-bottom:1px solid var(--line);
+  }
+  .cart-head h3{font-size:1.3rem;}
+  .cart-close{
+    background:none; border:none; font-size:1.4rem; line-height:1;
+    color:var(--moss-ink); padding:4px;
+  }
+  .cart-items{flex:1; overflow-y:auto; padding:16px 24px;}
+  .cart-empty{
+    text-align:center; color:rgba(36,54,35,0.55);
+    padding:60px 20px; font-size:0.95rem;
+  }
+  .cart-item{
+    display:flex; gap:12px;
+    padding:16px 0; border-bottom:1px solid var(--line);
+  }
+  .cart-item .ci-icon{
+    width:52px; height:52px; flex-shrink:0;
+    background:var(--milk-sage); border-radius:12px;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .cart-item .ci-icon svg{width:36px; height:36px;}
+  .cart-item .ci-info{flex:1;}
+  .cart-item .ci-name{font-size:0.9rem; font-weight:600;}
+  .cart-item .ci-variant{font-size:0.78rem; color:rgba(36,54,35,0.6); margin-top:2px;}
+  .ci-row{
+    display:flex; justify-content:space-between; align-items:center;
+    margin-top:10px;
+  }
+  .qty-stepper{
+    display:flex; align-items:center; gap:10px;
+    border:1px solid var(--line); border-radius:100px;
+    padding:4px 10px;
+  }
+  .qty-stepper button{
+    background:none; border:none; font-size:1rem; font-weight:700;
+    color:var(--moss-ink); width:16px;
+  }
+  .qty-stepper span{font-size:0.85rem; font-weight:600; min-width:16px; text-align:center;}
+  .ci-remove{
+    font-size:0.76rem; color:var(--rosewater-deep); font-weight:600;
+    background:none; border:none;
+  }
+  .ci-line-total{font-size:0.88rem; font-weight:600;}
+  .cart-foot{
+    padding:20px 24px 26px; border-top:1px solid var(--line);
+  }
+  .cart-subtotal{
+    display:flex; justify-content:space-between; align-items:baseline;
+    margin-bottom:16px;
+    font-size:1rem;
+  }
+  .cart-subtotal strong{font-family:'Fraunces',serif; font-size:1.3rem;}
+  .checkout-btn{
+    width:100%;
+    background:var(--moss-ink); color:var(--milk-sage);
+    border:none; border-radius:100px;
+    padding:14px; font-size:0.95rem; font-weight:600;
+  }
+  .checkout-btn:disabled{opacity:0.5;}
+  /* ---------- Checkout details modal ---------- */
+  .modal-overlay{
+    position:fixed; inset:0;
+    background:rgba(36,54,35,0.5);
+    z-index:950;
+    display:flex; align-items:center; justify-content:center;
+    padding:20px;
+    opacity:0; pointer-events:none;
+    transition:opacity 0.3s ease;
+  }
+  .modal-overlay.open{opacity:1; pointer-events:auto;}
+  .checkout-modal{
+    background:var(--paper);
+    border-radius:22px;
+    width:min(480px, 100%);
+    max-height:90vh;
+    overflow-y:auto;
+    padding:28px clamp(20px,4vw,32px) 30px;
+    box-shadow:var(--shadow-soft);
+    transform:translateY(16px);
+    transition:transform 0.3s ease;
+  }
+  .modal-overlay.open .checkout-modal{transform:translateY(0);}
+  .checkout-modal h3{font-size:1.4rem; margin-bottom:4px;}
+  .checkout-modal .modal-sub{font-size:0.85rem; color:rgba(36,54,35,0.62); margin-bottom:20px;}
+  .form-row{display:flex; gap:12px;}
+  .form-field{margin-bottom:14px; flex:1;}
+  .form-field label{
+    display:block; font-size:0.76rem; font-weight:600;
+    text-transform:uppercase; letter-spacing:0.04em;
+    color:rgba(36,54,35,0.6); margin-bottom:6px;
+  }
+  .form-field input, .form-field select, .form-field textarea{
+    width:100%;
+    border:1px solid var(--line);
+    background:#fff;
+    border-radius:10px;
+    padding:11px 13px;
+    font-family:inherit;
+    font-size:0.92rem;
+    color:var(--moss-ink);
+  }
+  .form-field textarea{resize:vertical; min-height:60px;}
+  .form-field input:focus, .form-field select:focus, .form-field textarea:focus{
+    outline:none; border-color:var(--fern);
+  }
+  .form-field.error input, .form-field.error textarea{border-color:var(--rosewater-deep);}
+  .field-err{font-size:0.72rem; color:var(--rosewater-deep); margin-top:4px; display:none;}
+  .form-field.error .field-err{display:block;}
+  .modal-actions{display:flex; gap:12px; margin-top:8px;}
+  .modal-cancel{
+    flex:0 0 auto;
+    background:none; border:1px solid var(--line);
+    border-radius:100px; padding:14px 20px;
+    font-weight:600; font-size:0.9rem;
+  }
+  .modal-submit{
+    flex:1;
+    background:var(--moss-ink); color:var(--milk-sage);
+    border:none; border-radius:100px;
+    padding:14px; font-size:0.95rem; font-weight:600;
+  }
+  .modal-submit:disabled{opacity:0.5;}
+  .modal-order-summary{
+    background:var(--milk-sage);
+    border-radius:14px;
+    padding:14px 16px;
+    margin-bottom:18px;
+    font-size:0.85rem;
+  }
+  .modal-order-summary .mos-row{display:flex; justify-content:space-between; padding:3px 0;}
+  .modal-order-summary .mos-total{font-weight:700; border-top:1px solid var(--line); margin-top:6px; padding-top:8px;}
+
+  .checkout-note{
+    font-size:0.72rem; color:rgba(36,54,35,0.5);
+    margin-top:10px; text-align:center;
+  }
+
+  /* ---------- Contact ---------- */
+  .contact{
+    padding:clamp(70px,10vw,110px) 0;
+    background:var(--milk-sage-2);
+  }
+  .contact-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:clamp(20px,5vw,50px);
+    align-items:start;
+  }
+  .contact h2{font-size:clamp(1.9rem,3.4vw,2.6rem); max-width:12ch; margin-bottom:16px;}
+  .contact-lede{color:rgba(36,54,35,0.72); max-width:42ch; font-size:0.98rem;}
+  .contact-cards{display:flex; flex-direction:column; gap:14px;}
+  .contact-card{
+    display:flex; align-items:center; gap:16px;
+    background:var(--paper);
+    border:1px solid var(--line);
+    border-radius:18px;
+    padding:20px 22px;
+    transition:transform 0.25s ease, box-shadow 0.25s ease;
+  }
+  .contact-card:hover{transform:translateY(-3px); box-shadow:var(--shadow-soft);}
+  .contact-card .cc-icon{
+    width:44px; height:44px; border-radius:50%;
+    background:var(--milk-sage);
+    display:flex; align-items:center; justify-content:center;
+    flex-shrink:0;
+  }
+  .contact-card .cc-icon svg{width:22px; height:22px;}
+  .contact-card .cc-label{font-size:0.75rem; text-transform:uppercase; letter-spacing:0.06em; color:rgba(36,54,35,0.55); margin-bottom:3px;}
+  .contact-card .cc-value{font-weight:600; font-size:1.02rem;}
+
+  /* ---------- Why natural ---------- */
+  .why{
+    background:var(--moss-ink);
+    color:var(--milk-sage-2);
+    padding:clamp(60px,9vw,100px) 0;
+  }
+  .why .section-head h2{color:var(--milk-sage);}
+  .why .section-head p{color:rgba(238,241,230,0.65);}
+  .badge-grid{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:1px;
+    background:rgba(238,241,230,0.15);
+    border:1px solid rgba(238,241,230,0.15);
+    border-radius:16px;
+    overflow:hidden;
+  }
+  .badge{
+    background:var(--moss-ink);
+    padding:30px 22px;
+    text-align:left;
+  }
+  .badge .num{
+    font-family:'Fraunces', serif;
+    font-style:italic;
+    color:var(--rosewater);
+    font-size:0.95rem;
+    margin-bottom:14px;
+    display:block;
+  }
+  .badge h4{font-family:'Fraunces',serif; font-size:1.15rem; font-weight:600; margin-bottom:8px;}
+  .badge p{font-size:0.85rem; color:rgba(238,241,230,0.65);}
+
+  /* ---------- Testimonials ---------- */
+  .testimonials{
+    padding:clamp(70px,10vw,110px) 0;
+  }
+  .t-grid{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:22px;
+  }
+  .t-card{
+    border:1px solid var(--line);
+    border-radius:18px;
+    padding:26px;
+    background:var(--paper);
+  }
+  .t-card .stars{color:var(--honey-oil); font-size:0.95rem; margin-bottom:14px; letter-spacing:2px;}
+  .t-card p.quote{
+    font-family:'Fraunces', serif;
+    font-size:1.05rem;
+    line-height:1.5;
+    margin-bottom:18px;
+  }
+  .t-card .who{
+    display:flex; align-items:center; gap:10px;
+    font-size:0.85rem; font-weight:600;
+  }
+  .avatar{
+    width:34px; height:34px; border-radius:50%;
+    background:linear-gradient(135deg, var(--rosewater), var(--honey-oil));
+    display:flex; align-items:center; justify-content:center;
+    color:white; font-family:'Fraunces',serif; font-size:0.9rem;
+  }
+
+  /* ---------- CTA banner ---------- */
+  .cta-banner{
+    margin:0 clamp(20px,5vw,56px) clamp(70px,9vw,110px);
+    max-width:1180px; margin-left:auto; margin-right:auto;
+    background:linear-gradient(120deg, #d9c9a3 0%, var(--rosewater) 100%);
+    border-radius:28px;
+    padding:clamp(40px,7vw,70px) clamp(30px,6vw,70px);
+    display:flex; justify-content:space-between; align-items:center;
+    gap:30px; flex-wrap:wrap;
+    color:var(--moss-ink);
+    position:relative;
+    overflow:hidden;
+  }
+  .cta-banner h2{font-size:clamp(1.7rem,3.4vw,2.4rem); max-width:16ch;}
+  .cta-banner .btn-primary{background:var(--moss-ink); color:var(--milk-sage); border-color:var(--moss-ink);}
+
+  /* ---------- Footer ---------- */
+  footer{
+    border-top:1px solid var(--line);
+    padding:clamp(40px,6vw,60px) 0 30px;
+  }
+  .footer-grid{
+    display:grid;
+    grid-template-columns:1.4fr 1fr 1fr 1fr;
+    gap:30px;
+    padding-bottom:36px;
+  }
+  .footer-grid h5{
+    font-size:0.78rem; text-transform:uppercase; letter-spacing:0.1em;
+    margin-bottom:14px; color:rgba(36,54,35,0.55);
+  }
+  .footer-grid a, .footer-grid p{
+    display:block; font-size:0.92rem; margin-bottom:10px; color:rgba(36,54,35,0.78);
+  }
+  .footer-grid a:hover{color:var(--rosewater-deep);}
+  .footer-bottom{
+    display:flex; justify-content:space-between; align-items:center;
+    padding-top:22px; border-top:1px solid var(--line);
+    font-size:0.8rem; color:rgba(36,54,35,0.55);
+    flex-wrap:wrap; gap:10px;
+  }
+
+  /* ---------- Wave divider ---------- */
+  .wave{
+    display:block; width:100%; height:40px;
+    margin-top:-1px;
+  }
+
+  /* ---------- Responsive ---------- */
+  @media (max-width:920px){
+    .hero-grid{grid-template-columns:1fr;}
+    .soap-stage{order:-1; min-height:280px;}
+    .mission-grid{grid-template-columns:1fr;}
+    .product-grid{grid-template-columns:1fr 1fr;}
+    .badge-grid{grid-template-columns:1fr 1fr;}
+    .t-grid{grid-template-columns:1fr;}
+    .footer-grid{grid-template-columns:1fr 1fr;}
+    .contact-grid{grid-template-columns:1fr;}
+  }
+  @media (max-width:640px){
+    .nav-links{display:none;}
+    .product-grid{grid-template-columns:1fr;}
+    .badge-grid{grid-template-columns:1fr;}
+    .footer-grid{grid-template-columns:1fr;}
+    .cta-banner{flex-direction:column; align-items:flex-start;}
+    .nav-cta{display:none;}
+  }
+</style>
+</head>
+<body>
+
+<div id="dew" aria-hidden="true"></div>
+
+<header>
+  <div class="topbar">Free delivery on all orders · Buy more, save more with combo offers</div>
+  <nav>
+    <a href="#top" class="logo"><span class="dot"></span>Flora Dew</a>
+    <div class="nav-links">
+      <a href="#products">Shop</a>
+      <a href="#mission">Our Mission</a>
+      <a href="#why">Why Natural</a>
+      <a href="#reviews">Reviews</a>
+      <a href="#contact">Contact</a>
+    </div>
+    <div style="display:flex; align-items:center; gap:12px;">
+      <button class="cart-btn" id="cart-open-btn" aria-label="Open cart">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>
+        Cart<span class="cart-count" id="cart-count" style="display:none;">0</span>
+      </button>
+      <a href="#products" class="nav-cta">Shop Now</a>
+    </div>
+  </nav>
+</header>
+
+<main id="top">
+  <!-- HERO -->
+  <section class="hero">
+    <div class="wrap hero-grid">
+      <div>
+        <div class="eyebrow hero-eyebrow">Handmade in small batches</div>
+        <h1>Skincare poured slow, <em>never</em> rushed.</h1>
+        <p class="lede">Flora Dew crafts bathing soaps, hair oils, lip balms and lip colour from botanicals, cold-pressed oils and butters — chemical-free, cruelty-free, and gentle enough for every day.</p>
+        <div class="hero-actions">
+          <a href="#products" class="btn-primary">Explore products →</a>
+          <a href="#mission" class="btn-ghost">Read our mission</a>
+        </div>
+        <div class="hero-stats">
+          <div><strong>0%</strong><span>Parabens & sulfates</span></div>
+          <div><strong>14</strong><span>Handmade formulas</span></div>
+          <div><strong>4</strong><span>Rituals: soap, oil, balm, colour</span></div>
+        </div>
+      </div>
+
+      <div class="soap-stage">
+        <span class="float-tag t1">Cold-pressed</span>
+        <span class="float-tag t2">Skin-first</span>
+        <span class="float-tag t3">Small-batch</span>
+        <svg viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Illustration of a handmade soap bar cross-section with botanical inclusions">
+          <defs>
+            <linearGradient id="bar" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#f4ede0"/>
+              <stop offset="100%" stop-color="#e3d4b7"/>
+            </linearGradient>
+          </defs>
+          <ellipse cx="200" cy="330" rx="150" ry="18" fill="#243623" opacity="0.08"/>
+          <g>
+            <rect x="70" y="120" width="260" height="180" rx="26" fill="url(#bar)" stroke="#243623" stroke-opacity="0.15"/>
+            <path d="M70 146 Q200 110 330 146" fill="none" stroke="#c2963a" stroke-width="3" stroke-opacity="0.5"/>
+            <circle cx="120" cy="200" r="10" fill="#c4707c" opacity="0.75"/>
+            <circle cx="165" cy="235" r="6" fill="#4e6b4c" opacity="0.7"/>
+            <circle cx="255" cy="190" r="8" fill="#c2963a" opacity="0.7"/>
+            <circle cx="290" cy="240" r="5" fill="#c4707c" opacity="0.6"/>
+            <circle cx="205" cy="255" r="7" fill="#4e6b4c" opacity="0.55"/>
+            <circle cx="150" cy="165" r="4" fill="#c2963a" opacity="0.6"/>
+            <circle cx="240" cy="150" r="5" fill="#c4707c" opacity="0.5"/>
+          </g>
+          <g stroke="#4e6b4c" stroke-width="2.5" opacity="0.75" fill="none" stroke-linecap="round">
+            <path d="M200 60 C 190 80, 190 95, 200 108 C 210 95, 210 80, 200 60 Z" fill="#4e6b4c" opacity="0.65" stroke="none"/>
+            <path d="M180 70 Q160 55 150 30" />
+            <path d="M220 70 Q240 55 250 30" />
+          </g>
+          <path d="M60 300 Q200 340 340 300" fill="none" stroke="#243623" stroke-opacity="0.12" stroke-width="1.5"/>
+        </svg>
+      </div>
+    </div>
+  </section>
+
+  <!-- MARQUEE -->
+  <div class="marquee-band" aria-hidden="true">
+    <div class="marquee-track">
+      <span>Aloe Vera</span><span>Neem</span><span>Sandalwood</span><span>Activated Charcoal</span><span>Hibiscus</span><span>Kesar & Oats</span><span>Avarampoo</span><span>Beetroot</span><span>12 Ayurvedic Herbs</span>
+      <span>Aloe Vera</span><span>Neem</span><span>Sandalwood</span><span>Activated Charcoal</span><span>Hibiscus</span><span>Kesar & Oats</span><span>Avarampoo</span><span>Beetroot</span><span>12 Ayurvedic Herbs</span>
+    </div>
+  </div>
+
+  <!-- MISSION -->
+  <section class="mission" id="mission">
+    <div class="wrap mission-grid">
+      <div>
+        <div class="eyebrow">The Flora Dew Mission</div>
+        <h2>Gentle on skin. Gentle on the earth.</h2>
+      </div>
+      <div>
+        <blockquote>We are dedicated to creating <em>handcrafted</em> soaps, hair oil and lip balms using natural ingredients that are gentle on the skin and the environment.</blockquote>
+        <p class="mission-foot">Our mission is to provide chemical-free formulations that promote healthy, nourished skin — made in small batches, tested on real routines, never on animals.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- PRODUCTS -->
+  <section class="products" id="products">
+    <div class="wrap">
+      <div class="section-head">
+        <h2>Shop the full range</h2>
+        <p>14 formulas across bathing, hair, lip care and colour — every one handmade in small batches.</p>
+      </div>
+      <div class="shop-tabs" id="shop-tabs" role="tablist" aria-label="Filter products by category"></div>
+      <div class="product-grid" id="product-grid"></div>
+    </div>
+  </section>
+
+  <!-- WHY NATURAL -->
+  <section class="why" id="why">
+    <div class="wrap">
+      <div class="section-head">
+        <h2>Why go natural</h2>
+        <p>Four commitments we don't compromise on, no matter the batch size.</p>
+      </div>
+      <div class="badge-grid">
+        <div class="badge"><span class="num">01</span><h4>No parabens</h4><p>Preservative-free formulas that let real ingredients do the work.</p></div>
+        <div class="badge"><span class="num">02</span><h4>No sulfates</h4><p>Cleansing agents that foam gently instead of stripping skin dry.</p></div>
+        <div class="badge"><span class="num">03</span><h4>Cruelty-free</h4><p>Every batch is tested on us and our customers — never on animals.</p></div>
+        <div class="badge"><span class="num">04</span><h4>Small-batch</h4><p>Made in limited quantities so freshness never sits on a shelf.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TESTIMONIALS -->
+  <section class="testimonials" id="reviews">
+    <div class="wrap">
+      <div class="section-head">
+        <h2>What our customers say</h2>
+        <p>Real routines, real skin, real feedback.</p>
+      </div>
+      <div class="t-grid">
+        <div class="t-card">
+          <div class="stars">★★★★★</div>
+          <p class="quote">"My skin stopped feeling tight after switching to the neem soap. Small change, big difference."</p>
+          <div class="who"><span class="avatar">A</span> Aditi R.</div>
+        </div>
+        <div class="t-card">
+          <div class="stars">★★★★★</div>
+          <p class="quote">"The hair oil doesn't leave that heavy residue I hated in other brands. Just clean, healthy shine."</p>
+          <div class="who"><span class="avatar">R</span> Rohan K.</div>
+        </div>
+        <div class="t-card">
+          <div class="stars">★★★★★</div>
+          <p class="quote">"Lip balm lives in every bag I own now. Melts in instantly and actually lasts the day."</p>
+          <div class="who"><span class="avatar">S</span> Sana M.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <div class="cta-banner">
+    <h2>Ready to switch your shelf to nature?</h2>
+    <a href="#products" class="btn-primary">Shop the collection →</a>
+  </div>
+
+  <!-- CONTACT -->
+  <section class="contact" id="contact">
+    <div class="wrap contact-grid">
+      <div>
+        <div class="eyebrow">Get in touch</div>
+        <h2>Questions about an order?</h2>
+        <p class="contact-lede">Whether it's a bulk order, a gifting box, or you just want to ask what suits your skin type — reach out and we'll get back to you personally.</p>
+      </div>
+      <div class="contact-cards">
+        <a class="contact-card" href="https://wa.me/917892834714" target="_blank" rel="noopener">
+          <span class="cc-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#4e6b4c" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg></span>
+          <div><div class="cc-label">WhatsApp / Phone</div><div class="cc-value">+91 78928 34714</div></div>
+        </a>
+        <a class="contact-card" href="mailto:hello@floradew.in">
+          <span class="cc-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#4e6b4c" stroke-width="2"><path d="M4 4h16v16H4z" stroke="none" fill="none"/><path d="M22 6l-10 7L2 6"/><rect x="2" y="4" width="20" height="16" rx="2"/></svg></span>
+          <div><div class="cc-label">Email</div><div class="cc-value">hello@floradew.in</div></div>
+        </a>
+        <a class="contact-card" href="https://instagram.com/flora_dew_official" target="_blank" rel="noopener">
+          <span class="cc-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#4e6b4c" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="18" cy="6" r="1" fill="#4e6b4c"/></svg></span>
+          <div><div class="cc-label">Instagram</div><div class="cc-value">@flora_dew_official</div></div>
+        </a>
+      </div>
+    </div>
+  </section>
+</main>
+
+<!-- CART DRAWER -->
+<div class="cart-overlay" id="cart-overlay"></div>
+<aside class="cart-drawer" id="cart-drawer" aria-label="Shopping cart">
+  <div class="cart-head">
+    <h3>Your Cart</h3>
+    <button class="cart-close" id="cart-close-btn" aria-label="Close cart">&times;</button>
+  </div>
+  <div class="cart-items" id="cart-items">
+    <div class="cart-empty">Your cart is empty. Add something you'd love.</div>
+  </div>
+  <div class="cart-foot">
+    <div class="cart-subtotal"><span>Subtotal</span><strong id="cart-subtotal">₹0</strong></div>
+    <button class="checkout-btn" id="checkout-btn" disabled>Checkout with Razorpay</button>
+    <p class="checkout-note">Secure UPI, cards & netbanking via Razorpay</p>
+  </div>
+</aside>
+
+<div class="modal-overlay" id="checkout-modal-overlay">
+  <div class="checkout-modal" role="dialog" aria-modal="true" aria-labelledby="checkout-modal-title">
+    <h3 id="checkout-modal-title">Delivery details</h3>
+    <p class="modal-sub">We need this to ship your order and send your payment receipt.</p>
+
+    <div class="modal-order-summary" id="modal-order-summary"></div>
+
+    <form id="checkout-form" novalidate>
+      <div class="form-field" id="field-name">
+        <label for="cf-name">Full name</label>
+        <input type="text" id="cf-name" autocomplete="name" required>
+        <div class="field-err">Please enter your name.</div>
+      </div>
+      <div class="form-row">
+        <div class="form-field" id="field-phone">
+          <label for="cf-phone">Phone number</label>
+          <input type="tel" id="cf-phone" autocomplete="tel" inputmode="numeric" placeholder="10-digit mobile" required>
+          <div class="field-err">Enter a valid 10-digit phone number.</div>
+        </div>
+        <div class="form-field" id="field-email">
+          <label for="cf-email">Email</label>
+          <input type="email" id="cf-email" autocomplete="email" required>
+          <div class="field-err">Enter a valid email address.</div>
+        </div>
+      </div>
+      <div class="form-field" id="field-address">
+        <label for="cf-address">Address (house no., street, area)</label>
+        <textarea id="cf-address" autocomplete="street-address" required></textarea>
+        <div class="field-err">Please enter your delivery address.</div>
+      </div>
+      <div class="form-row">
+        <div class="form-field" id="field-city">
+          <label for="cf-city">City</label>
+          <input type="text" id="cf-city" autocomplete="address-level2" required>
+          <div class="field-err">Please enter your city.</div>
+        </div>
+        <div class="form-field" id="field-state">
+          <label for="cf-state">State</label>
+          <input type="text" id="cf-state" autocomplete="address-level1" required>
+          <div class="field-err">Please enter your state.</div>
+        </div>
+        <div class="form-field" id="field-pincode">
+          <label for="cf-pincode">Pincode</label>
+          <input type="text" id="cf-pincode" autocomplete="postal-code" inputmode="numeric" placeholder="6-digit" required>
+          <div class="field-err">Enter a valid 6-digit pincode.</div>
+        </div>
+      </div>
+
+      <div class="modal-actions">
+        <button type="button" class="modal-cancel" id="modal-cancel-btn">Cancel</button>
+        <button type="submit" class="modal-submit" id="modal-submit-btn">Continue to payment →</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+
+<footer>
+  <div class="wrap">
+    <div class="footer-grid">
+      <div>
+        <a href="#top" class="logo" style="margin-bottom:14px;"><span class="dot"></span>Flora Dew</a>
+        <p>Handcrafted soaps, hair oils and lip balms — gentle on skin, gentle on the environment.</p>
+      </div>
+      <div>
+        <h5>Shop</h5>
+        <a href="#products">Soaps</a>
+        <a href="#products">Hair Oils</a>
+        <a href="#products">Lip Balms</a>
+        <a href="#products">Lip Colour</a>
+      </div>
+      <div>
+        <h5>Company</h5>
+        <a href="#mission">Our Mission</a>
+        <a href="#why">Why Natural</a>
+        <a href="#reviews">Reviews</a>
+      </div>
+      <div>
+        <h5>Support</h5>
+        <a href="#">Track Order</a>
+        <a href="#">Shipping Info</a>
+        <a href="#">Contact Us</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2026 Flora Dew. All rights reserved.</span>
+      <span>Made slow, on purpose.</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+  // ---------- Organization / Website structured data (SEO) ----------
+  (function(){
+    var orgSchema = {
+      "@context":"https://schema.org",
+      "@type":"Organization",
+      "name":"Flora Dew",
+      "url":"https://www.floradew.in/",
+      "logo":"https://www.floradew.in/logo.png",
+      "sameAs":[
+        "https://instagram.com/flora_dew_official"
+      ],
+      "contactPoint":[{
+        "@type":"ContactPoint",
+        "contactType":"customer service",
+        "email":"hello@floradew.in",
+        "areaServed":"IN",
+        "availableLanguage":["en"]
+      }]
+    };
+    var siteSchema = {
+      "@context":"https://schema.org",
+      "@type":"WebSite",
+      "name":"Flora Dew",
+      "url":"https://www.floradew.in/"
+    };
+    [orgSchema, siteSchema].forEach(function(obj){
+      var s = document.createElement('script');
+      s.type = 'application/ld+json';
+      s.text = JSON.stringify(obj);
+      document.head.appendChild(s);
+    });
+  })();
+
+  // ---------- Real product catalog ----------
+  var ICONS = {
+    soap: '<svg viewBox="0 0 120 120"><rect x="20" y="45" width="80" height="55" rx="20" fill="#e3d4b7" stroke="#243623" stroke-opacity="0.2"/><path d="M28 60 Q60 45 92 60" stroke="#c2963a" stroke-width="2.5" fill="none" opacity="0.6"/><circle cx="50" cy="75" r="6" fill="#c4707c" opacity="0.7"/><circle cx="72" cy="82" r="4" fill="#4e6b4c" opacity="0.6"/><circle cx="65" cy="65" r="3" fill="#c2963a" opacity="0.6"/></svg>',
+    soapDeco: '<svg viewBox="0 0 120 120"><circle cx="60" cy="70" r="14" fill="#c4707c" opacity="0.85"/><circle cx="42" cy="55" r="11" fill="#c2963a" opacity="0.8"/><circle cx="78" cy="55" r="11" fill="#4e6b4c" opacity="0.75"/><circle cx="60" cy="42" r="10" fill="#c4707c" opacity="0.7"/><rect x="57" y="18" width="6" height="20" rx="3" fill="#4e6b4c"/></svg>',
+    oil: '<svg viewBox="0 0 120 120"><path d="M50 25 C 40 40 40 55 50 65 C 60 55 60 40 50 25 Z" fill="#c2963a" opacity="0.75"/><rect x="42" y="60" width="16" height="40" rx="6" fill="#e3d4b7" stroke="#243623" stroke-opacity="0.2"/><rect x="46" y="52" width="8" height="10" fill="#4e6b4c"/><circle cx="78" cy="80" r="3" fill="#c2963a" opacity="0.6"/><circle cx="85" cy="65" r="2.5" fill="#c4707c" opacity="0.6"/></svg>',
+    balm: '<svg viewBox="0 0 120 120"><rect x="52" y="35" width="16" height="24" rx="6" fill="#4e6b4c"/><rect x="50" y="55" width="20" height="34" rx="8" fill="#c4707c" opacity="0.8"/><ellipse cx="60" cy="55" rx="10" ry="6" fill="#e3d4b7"/></svg>',
+    lipstick: '<svg viewBox="0 0 120 120"><rect x="50" y="30" width="20" height="18" rx="4" fill="#a5525e"/><rect x="48" y="46" width="24" height="44" rx="10" fill="#e3d4b7" stroke="#243623" stroke-opacity="0.2"/><rect x="53" y="70" width="14" height="6" fill="#c2963a" opacity="0.6"/></svg>'
+  };
+
+  var PRODUCTS = [
+    { cat:'soap', name:'Aloe Vera Handmade Soap', tag:'Bathing', icon:'soap',
+      desc:'Pure aloe vera and herbal essential oils, handmade in small batches for soft, glowing skin. Gentle enough for dry, sensitive and acne-prone skin.',
+      ing:['Aloe Vera','Herbal Extracts'],
+      variants:[{l:'100 g',p:99,m:179},{l:'70–80 g Prism',p:99,m:219},{l:'Combo of 2 (200 g)',p:179,m:358},{l:'Combo of 3 (100 g)',p:249,m:537}] },
+    { cat:'soap', name:'Charcoal Handmade Soap', tag:'Bathing', icon:'soap',
+      desc:'Activated charcoal draws out dirt, excess oil and impurities, leaving skin clean and rejuvenated. Suited to oily and acne-prone skin.',
+      ing:['Activated Charcoal'],
+      variants:[{l:'100 g',p:99,m:179},{l:'Combo of 2',p:179,m:358},{l:'Combo of 3',p:249,m:537}] },
+    { cat:'soap', name:'Charcoal & Multani Mitti Soap', tag:'Bathing', icon:'soap',
+      desc:'Cold-processed with Multani mitti to deep-cleanse pores, exfoliate gently and absorb excess oil for a clearer, healthier complexion.',
+      ing:['Charcoal','Multani Mitti'],
+      variants:[{l:'100 g',p:139,m:219}] },
+    { cat:'soap', name:'Neem Handmade Soap', tag:'Bathing', icon:'soap',
+      desc:'Pure neem extracts with antibacterial and antifungal properties help fight pimples and acne for clearer skin.',
+      ing:['Neem','Herbal Extracts'],
+      variants:[{l:'100 g',p:99,m:179},{l:'Sunburst 100 g',p:99,m:219},{l:'Combo of 2',p:179,m:358},{l:'Combo of 3',p:249,m:537}] },
+    { cat:'soap', name:'Sandalwood Handmade Soap', tag:'Bathing', icon:'soap',
+      desc:'Pure sandalwood extracts soothe skin, reduce blemishes and improve complexion, with a long-lasting natural fragrance.',
+      ing:['Sandalwood'],
+      variants:[{l:'100 g',p:99,m:179},{l:'Sunflower 100 g',p:130,m:219},{l:'Combo of 2',p:179,m:358},{l:'Combo of 3',p:249,m:537}] },
+    { cat:'soap', name:'Hibiscus & Aloe Vera Soap', tag:'Bathing', icon:'soap',
+      desc:'Improves skin elasticity and natural glow while soothing and calming sensitive, dry skin with antioxidants and minerals.',
+      ing:['Hibiscus','Aloe Vera'],
+      variants:[{l:'100 g',p:139,m:219}] },
+    { cat:'soap', name:'Kesar Oats Bath Soap', tag:'Bathing', icon:'soap',
+      desc:'Handcrafted with pure saffron and oats to gently cleanse, nourish and brighten normal to dry skin.',
+      ing:['Kesar (Saffron)','Oats'],
+      variants:[{l:'100 g',p:159,m:249}] },
+    { cat:'soap', name:'Avarampoo Cold-Processed Soap', tag:'Bathing', icon:'soap',
+      desc:'Avarampoo extract brightens skin tone and supports a natural glow, rich in antioxidants to purify and rejuvenate.',
+      ing:['Avarampoo Extract'],
+      variants:[{l:'100 g',p:139,m:219}] },
+    { cat:'soap', name:'Gentle Baby Soap', tag:'Baby Care', icon:'soap',
+      desc:'Vanilla essential oil, olive oil, cocoa and shea butter cleanse while nourishing delicate skin, with vitamins A & E. For kids above 2 years.',
+      ing:['Cocoa Butter','Shea Butter','Vanilla'],
+      variants:[{l:'Standard bar',p:139,m:199}] },
+    { cat:'soap', name:'Handcrafted Hanging Grape Bunch Soap', tag:'Decorative', icon:'soapDeco',
+      desc:'A luxurious, mess-free hanging soap for kitchen or bathroom that gently cleanses while leaving hands soft and hydrated.',
+      ing:['Glycerin Base'],
+      variants:[{l:'Blue',p:189,m:219},{l:'Green',p:189,m:219},{l:'Lavender',p:189,m:219},{l:'Orange',p:189,m:219},{l:'Pink',p:189,m:219},{l:'Strawberry',p:189,m:219},{l:'Yellow',p:189,m:219}] },
+    { cat:'oil', name:'12 Herbs Hair Growth Oil', tag:'Haircare', icon:'oil',
+      desc:'An Ayurvedic blend of 12 herbs — Bhringraj, Amla, Brahmi, Neem, Hibiscus and more — that nourishes the scalp, reduces hair fall and restores shine.',
+      ing:['Rosemary','Castor','Coconut','Amla'],
+      variants:[{l:'100 ml',p:149,m:219},{l:'200 ml',p:269,m:429}] },
+    { cat:'balm', name:'Beetroot & Shea Butter Lip Balm', tag:'Lip Care', icon:'balm',
+      desc:'Beetroot adds a subtle pinkish tint while shea butter keeps lips hydrated, soft and smooth all day — free from parabens and sulfates.',
+      ing:['Beetroot','Shea Butter'],
+      variants:[{l:'Pack of 1',p:109,m:199}] },
+    { cat:'balm', name:'Natural Creamy Lip Balm', tag:'Lip Care', icon:'balm',
+      desc:'A lightweight, creamy lemon-scented balm that glides on smooth and keeps lips nourished through the day.',
+      ing:['Lemon','Vitamin E'],
+      variants:[{l:'Lemon',p:109,m:199}] },
+    { cat:'lipstick', name:'Semi-Matte Lipstick', tag:'Lip Colour', icon:'lipstick',
+      desc:'A moisturising, creamy semi-matte lipstick with buildable, long-lasting coverage — comfortable enough for daily wear.',
+      ing:['Moisturising Base'],
+      variants:[{l:'Tomato Red',p:219,m:299},{l:'Velvet Maroon',p:219,m:299},{l:'Pink Blush',p:219,m:299}] }
+  ];
+
+  var CATS = [
+    {id:'all', label:'All Products'},
+    {id:'soap', label:'Soaps'},
+    {id:'oil', label:'Hair Oil'},
+    {id:'balm', label:'Lip Balms'},
+    {id:'lipstick', label:'Lip Colour'}
+  ];
+
+  (function renderShop(){
+    var tabsEl = document.getElementById('shop-tabs');
+    var gridEl = document.getElementById('product-grid');
+    if(!tabsEl || !gridEl) return;
+
+    CATS.forEach(function(c, i){
+      var b = document.createElement('button');
+      b.className = 'shop-tab' + (i===0 ? ' active' : '');
+      b.textContent = c.label;
+      b.dataset.cat = c.id;
+      b.setAttribute('role','tab');
+      b.addEventListener('click', function(){
+        tabsEl.querySelectorAll('.shop-tab').forEach(function(t){ t.classList.remove('active'); });
+        b.classList.add('active');
+        gridEl.querySelectorAll('.product-card').forEach(function(card){
+          var show = c.id === 'all' || card.dataset.cat === c.id;
+          card.classList.toggle('hidden', !show);
+        });
+      });
+      tabsEl.appendChild(b);
+    });
+
+    PRODUCTS.forEach(function(prod, idx){
+      var card = document.createElement('div');
+      card.className = 'product-card';
+      card.dataset.cat = prod.cat;
+      card.dataset.pidx = idx;
+      card.dataset.vidx = 0;
+
+      var ingHtml = prod.ing.map(function(i){ return '<span>'+i+'</span>'; }).join('');
+      var pillsHtml = prod.variants.map(function(v, vi){
+        return '<button class="variant-pill'+(vi===0?' active':'')+'" data-vi="'+vi+'" data-p="'+v.p+'" data-m="'+v.m+'">'+v.l+'</button>';
+      }).join('');
+      var off0 = Math.round((1 - prod.variants[0].p / prod.variants[0].m) * 100);
+
+      card.innerHTML =
+        '<span class="card-tag">'+prod.tag+'</span>' +
+        '<div class="icon-stage">'+ICONS[prod.icon]+'</div>' +
+        '<h3>'+prod.name+'</h3>' +
+        '<p class="desc">'+prod.desc+'</p>' +
+        '<div class="ingredient-row">'+ingHtml+'</div>' +
+        '<div class="variant-pills">'+pillsHtml+'</div>' +
+        '<div class="price-row">' +
+          '<span class="price-now">₹'+prod.variants[0].p+'</span>' +
+          '<span class="price-mrp">₹'+prod.variants[0].m+'</span>' +
+          '<span class="price-off">'+off0+'% off</span>' +
+        '</div>' +
+        '<button class="add-cart-btn">Add to cart</button>';
+
+      card.querySelectorAll('.variant-pill').forEach(function(pill){
+        pill.addEventListener('click', function(){
+          card.querySelectorAll('.variant-pill').forEach(function(p2){ p2.classList.remove('active'); });
+          pill.classList.add('active');
+          card.dataset.vidx = pill.dataset.vi;
+          var p = parseInt(pill.dataset.p, 10);
+          var m = parseInt(pill.dataset.m, 10);
+          var off = Math.round((1 - p/m) * 100);
+          card.querySelector('.price-now').textContent = '₹'+p;
+          card.querySelector('.price-mrp').textContent = '₹'+m;
+          card.querySelector('.price-off').textContent = off+'% off';
+        });
+      });
+
+      card.querySelector('.add-cart-btn').addEventListener('click', function(){
+        var vi = parseInt(card.dataset.vidx, 10);
+        addToCart(idx, vi);
+        var btn = card.querySelector('.add-cart-btn');
+        btn.textContent = 'Added ✓';
+        btn.classList.add('added');
+        setTimeout(function(){ btn.textContent = 'Add to cart'; btn.classList.remove('added'); }, 1200);
+      });
+
+      gridEl.appendChild(card);
+    });
+
+    var productSchemas = PRODUCTS.map(function(prod){
+      return {
+        "@context":"https://schema.org",
+        "@type":"Product",
+        "name":prod.name,
+        "description":prod.desc,
+        "brand":{"@type":"Brand","name":"Flora Dew"},
+        "category":prod.tag,
+        "offers":prod.variants.map(function(v){
+          return {
+            "@type":"Offer",
+            "name":v.l,
+            "price":v.p,
+            "priceCurrency":"INR",
+            "availability":"https://schema.org/InStock",
+            "url":"https://www.floradew.in/#products"
+          };
+        })
+      };
+    });
+    productSchemas.forEach(function(obj){
+      var s = document.createElement('script');
+      s.type = 'application/ld+json';
+      s.text = JSON.stringify(obj);
+      document.head.appendChild(s);
+    });
+  })();
+
+  // ---------- Cart state & drawer ----------
+  var CART = []; // { pidx, vidx, qty }
+
+  function addToCart(pidx, vidx){
+    var existing = CART.find(function(c){ return c.pidx === pidx && c.vidx === vidx; });
+    if(existing){ existing.qty += 1; }
+    else{ CART.push({ pidx: pidx, vidx: vidx, qty: 1 }); }
+    renderCart();
+    openCart();
+  }
+
+  function cartSubtotal(){
+    return CART.reduce(function(sum, item){
+      var prod = PRODUCTS[item.pidx];
+      var variant = prod.variants[item.vidx];
+      return sum + variant.p * item.qty;
+    }, 0);
+  }
+
+  function renderCart(){
+    var itemsEl = document.getElementById('cart-items');
+    var countEl = document.getElementById('cart-count');
+    var subtotalEl = document.getElementById('cart-subtotal');
+    var checkoutBtn = document.getElementById('checkout-btn');
+    if(!itemsEl) return;
+
+    var totalQty = CART.reduce(function(s,c){ return s + c.qty; }, 0);
+    if(totalQty > 0){
+      countEl.style.display = 'flex';
+      countEl.textContent = totalQty;
+    } else {
+      countEl.style.display = 'none';
+    }
+
+    if(CART.length === 0){
+      itemsEl.innerHTML = '<div class="cart-empty">Your cart is empty. Add something you\'d love.</div>';
+      checkoutBtn.disabled = true;
+    } else {
+      itemsEl.innerHTML = CART.map(function(item, ci){
+        var prod = PRODUCTS[item.pidx];
+        var variant = prod.variants[item.vidx];
+        var lineTotal = variant.p * item.qty;
+        return '<div class="cart-item" data-ci="'+ci+'">' +
+          '<div class="ci-icon">'+ICONS[prod.icon]+'</div>' +
+          '<div class="ci-info">' +
+            '<div class="ci-name">'+prod.name+'</div>' +
+            '<div class="ci-variant">'+variant.l+' · ₹'+variant.p+'</div>' +
+            '<div class="ci-row">' +
+              '<div class="qty-stepper">' +
+                '<button class="qty-minus" data-ci="'+ci+'">−</button>' +
+                '<span>'+item.qty+'</span>' +
+                '<button class="qty-plus" data-ci="'+ci+'">+</button>' +
+              '</div>' +
+              '<span class="ci-line-total">₹'+lineTotal+'</span>' +
+            '</div>' +
+            '<button class="ci-remove" data-ci="'+ci+'">Remove</button>' +
+          '</div>' +
+        '</div>';
+      }).join('');
+      checkoutBtn.disabled = false;
+
+      itemsEl.querySelectorAll('.qty-plus').forEach(function(btn){
+        btn.addEventListener('click', function(){ CART[+btn.dataset.ci].qty += 1; renderCart(); });
+      });
+      itemsEl.querySelectorAll('.qty-minus').forEach(function(btn){
+        btn.addEventListener('click', function(){
+          var i = +btn.dataset.ci;
+          CART[i].qty -= 1;
+          if(CART[i].qty <= 0) CART.splice(i,1);
+          renderCart();
+        });
+      });
+      itemsEl.querySelectorAll('.ci-remove').forEach(function(btn){
+        btn.addEventListener('click', function(){ CART.splice(+btn.dataset.ci, 1); renderCart(); });
+      });
+    }
+
+    subtotalEl.textContent = '₹' + cartSubtotal();
+  }
+
+  function openCart(){
+    document.getElementById('cart-drawer').classList.add('open');
+    document.getElementById('cart-overlay').classList.add('open');
+  }
+  function closeCart(){
+    document.getElementById('cart-drawer').classList.remove('open');
+    document.getElementById('cart-overlay').classList.remove('open');
+  }
+
+  document.getElementById('cart-open-btn').addEventListener('click', openCart);
+  document.getElementById('cart-close-btn').addEventListener('click', closeCart);
+  document.getElementById('cart-overlay').addEventListener('click', closeCart);
+
+  // ---------- Razorpay checkout ----------
+  // TODO: replace with your live/test Razorpay Key ID (public, safe to expose client-side)
+  var RAZORPAY_KEY_ID = 'rzp_test_T9WrTgqzLwOq2z';
+
+  var modalOverlay = document.getElementById('checkout-modal-overlay');
+  var checkoutForm = document.getElementById('checkout-form');
+
+  function openCheckoutModal(){
+    if(CART.length === 0) return;
+    var summaryEl = document.getElementById('modal-order-summary');
+    var rows = CART.map(function(item){
+      var prod = PRODUCTS[item.pidx];
+      var variant = prod.variants[item.vidx];
+      return '<div class="mos-row"><span>'+prod.name+' ('+variant.l+') × '+item.qty+'</span><span>₹'+(variant.p*item.qty)+'</span></div>';
+    }).join('');
+    summaryEl.innerHTML = rows + '<div class="mos-row mos-total"><span>Total</span><span>₹'+cartSubtotal()+'</span></div>';
+    modalOverlay.classList.add('open');
+  }
+  function closeCheckoutModal(){
+    modalOverlay.classList.remove('open');
+  }
+
+  document.getElementById('checkout-btn').addEventListener('click', function(){
+    closeCart();
+    openCheckoutModal();
+  });
+  document.getElementById('modal-cancel-btn').addEventListener('click', closeCheckoutModal);
+  modalOverlay.addEventListener('click', function(e){
+    if(e.target === modalOverlay) closeCheckoutModal();
+  });
+
+  function setFieldError(id, hasError){
+    var el = document.getElementById(id);
+    if(el) el.classList.toggle('error', hasError);
+  }
+
+  function validateCheckoutForm(data){
+    var ok = true;
+    if(!data.name.trim()){ setFieldError('field-name', true); ok = false; } else setFieldError('field-name', false);
+    if(!/^[6-9]\d{9}$/.test(data.phone.trim())){ setFieldError('field-phone', true); ok = false; } else setFieldError('field-phone', false);
+    if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email.trim())){ setFieldError('field-email', true); ok = false; } else setFieldError('field-email', false);
+    if(!data.address.trim()){ setFieldError('field-address', true); ok = false; } else setFieldError('field-address', false);
+    if(!data.city.trim()){ setFieldError('field-city', true); ok = false; } else setFieldError('field-city', false);
+    if(!data.state.trim()){ setFieldError('field-state', true); ok = false; } else setFieldError('field-state', false);
+    if(!/^\d{6}$/.test(data.pincode.trim())){ setFieldError('field-pincode', true); ok = false; } else setFieldError('field-pincode', false);
+    return ok;
+  }
+
+  checkoutForm.addEventListener('submit', function(e){
+    e.preventDefault();
+    if(CART.length === 0) return;
+
+    var customer = {
+      name: document.getElementById('cf-name').value,
+      phone: document.getElementById('cf-phone').value,
+      email: document.getElementById('cf-email').value,
+      address: document.getElementById('cf-address').value,
+      city: document.getElementById('cf-city').value,
+      state: document.getElementById('cf-state').value,
+      pincode: document.getElementById('cf-pincode').value
+    };
+
+    if(!validateCheckoutForm(customer)) return;
+
+    var items = CART.map(function(item){
+      var prod = PRODUCTS[item.pidx];
+      var variant = prod.variants[item.vidx];
+      return { name: prod.name, variant: variant.l, price: variant.p, qty: item.qty };
+    });
+
+    var amountPaise = cartSubtotal() * 100;
+    var submitBtn = document.getElementById('modal-submit-btn');
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Preparing checkout…';
+
+    fetch('/.netlify/functions/create-order', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ amount: amountPaise, currency: 'INR', customer: customer, items: items })
+    })
+      .then(function(res){ return res.json(); })
+      .then(function(order){
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Continue to payment →';
+
+        if(order.error){
+          alert('Could not start checkout. Please try again in a moment.');
+          return;
+        }
+
+        var rzp = new Razorpay({
+          key: RAZORPAY_KEY_ID,
+          amount: amountPaise,
+          currency: 'INR',
+          name: 'Flora Dew',
+          description: 'Order payment',
+          order_id: order.id,
+          handler: function(response){
+            fetch('/.netlify/functions/verify-payment', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(response)
+            })
+              .then(function(res){ return res.json(); })
+              .then(function(result){
+                if(result.verified){
+                  CART = [];
+                  renderCart();
+                  closeCheckoutModal();
+                  checkoutForm.reset();
+                  alert('Payment successful! Thank you, ' + customer.name + ' — a confirmation has been sent to ' + customer.email + '.');
+                } else {
+                  alert('Payment could not be verified. Please contact us if you were charged.');
+                }
+              });
+          },
+          prefill: {
+            name: customer.name,
+            email: customer.email,
+            contact: customer.phone
+          },
+          theme: { color: '#243623' }
+        });
+        rzp.open();
+      })
+      .catch(function(err){
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Continue to payment →';
+        alert('Could not start checkout. Please try again in a moment.');
+        console.error(err);
+      });
+  });
+
+  // Dew-drop cursor follower (desktop pointer only, respects reduced motion)
+  (function(){
+    var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    var isFine = window.matchMedia('(pointer: fine)').matches;
+    var dew = document.getElementById('dew');
+    if(reduce || !isFine || !dew) return;
+    var x=0,y=0,tx=0,ty=0;
+    window.addEventListener('mousemove', function(e){
+      tx = e.clientX; ty = e.clientY;
+      dew.style.opacity = 1;
+    });
+    function loop(){
+      x += (tx - x) * 0.18;
+      y += (ty - y) * 0.18;
+      dew.style.left = x + 'px';
+      dew.style.top = y + 'px';
+      requestAnimationFrame(loop);
+    }
+    loop();
+    document.addEventListener('mouseleave', function(){ dew.style.opacity = 0; });
+  })();
+</script>
+
+</body>
+</html>

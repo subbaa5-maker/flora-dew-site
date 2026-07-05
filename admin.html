@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Flora Dew — Order Dashboard</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,450;0,9..144,600;1,9..144,450;1,9..144,600&family=Work+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --moss-ink:#243623;
+    --milk-sage:#eef1e6;
+    --milk-sage-2:#e3e8d6;
+    --rosewater:#c4707c;
+    --rosewater-deep:#a5525e;
+    --honey-oil:#c2963a;
+    --fern:#4e6b4c;
+    --paper:#f8f8f3;
+    --line: rgba(36,54,35,0.14);
+    --shadow-soft: 0 20px 40px -24px rgba(36,54,35,0.35);
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{
+    background:var(--milk-sage);
+    color:var(--moss-ink);
+    font-family:'Work Sans', sans-serif;
+    line-height:1.5;
+    min-height:100vh;
+  }
+  h1,h2,h3{font-family:'Fraunces', serif; font-weight:450; letter-spacing:-0.01em;}
+  a{color:inherit;}
+  .wrap{max-width:1100px; margin:0 auto; padding:28px clamp(16px,4vw,40px) 80px;}
+
+  /* ---------- Login gate ---------- */
+  .gate{
+    min-height:100vh;
+    display:flex; align-items:center; justify-content:center;
+    padding:20px;
+  }
+  .gate-card{
+    background:var(--paper);
+    border-radius:22px;
+    padding:36px clamp(24px,5vw,44px);
+    width:min(400px, 100%);
+    box-shadow:var(--shadow-soft);
+    text-align:center;
+  }
+  .gate-card h1{font-size:1.6rem; margin-bottom:6px;}
+  .gate-card p{font-size:0.9rem; color:rgba(36,54,35,0.65); margin-bottom:22px;}
+  .gate-card input{
+    width:100%;
+    border:1px solid var(--line);
+    background:#fff;
+    border-radius:10px;
+    padding:12px 14px;
+    font-size:0.95rem;
+    font-family:inherit;
+    margin-bottom:14px;
+  }
+  .gate-card input:focus{outline:none; border-color:var(--fern);}
+  .gate-card button{
+    width:100%;
+    background:var(--moss-ink); color:var(--milk-sage);
+    border:none; border-radius:100px;
+    padding:13px; font-size:0.95rem; font-weight:600;
+    cursor:pointer;
+  }
+  .gate-error{color:var(--rosewater-deep); font-size:0.85rem; margin-top:12px; display:none;}
+
+  /* ---------- Dashboard header ---------- */
+  .dash-header{
+    display:flex; justify-content:space-between; align-items:center;
+    flex-wrap:wrap; gap:14px;
+    margin-bottom:26px;
+  }
+  .dash-header h1{font-size:1.8rem;}
+  .dash-header .logo-dot{width:9px;height:9px;border-radius:50%;background:var(--rosewater); display:inline-block; margin-right:8px;}
+  .header-actions{display:flex; gap:10px; flex-wrap:wrap;}
+  .btn{
+    border-radius:100px;
+    padding:10px 18px;
+    font-size:0.85rem;
+    font-weight:600;
+    cursor:pointer;
+    border:1px solid var(--line);
+    background:#fff;
+  }
+  .btn:hover{background:var(--milk-sage-2);}
+  .btn-primary{background:var(--moss-ink); color:var(--milk-sage); border-color:var(--moss-ink);}
+  .btn-primary:hover{opacity:0.92; background:var(--moss-ink);}
+
+  /* ---------- Stats ---------- */
+  .stats-row{
+    display:grid;
+    grid-template-columns:repeat(auto-fit, minmax(150px, 1fr));
+    gap:14px;
+    margin-bottom:26px;
+  }
+  .stat-card{
+    background:var(--paper);
+    border-radius:16px;
+    padding:18px 20px;
+    box-shadow:var(--shadow-soft);
+  }
+  .stat-card .stat-label{font-size:0.72rem; text-transform:uppercase; letter-spacing:0.06em; color:rgba(36,54,35,0.55); margin-bottom:6px;}
+  .stat-card .stat-value{font-family:'Fraunces',serif; font-size:1.7rem; font-weight:600;}
+
+  /* ---------- Controls ---------- */
+  .controls{
+    display:flex; gap:12px; flex-wrap:wrap;
+    margin-bottom:20px;
+  }
+  .controls input[type="text"]{
+    flex:1; min-width:200px;
+    border:1px solid var(--line);
+    background:#fff;
+    border-radius:10px;
+    padding:11px 14px;
+    font-family:inherit;
+    font-size:0.9rem;
+  }
+  .controls select{
+    border:1px solid var(--line);
+    background:#fff;
+    border-radius:10px;
+    padding:11px 14px;
+    font-family:inherit;
+    font-size:0.9rem;
+  }
+  .controls input:focus, .controls select:focus{outline:none; border-color:var(--fern);}
+
+  /* ---------- Order cards ---------- */
+  .order-list{display:flex; flex-direction:column; gap:14px;}
+  .order-card{
+    background:var(--paper);
+    border-radius:16px;
+    padding:20px 22px;
+    box-shadow:var(--shadow-soft);
+  }
+  .order-top{
+    display:flex; justify-content:space-between; align-items:flex-start;
+    flex-wrap:wrap; gap:10px;
+    margin-bottom:14px;
+    padding-bottom:14px;
+    border-bottom:1px solid var(--line);
+  }
+  .order-customer{font-size:1.05rem; font-weight:600;}
+  .order-meta{font-size:0.8rem; color:rgba(36,54,35,0.6); margin-top:3px;}
+  .status-badge{
+    font-size:0.72rem; font-weight:700; text-transform:uppercase; letter-spacing:0.04em;
+    padding:5px 12px; border-radius:100px;
+  }
+  .status-paid{background:rgba(78,107,76,0.15); color:var(--fern);}
+  .status-pending{background:rgba(194,150,58,0.18); color:var(--honey-oil);}
+  .order-body{display:grid; grid-template-columns:1.3fr 1fr; gap:20px;}
+  @media (max-width:640px){ .order-body{grid-template-columns:1fr;} }
+  .order-items{font-size:0.88rem;}
+  .order-items .item-row{display:flex; justify-content:space-between; padding:4px 0;}
+  .order-items .item-total{font-weight:700; border-top:1px solid var(--line); margin-top:6px; padding-top:8px;}
+  .order-contact{font-size:0.85rem; color:rgba(36,54,35,0.8);}
+  .order-contact div{margin-bottom:4px;}
+  .order-contact .oc-label{font-weight:600; color:var(--moss-ink);}
+  .order-ids{font-size:0.72rem; color:rgba(36,54,35,0.45); margin-top:12px; word-break:break-all;}
+
+  .empty-state{
+    text-align:center; padding:60px 20px;
+    color:rgba(36,54,35,0.55);
+    font-size:0.95rem;
+  }
+  .loading{text-align:center; padding:60px 20px; color:rgba(36,54,35,0.6);}
+</style>
+</head>
+<body>
+
+<!-- LOGIN GATE -->
+<div class="gate" id="gate">
+  <div class="gate-card">
+    <h1>Order Dashboard</h1>
+    <p>Enter your admin secret to view Flora Dew orders.</p>
+    <input type="password" id="secret-input" placeholder="Admin secret" autocomplete="off">
+    <button id="unlock-btn">Unlock</button>
+    <div class="gate-error" id="gate-error">Incorrect secret, or none set yet — check ADMIN_SECRET in Netlify.</div>
+  </div>
+</div>
+
+<!-- DASHBOARD (hidden until unlocked) -->
+<div class="wrap" id="dashboard" style="display:none;">
+  <div class="dash-header">
+    <h1><span class="logo-dot"></span>Flora Dew Orders</h1>
+    <div class="header-actions">
+      <button class="btn" id="refresh-btn">↻ Refresh</button>
+      <button class="btn" id="export-btn">⤓ Export CSV</button>
+      <button class="btn" id="lock-btn">Lock</button>
+    </div>
+  </div>
+
+  <div class="stats-row" id="stats-row"></div>
+
+  <div class="controls">
+    <input type="text" id="search-input" placeholder="Search by name, phone, email, or order ID…">
+    <select id="status-filter">
+      <option value="all">All statuses</option>
+      <option value="paid">Paid</option>
+      <option value="pending">Pending</option>
+    </select>
+  </div>
+
+  <div id="order-list" class="order-list">
+    <div class="loading">Loading orders…</div>
+  </div>
+</div>
+
+<script>
+  var ALL_ORDERS = [];
+
+  var gate = document.getElementById('gate');
+  var dashboard = document.getElementById('dashboard');
+  var secretInput = document.getElementById('secret-input');
+  var gateError = document.getElementById('gate-error');
+
+  function currentSecret(){
+    return sessionStorage.getItem('fd_admin_secret') || '';
+  }
+
+  function tryUnlock(secret){
+    fetch('/.netlify/functions/list-orders?secret=' + encodeURIComponent(secret))
+      .then(function(res){
+        if(!res.ok) throw new Error('unauthorized');
+        return res.json();
+      })
+      .then(function(orders){
+        sessionStorage.setItem('fd_admin_secret', secret);
+        ALL_ORDERS = orders || [];
+        gate.style.display = 'none';
+        dashboard.style.display = 'block';
+        renderAll();
+      })
+      .catch(function(){
+        gateError.style.display = 'block';
+      });
+  }
+
+  document.getElementById('unlock-btn').addEventListener('click', function(){
+    gateError.style.display = 'none';
+    var val = secretInput.value.trim();
+    if(!val) return;
+    tryUnlock(val);
+  });
+  secretInput.addEventListener('keydown', function(e){
+    if(e.key === 'Enter') document.getElementById('unlock-btn').click();
+  });
+
+  document.getElementById('lock-btn').addEventListener('click', function(){
+    sessionStorage.removeItem('fd_admin_secret');
+    dashboard.style.display = 'none';
+    gate.style.display = 'flex';
+    secretInput.value = '';
+  });
+
+  document.getElementById('refresh-btn').addEventListener('click', function(){
+    tryUnlock(currentSecret());
+  });
+
+  // Auto-unlock if this browser tab already unlocked earlier in the session
+  (function(){
+    var existing = currentSecret();
+    if(existing) tryUnlock(existing);
+  })();
+
+  function fmtDate(iso){
+    if(!iso) return '—';
+    var d = new Date(iso);
+    return d.toLocaleString('en-IN', { day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' });
+  }
+
+  function orderTotal(order){
+    return order.items.reduce(function(sum, it){ return sum + it.price * it.qty; }, 0);
+  }
+
+  function renderStats(orders){
+    var paid = orders.filter(function(o){ return o.status === 'paid'; });
+    var pending = orders.filter(function(o){ return o.status === 'pending'; });
+    var revenue = paid.reduce(function(sum, o){ return sum + orderTotal(o); }, 0);
+
+    var stats = [
+      { label:'Total orders', value: orders.length },
+      { label:'Paid', value: paid.length },
+      { label:'Pending', value: pending.length },
+      { label:'Revenue (paid)', value: '₹' + revenue.toLocaleString('en-IN') }
+    ];
+
+    document.getElementById('stats-row').innerHTML = stats.map(function(s){
+      return '<div class="stat-card"><div class="stat-label">'+s.label+'</div><div class="stat-value">'+s.value+'</div></div>';
+    }).join('');
+  }
+
+  function renderOrders(orders){
+    var listEl = document.getElementById('order-list');
+    if(orders.length === 0){
+      listEl.innerHTML = '<div class="empty-state">No orders match this view yet.</div>';
+      return;
+    }
+
+    listEl.innerHTML = orders.map(function(order){
+      var total = orderTotal(order);
+      var itemRows = order.items.map(function(it){
+        return '<div class="item-row"><span>'+it.name+' ('+it.variant+') × '+it.qty+'</span><span>₹'+(it.price*it.qty)+'</span></div>';
+      }).join('');
+      var statusClass = order.status === 'paid' ? 'status-paid' : 'status-pending';
+      var c = order.customer || {};
+
+      return '' +
+        '<div class="order-card">' +
+          '<div class="order-top">' +
+            '<div>' +
+              '<div class="order-customer">'+(c.name || 'Unknown customer')+'</div>' +
+              '<div class="order-meta">'+fmtDate(order.paidAt || order.createdAt)+'</div>' +
+            '</div>' +
+            '<span class="status-badge '+statusClass+'">'+order.status+'</span>' +
+          '</div>' +
+          '<div class="order-body">' +
+            '<div class="order-items">' +
+              itemRows +
+              '<div class="item-row item-total"><span>Total</span><span>₹'+total+'</span></div>' +
+            '</div>' +
+            '<div class="order-contact">' +
+              '<div><span class="oc-label">Phone:</span> '+(c.phone || '—')+'</div>' +
+              '<div><span class="oc-label">Email:</span> '+(c.email || '—')+'</div>' +
+              '<div><span class="oc-label">Address:</span> '+(c.address || '—')+', '+(c.city || '')+', '+(c.state || '')+' - '+(c.pincode || '')+'</div>' +
+            '</div>' +
+          '</div>' +
+          '<div class="order-ids">Order: '+order.orderId+(order.paymentId ? ' · Payment: '+order.paymentId : '')+'</div>' +
+        '</div>';
+    }).join('');
+  }
+
+  function applyFilters(){
+    var q = document.getElementById('search-input').value.trim().toLowerCase();
+    var status = document.getElementById('status-filter').value;
+
+    var filtered = ALL_ORDERS.filter(function(order){
+      if(status !== 'all' && order.status !== status) return false;
+      if(!q) return true;
+      var c = order.customer || {};
+      var haystack = [c.name, c.phone, c.email, order.orderId, order.paymentId].join(' ').toLowerCase();
+      return haystack.indexOf(q) !== -1;
+    });
+
+    renderOrders(filtered);
+  }
+
+  function renderAll(){
+    renderStats(ALL_ORDERS);
+    applyFilters();
+  }
+
+  document.getElementById('search-input').addEventListener('input', applyFilters);
+  document.getElementById('status-filter').addEventListener('change', applyFilters);
+
+  document.getElementById('export-btn').addEventListener('click', function(){
+    if(ALL_ORDERS.length === 0) return;
+    var header = ['Order ID','Status','Date','Name','Phone','Email','Address','City','State','Pincode','Items','Total','Payment ID'];
+    var rows = ALL_ORDERS.map(function(o){
+      var c = o.customer || {};
+      var itemsStr = o.items.map(function(it){ return it.name+' ('+it.variant+') x'+it.qty; }).join('; ');
+      return [
+        o.orderId, o.status, fmtDate(o.paidAt || o.createdAt),
+        c.name, c.phone, c.email, c.address, c.city, c.state, c.pincode,
+        itemsStr, orderTotal(o), o.paymentId || ''
+      ].map(function(v){
+        v = (v === undefined || v === null) ? '' : String(v);
+        return '"' + v.replace(/"/g,'""') + '"';
+      }).join(',');
+    });
+    var csv = [header.join(',')].concat(rows).join('\n');
+    var blob = new Blob([csv], { type:'text/csv;charset=utf-8;' });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = 'flora-dew-orders-' + new Date().toISOString().slice(0,10) + '.csv';
+    a.click();
+    URL.revokeObjectURL(url);
+  });
+</script>
+
+</body>
+</html>
