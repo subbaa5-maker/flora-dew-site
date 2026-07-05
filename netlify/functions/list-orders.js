@@ -1,31 +1,12 @@
 // netlify/functions/list-orders.js
 //
-// A minimal way to see your orders without building a full admin dashboard.
-// Visit:  https://YOUR-SITE.netlify.app/.netlify/functions/list-orders?secret=YOUR_ADMIN_SECRET
-// It returns every saved order (pending + paid) as JSON, newest first.
+// Secret-protected: returns every saved order (pending + paid) as JSON,
+// newest first. Used by admin.html.
 //
 // Required Netlify environment variable:
-//   ADMIN_SECRET   — pick any long random string yourself; treat it like a password.
-//
-// Optional (fixes MissingBlobsEnvironmentError on some accounts — see SETUP.md):
-//   BLOBS_SITE_ID
-//   BLOBS_TOKEN
+//   ADMIN_SECRET
 
-const { getStore } = require('@netlify/blobs');
-
-// Netlify's automatic Blobs configuration doesn't always kick in reliably.
-// If BLOBS_SITE_ID + BLOBS_TOKEN are set, use them explicitly; otherwise
-// fall back to auto-detection.
-function ordersStore() {
-  if (process.env.BLOBS_SITE_ID && process.env.BLOBS_TOKEN) {
-    return getStore({
-      name: 'orders',
-      siteID: process.env.BLOBS_SITE_ID,
-      token: process.env.BLOBS_TOKEN,
-    });
-  }
-  return getStore('orders');
-}
+const { ordersStore } = require('./lib/blobs');
 
 exports.handler = async function (event) {
   const secret = (event.queryStringParameters || {}).secret;
@@ -34,12 +15,10 @@ exports.handler = async function (event) {
   }
 
   try {
-    const ordersStoreInstance = ordersStore();
-    const { blobs } = await ordersStoreInstance.list();
+    const store = ordersStore();
+    const { blobs } = await store.list();
 
-    const orders = await Promise.all(
-      blobs.map((b) => ordersStoreInstance.get(b.key, { type: 'json' }))
-    );
+    const orders = await Promise.all(blobs.map((b) => store.get(b.key, { type: 'json' })));
 
     orders.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
