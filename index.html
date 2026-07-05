@@ -1382,7 +1382,7 @@
     lipstick: '<svg viewBox="0 0 120 120"><rect x="50" y="30" width="20" height="18" rx="4" fill="#a5525e"/><rect x="48" y="46" width="24" height="44" rx="10" fill="#e3d4b7" stroke="#243623" stroke-opacity="0.2"/><rect x="53" y="70" width="14" height="6" fill="#c2963a" opacity="0.6"/></svg>'
   };
 
-  var PRODUCTS = [
+  var DEFAULT_PRODUCTS = [
     { id:'aloe-vera-soap', cat:'soap', name:'Aloe Vera Handmade Soap', tag:'Bathing', icon:'soap',
       desc:'Pure aloe vera and herbal essential oils, handmade in small batches for soft, glowing skin. Gentle enough for dry, sensitive and acne-prone skin.',
       ing:['Aloe Vera','Herbal Extracts'],
@@ -1441,13 +1441,26 @@
       variants:[{l:'Tomato Red',p:219,m:299},{l:'Velvet Maroon',p:219,m:299},{l:'Pink Blush',p:219,m:299}] }
   ];
 
-  var CATS = [
-    {id:'all', label:'All Products'},
+  var DEFAULT_CATS = [
     {id:'soap', label:'Soaps'},
     {id:'oil', label:'Hair Oil'},
     {id:'balm', label:'Lip Balms'},
     {id:'lipstick', label:'Lip Colour'}
   ];
+
+  // The live catalogue/category list — starts out equal to the built-in
+  // defaults above, then gets replaced with whatever's actually stored
+  // in Admin (see initShop() near the bottom), same pattern as PRODUCTS.
+  // The "All Products" tab is prepended once here rather than stored
+  // server-side, since it isn't a real catalogue.
+  var CATS = [{id:'all', label:'All Products'}].concat(DEFAULT_CATS);
+
+  // The live catalog used everywhere below. Starts out equal to the
+  // built-in defaults, then gets replaced with whatever's actually
+  // stored in Admin (see initShop() near the bottom) before anything is
+  // rendered or ordered — so both the offline fallback and the real,
+  // admin-editable catalog work with the exact same code.
+  var PRODUCTS = DEFAULT_PRODUCTS;
 
   // ---------- FAQ accordion ----------
   (function(){
@@ -1461,10 +1474,13 @@
     });
   })();
 
-  (function renderShop(){
+  function renderShop(){
     var tabsEl = document.getElementById('shop-tabs');
     var gridEl = document.getElementById('product-grid');
     if(!tabsEl || !gridEl) return;
+
+    tabsEl.innerHTML = '';
+    gridEl.innerHTML = '';
 
     CATS.forEach(function(c, i){
       var b = document.createElement('button');
@@ -1562,10 +1578,10 @@
       s.text = JSON.stringify(obj);
       document.head.appendChild(s);
     });
-  })();
+  }
 
   // ---------- Real product photos (uploaded from the admin dashboard) ----------
-  (function loadProductPhotos(){
+  function loadProductPhotos(){
     fetch('/.netlify/functions/product-images')
       .then(function(res){ return res.ok ? res.json() : {}; })
       .then(function(imagesByProduct){
@@ -1607,7 +1623,7 @@
         });
       })
       .catch(function(){ /* keep the placeholder icons if this fails */ });
-  })();
+  }
 
   // ---------- Editable site images (uploaded from the admin dashboard) ----------
   // Hero, About Us / Mission, Why Natural, Reviews, and the Footer logo
@@ -1663,7 +1679,7 @@
   })();
 
   // ---------- Store open/closed (holiday) banner ----------
-  (function loadStoreStatus(){
+  function loadStoreStatus(){
     fetch('/.netlify/functions/store-settings')
       .then(function(res){ return res.ok ? res.json() : null; })
       .then(function(settings){
@@ -1687,6 +1703,30 @@
         if(checkoutBtn) checkoutBtn.disabled = true;
       })
       .catch(function(){ /* if this fails, ordering stays enabled as normal */ });
+  }
+
+  // ---------- Load the live product catalog, then build the shop ----------
+  // Products (name, description, price, size/weight variants, etc.) are
+  // managed from the admin dashboard and stored server-side, so the
+  // catalog can change without a code deploy. We fetch it once, up
+  // front, and fall back to the built-in defaults if that fails for any
+  // reason — the rest of the page (cart, checkout) depends on PRODUCTS
+  // being final and stable before anything renders.
+  (function initShop(){
+    Promise.all([
+      fetch('/.netlify/functions/products').then(function(res){ return res.ok ? res.json() : null; }).catch(function(){ return null; }),
+      fetch('/.netlify/functions/categories').then(function(res){ return res.ok ? res.json() : null; }).catch(function(){ return null; })
+    ]).then(function(results){
+      var products = results[0];
+      var categories = results[1];
+      PRODUCTS = (Array.isArray(products) && products.length) ? products : DEFAULT_PRODUCTS;
+      var cats = (Array.isArray(categories) && categories.length) ? categories : DEFAULT_CATS;
+      CATS = [{id:'all', label:'All Products'}].concat(cats);
+    }).then(function(){
+      renderShop();
+      loadProductPhotos();
+      loadStoreStatus();
+    });
   })();
 
   // ---------- Cart state & drawer ----------

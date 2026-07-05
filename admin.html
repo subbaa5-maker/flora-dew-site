@@ -239,6 +239,85 @@
     font-size:0.82rem; color:rgba(36,54,35,0.65); background:var(--paper);
     border:1px solid var(--line); border-radius:12px; padding:12px 16px; margin-bottom:16px;
   }
+  .pm-card.pm-card-draft{border:1.5px dashed var(--fern);}
+
+  /* ---------- Product edit form ---------- */
+  .pm-field-grid{display:grid; grid-template-columns:2fr 1fr 1fr 1fr; gap:12px; margin-bottom:12px;}
+  @media (max-width:720px){ .pm-field-grid{grid-template-columns:1fr 1fr;} }
+  .pm-field label{display:block; font-size:0.7rem; text-transform:uppercase; letter-spacing:0.04em; color:rgba(36,54,35,0.55); margin-bottom:5px;}
+  .pm-field input, .pm-field select, .pm-field textarea{
+    width:100%; border:1px solid var(--line); background:#fff;
+    border-radius:8px; padding:8px 10px; font-family:inherit; font-size:0.85rem;
+  }
+  .pm-field input:focus, .pm-field select:focus, .pm-field textarea:focus{outline:none; border-color:var(--fern);}
+  .pm-field-full{margin-bottom:12px;}
+  .pm-field-full textarea{min-height:64px; resize:vertical;}
+  .pm-variants-block{margin-bottom:14px;}
+  .pm-variants-block > label{display:block; font-size:0.7rem; text-transform:uppercase; letter-spacing:0.04em; color:rgba(36,54,35,0.55); margin-bottom:8px;}
+  .pm-variant-row{display:flex; gap:8px; align-items:center; margin-bottom:8px;}
+  .pm-variant-row input{
+    border:1px solid var(--line); background:#fff; border-radius:8px; padding:8px 10px;
+    font-family:inherit; font-size:0.85rem;
+  }
+  .pm-variant-row input:focus{outline:none; border-color:var(--fern);}
+  .pm-variant-label{flex:2; min-width:0;}
+  .pm-variant-price, .pm-variant-mrp{flex:1; min-width:0;}
+  .pm-variant-remove-btn{
+    flex-shrink:0; width:26px; height:26px; border-radius:50%; border:none;
+    background:rgba(165,82,94,0.12); color:var(--rosewater-deep); font-size:0.85rem; cursor:pointer; line-height:26px;
+  }
+  .pm-variant-remove-btn:hover{background:rgba(165,82,94,0.22);}
+  .pm-add-variant-btn{
+    border:1px dashed var(--line); background:none; color:var(--moss-ink);
+    border-radius:8px; padding:7px 14px; font-size:0.8rem; font-weight:600; cursor:pointer;
+  }
+  .pm-add-variant-btn:hover{background:var(--milk-sage-2);}
+  .pm-form-actions{display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin-bottom:16px; padding-bottom:16px; border-bottom:1px dashed var(--line);}
+  .pm-delete-btn{
+    background:rgba(165,82,94,0.1); color:var(--rosewater-deep); border:1px solid rgba(165,82,94,0.3);
+    border-radius:100px; padding:9px 16px; font-size:0.82rem; font-weight:600; cursor:pointer;
+  }
+  .pm-delete-btn:hover{background:rgba(165,82,94,0.18);}
+  .pm-image-locked{font-size:0.8rem; color:rgba(36,54,35,0.55); font-style:italic;}
+
+  /* ---------- Catalogue (category) manager ---------- */
+  .cat-list{display:flex; flex-direction:column; gap:8px; margin-bottom:18px;}
+  .cat-row{
+    display:flex; align-items:center; gap:10px; background:var(--paper);
+    border-radius:12px; padding:10px 12px; box-shadow:var(--shadow-soft);
+  }
+  .cat-row-arrows{display:flex; flex-direction:column; gap:2px;}
+  .cat-arrow-btn{
+    border:1px solid var(--line); background:#fff; color:var(--moss-ink);
+    border-radius:6px; width:22px; height:20px; line-height:18px; font-size:0.7rem; cursor:pointer; padding:0;
+  }
+  .cat-arrow-btn:hover:not(:disabled){background:var(--milk-sage-2);}
+  .cat-arrow-btn:disabled{opacity:0.3; cursor:default;}
+  .cat-row input[type="text"]{
+    flex:1; min-width:0; border:1px solid var(--line); background:#fff;
+    border-radius:8px; padding:8px 10px; font-family:inherit; font-size:0.85rem;
+  }
+  .cat-row input[type="text"]:focus{outline:none; border-color:var(--fern);}
+  .cat-row-id{font-size:0.72rem; color:rgba(36,54,35,0.45); flex-shrink:0; white-space:nowrap;}
+  .cat-row-save-btn{
+    border:1px solid var(--line); background:none; color:var(--moss-ink);
+    border-radius:100px; padding:7px 14px; font-size:0.78rem; font-weight:600; cursor:pointer; flex-shrink:0;
+  }
+  .cat-row-save-btn:hover{background:var(--milk-sage-2);}
+  .cat-row-delete-btn{
+    background:rgba(165,82,94,0.1); color:var(--rosewater-deep); border:1px solid rgba(165,82,94,0.3);
+    border-radius:100px; padding:7px 14px; font-size:0.78rem; font-weight:600; cursor:pointer; flex-shrink:0;
+  }
+  .cat-row-delete-btn:hover{background:rgba(165,82,94,0.18);}
+  .cat-row-msg{width:100%; font-size:0.78rem; margin-top:2px;}
+  .cat-row-msg.err{color:var(--rosewater-deep);}
+  .cat-row-msg.ok{color:var(--fern);}
+  .cat-add-row{display:flex; gap:10px; max-width:520px;}
+  .cat-add-row input{
+    flex:1; border:1px solid var(--line); background:#fff; border-radius:8px;
+    padding:9px 12px; font-family:inherit; font-size:0.9rem;
+  }
+  .cat-add-row input:focus{outline:none; border-color:var(--fern);}
 
   /* ---------- Crop modal ---------- */
   .crop-modal-overlay{
@@ -326,7 +405,8 @@
 
   <div class="tab-nav">
     <button class="tab-btn active" data-tab="orders">Orders</button>
-    <button class="tab-btn" data-tab="products">Product Photos</button>
+    <button class="tab-btn" data-tab="products">Products</button>
+    <button class="tab-btn" data-tab="catalogues">Catalogues</button>
     <button class="tab-btn" data-tab="images">Site Images</button>
     <button class="tab-btn" data-tab="settings">Store Status</button>
   </div>
@@ -357,19 +437,28 @@
   </div>
 
   <div class="tab-panel" id="tab-products">
-    <div class="pm-section-note">Best results: square or 4:3 photos, at least 1000px on the shortest side. You'll be able to crop each photo right after choosing it.</div>
+    <div class="pm-section-note">Edit a product's name, description, price, size/weight, category, and photos below — or add a brand new product. Best photo results: square or 4:3, at least 1000px on the shortest side; you'll be able to crop right after choosing a photo.</div>
     <div class="pm-controls">
       <select id="pm-category-filter">
         <option value="all">All categories</option>
-        <option value="soap">Soaps</option>
-        <option value="oil">Hair Oil</option>
-        <option value="balm">Lip Balms</option>
-        <option value="lipstick">Lip Colour</option>
       </select>
+      <button type="button" class="btn btn-primary" id="pm-add-product-btn" style="margin-left:auto;">+ Add new product</button>
     </div>
     <div id="pm-grid" class="pm-grid">
       <div class="loading">Loading products…</div>
     </div>
+  </div>
+
+  <div class="tab-panel" id="tab-catalogues">
+    <div class="pm-section-note">Catalogues are the categories shown as tabs on the shop (Soaps, Hair Oil, etc). Add a new one, rename one, reorder them, or remove one that's no longer used — you can't remove a catalogue that still has products in it.</div>
+    <div id="cat-list" class="cat-list">
+      <div class="loading">Loading catalogues…</div>
+    </div>
+    <div class="cat-add-row">
+      <input type="text" id="cat-new-label" placeholder="New catalogue name, e.g. Body Scrubs">
+      <button type="button" class="btn btn-primary" id="cat-add-btn">+ Add catalogue</button>
+    </div>
+    <span class="pm-upload-msg pm-save-msg" id="cat-add-msg"></span>
   </div>
 
   <div class="tab-panel" id="tab-images">
@@ -729,82 +818,423 @@
   });
 
   // =====================================================================
-  // Product photo manager
+  // Product manager — full catalog editing (name, category, description,
+  // price, size/weight variants, photos) plus add/remove products.
+  // Product text/price data lives in the "products" backend function;
+  // photos stay in the separate "product-images" store, keyed by id.
   // =====================================================================
-  // Mirrors the product catalog in index.html (id/name/category only —
-  // this is just enough to know which products exist and let you attach
-  // photos to each one; prices/descriptions still live in index.html).
-  var PRODUCTS_META = [
-    { id:'aloe-vera-soap', name:'Aloe Vera Handmade Soap', cat:'soap' },
-    { id:'charcoal-soap', name:'Charcoal Handmade Soap', cat:'soap' },
-    { id:'charcoal-multani-mitti-soap', name:'Charcoal & Multani Mitti Soap', cat:'soap' },
-    { id:'neem-soap', name:'Neem Handmade Soap', cat:'soap' },
-    { id:'sandalwood-soap', name:'Sandalwood Handmade Soap', cat:'soap' },
-    { id:'hibiscus-aloe-vera-soap', name:'Hibiscus & Aloe Vera Soap', cat:'soap' },
-    { id:'kesar-oats-soap', name:'Kesar Oats Bath Soap', cat:'soap' },
-    { id:'avarampoo-soap', name:'Avarampoo Cold-Processed Soap', cat:'soap' },
-    { id:'gentle-baby-soap', name:'Gentle Baby Soap', cat:'soap' },
-    { id:'hanging-grape-soap', name:'Handcrafted Hanging Grape Bunch Soap', cat:'soap' },
-    { id:'12-herbs-hair-oil', name:'12 Herbs Hair Growth Oil', cat:'oil' },
-    { id:'beetroot-shea-lip-balm', name:'Beetroot & Shea Butter Lip Balm', cat:'balm' },
-    { id:'natural-creamy-lip-balm', name:'Natural Creamy Lip Balm', cat:'balm' },
-    { id:'semi-matte-lipstick', name:'Semi-Matte Lipstick', cat:'lipstick' }
-  ];
-  var MAX_IMAGES_PER_PRODUCT = 8;
+  var PRODUCTS = []; // full catalog, loaded from the server
   var PRODUCT_IMAGES = {}; // productId -> array of data-URLs, loaded from the server
+  var NEW_PRODUCT_DRAFT = null; // set while a new, not-yet-saved product is being added
+  var MAX_IMAGES_PER_PRODUCT = 8;
+
+  var CATEGORIES = []; // [{id,label}], loaded from the server — see loadCategories()
+
+  function categoryOptions(){
+    return CATEGORIES.map(function(c){ return { v:c.id, l:c.label }; });
+  }
+
+  var ICON_OPTIONS = [
+    { v:'soap', l:'Soap bar' },
+    { v:'soapDeco', l:'Decorative hanging soap' },
+    { v:'oil', l:'Oil bottle' },
+    { v:'balm', l:'Lip balm tin' },
+    { v:'lipstick', l:'Lipstick' }
+  ];
+
+  function escapeHtml(str){
+    return String(str == null ? '' : str)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+
+  function blankDraftProduct(){
+    return { cat:(CATEGORIES[0] && CATEGORIES[0].id) || '', name:'', tag:'', desc:'', icon:'soap', ing:[], variants:[{ l:'', p:'', m:'' }] };
+  }
+
+  function rebuildCategoryFilterOptions(){
+    var filterEl = document.getElementById('pm-category-filter');
+    if(!filterEl) return;
+    var current = filterEl.value;
+    filterEl.innerHTML = '<option value="all">All categories</option>' +
+      CATEGORIES.map(function(c){ return '<option value="'+c.id+'">'+escapeHtml(c.label)+'</option>'; }).join('');
+    if(CATEGORIES.some(function(c){ return c.id === current; })) filterEl.value = current;
+  }
+
+  function loadCategories(){
+    return fetch('/.netlify/functions/categories').then(function(res){ return res.json(); }).then(function(cats){
+      CATEGORIES = Array.isArray(cats) ? cats : [];
+      rebuildCategoryFilterOptions();
+    }).catch(function(){
+      CATEGORIES = [];
+    });
+  }
 
   function loadProductManager(){
-    fetch('/.netlify/functions/product-images')
-      .then(function(res){ return res.json(); })
-      .then(function(images){
-        PRODUCT_IMAGES = images || {};
-        renderProductManager();
-      })
-      .catch(function(){
-        document.getElementById('pm-grid').innerHTML = '<div class="empty-state">Could not load product photos.</div>';
-      });
+    return Promise.all([
+      loadCategories(),
+      fetch('/.netlify/functions/products').then(function(res){ return res.json(); }),
+      fetch('/.netlify/functions/product-images').then(function(res){ return res.json(); })
+    ]).then(function(results){
+      PRODUCTS = results[1] || [];
+      PRODUCT_IMAGES = results[2] || {};
+      renderProductManager();
+      renderCataloguesManager();
+    }).catch(function(){
+      document.getElementById('pm-grid').innerHTML = '<div class="empty-state">Could not load products.</div>';
+    });
+  }
+
+  function buildSelectOptions(options, selectedValue){
+    return options.map(function(o){
+      return '<option value="'+o.v+'"'+(o.v === selectedValue ? ' selected' : '')+'>'+o.l+'</option>';
+    }).join('');
+  }
+
+  function buildVariantRowHtml(v){
+    v = v || { l:'', p:'', m:'' };
+    return '' +
+      '<div class="pm-variant-row">' +
+        '<input type="text" class="pm-variant-label" placeholder="Size / weight, e.g. 100 g" value="'+escapeHtml(v.l)+'">' +
+        '<input type="number" min="0" class="pm-variant-price" placeholder="Price ₹" value="'+escapeHtml(v.p)+'">' +
+        '<input type="number" min="0" class="pm-variant-mrp" placeholder="MRP ₹" value="'+escapeHtml(v.m)+'">' +
+        '<button type="button" class="pm-variant-remove-btn" title="Remove this size/weight">&times;</button>' +
+      '</div>';
+  }
+
+  function buildProductCardHtml(p, isDraft){
+    var key = isDraft ? 'draft' : p.id;
+    var images = isDraft ? [] : (PRODUCT_IMAGES[p.id] || []);
+    var thumbs = images.map(function(src, i){
+      return '<div class="pm-thumb"><img src="'+src+'" alt=""><button type="button" class="pm-thumb-del" data-pid="'+p.id+'" data-idx="'+i+'">&times;</button></div>';
+    }).join('');
+    var full = images.length >= MAX_IMAGES_PER_PRODUCT;
+
+    var imagesBlock = isDraft
+      ? '<p class="pm-image-locked">Save this product first — then you can add photos here.</p>'
+      : '' +
+        '<div class="pm-thumbs">'+thumbs+'</div>' +
+        '<div class="pm-upload-row">' +
+          '<input type="file" accept="image/*" multiple data-pid="'+p.id+'" class="pm-file-input" '+(full ? 'disabled' : '')+'>' +
+          '<span class="pm-upload-msg" id="pm-msg-'+p.id+'">'+(full ? 'Maximum reached — delete a photo to add another.' : '')+'</span>' +
+          '<span class="pm-dim-hint">Best results: square or 4:3, at least 1000px on the shortest side.</span>' +
+        '</div>';
+
+    var variantRows = (p.variants && p.variants.length ? p.variants : [{ l:'', p:'', m:'' }])
+      .map(buildVariantRowHtml).join('');
+
+    return '' +
+      '<div class="pm-card'+(isDraft ? ' pm-card-draft' : '')+'" data-pid="'+(isDraft ? '' : p.id)+'" data-draft="'+(isDraft ? '1' : '0')+'">' +
+        '<div class="pm-card-head">' +
+          '<span class="pm-name">'+(isDraft ? 'New product' : escapeHtml(p.name))+'</span>' +
+          (isDraft ? '' : '<span class="pm-count">'+images.length+' / '+MAX_IMAGES_PER_PRODUCT+' images</span>') +
+        '</div>' +
+
+        '<div class="pm-field-grid">' +
+          '<div class="pm-field"><label>Product name</label><input type="text" class="pm-input-name" value="'+escapeHtml(p.name)+'"></div>' +
+          '<div class="pm-field"><label>Category</label><select class="pm-input-cat">'+buildSelectOptions(categoryOptions(), p.cat)+'</select></div>' +
+          '<div class="pm-field"><label>Badge / tag</label><input type="text" class="pm-input-tag" placeholder="e.g. Bathing" value="'+escapeHtml(p.tag)+'"></div>' +
+          '<div class="pm-field"><label>Placeholder icon</label><select class="pm-input-icon">'+buildSelectOptions(ICON_OPTIONS, p.icon)+'</select></div>' +
+        '</div>' +
+
+        '<div class="pm-field pm-field-full"><label>Description</label><textarea class="pm-input-desc">'+escapeHtml(p.desc)+'</textarea></div>' +
+        '<div class="pm-field pm-field-full"><label>Key ingredients (comma separated)</label><input type="text" class="pm-input-ing" placeholder="e.g. Aloe Vera, Herbal Extracts" value="'+escapeHtml((p.ing || []).join(', '))+'"></div>' +
+
+        '<div class="pm-variants-block">' +
+          '<label>Sizes / weights &amp; pricing</label>' +
+          '<div class="pm-variant-rows">'+variantRows+'</div>' +
+          '<button type="button" class="pm-add-variant-btn">+ Add size / weight</button>' +
+        '</div>' +
+
+        '<div class="pm-form-actions">' +
+          '<button type="button" class="btn btn-primary pm-save-btn">'+(isDraft ? 'Create product' : 'Save changes')+'</button>' +
+          '<button type="button" class="pm-delete-btn">'+(isDraft ? 'Discard' : 'Delete product')+'</button>' +
+          '<span class="pm-upload-msg pm-save-msg"></span>' +
+        '</div>' +
+
+        imagesBlock +
+      '</div>';
   }
 
   function renderProductManager(){
     var catFilter = document.getElementById('pm-category-filter').value;
     var gridEl = document.getElementById('pm-grid');
-    var list = PRODUCTS_META.filter(function(p){ return catFilter === 'all' || p.cat === catFilter; });
+    var list = PRODUCTS.filter(function(p){ return catFilter === 'all' || p.cat === catFilter; });
 
-    gridEl.innerHTML = list.map(function(p){
-      var images = PRODUCT_IMAGES[p.id] || [];
-      var thumbs = images.map(function(src, i){
-        return '<div class="pm-thumb"><img src="'+src+'" alt=""><button type="button" class="pm-thumb-del" data-pid="'+p.id+'" data-idx="'+i+'">&times;</button></div>';
-      }).join('');
-      var full = images.length >= MAX_IMAGES_PER_PRODUCT;
+    var html = '';
+    if(NEW_PRODUCT_DRAFT){ html += buildProductCardHtml(NEW_PRODUCT_DRAFT, true); }
+    html += list.map(function(p){ return buildProductCardHtml(p, false); }).join('');
 
-      return '' +
-        '<div class="pm-card" data-pid="'+p.id+'">' +
-          '<div class="pm-card-head">' +
-            '<span class="pm-name">'+p.name+'</span>' +
-            '<span class="pm-count">'+images.length+' / '+MAX_IMAGES_PER_PRODUCT+' images</span>' +
-          '</div>' +
-          '<div class="pm-thumbs">'+thumbs+'</div>' +
-          '<div class="pm-upload-row">' +
-            '<input type="file" accept="image/*" multiple data-pid="'+p.id+'" class="pm-file-input" '+(full ? 'disabled' : '')+'>' +
-            '<span class="pm-upload-msg" id="pm-msg-'+p.id+'">'+(full ? 'Maximum reached — delete a photo to add another.' : '')+'</span>' +
-          '</div>' +
-        '</div>';
-    }).join('');
-
-    gridEl.querySelectorAll('.pm-file-input').forEach(function(input){
-      input.addEventListener('change', function(){
-        handleFileUpload(input.dataset.pid, input.files);
-        input.value = '';
-      });
-    });
-    gridEl.querySelectorAll('.pm-thumb-del').forEach(function(btn){
-      btn.addEventListener('click', function(){
-        deleteProductImage(btn.dataset.pid, parseInt(btn.dataset.idx, 10));
-      });
-    });
+    gridEl.innerHTML = html || '<div class="empty-state">No products in this category yet.</div>';
   }
 
   document.getElementById('pm-category-filter').addEventListener('change', renderProductManager);
+
+  document.getElementById('pm-add-product-btn').addEventListener('click', function(){
+    if(NEW_PRODUCT_DRAFT) return; // already adding one
+    NEW_PRODUCT_DRAFT = blankDraftProduct();
+    renderProductManager();
+    var draftCard = document.querySelector('.pm-card-draft');
+    if(draftCard) draftCard.scrollIntoView({ behavior:'smooth', block:'center' });
+  });
+
+  function readVariantRows(cardEl){
+    return Array.prototype.slice.call(cardEl.querySelectorAll('.pm-variant-row')).map(function(row){
+      return {
+        l: row.querySelector('.pm-variant-label').value.trim(),
+        p: parseFloat(row.querySelector('.pm-variant-price').value),
+        m: parseFloat(row.querySelector('.pm-variant-mrp').value)
+      };
+    }).filter(function(v){ return v.l || !isNaN(v.p) || !isNaN(v.m); });
+  }
+
+  function handleSaveProduct(cardEl){
+    var isDraft = cardEl.dataset.draft === '1';
+    var msgEl = cardEl.querySelector('.pm-save-msg');
+    var saveBtn = cardEl.querySelector('.pm-save-btn');
+
+    var name = cardEl.querySelector('.pm-input-name').value.trim();
+    var cat = cardEl.querySelector('.pm-input-cat').value;
+    var tag = cardEl.querySelector('.pm-input-tag').value.trim();
+    var desc = cardEl.querySelector('.pm-input-desc').value.trim();
+    var icon = cardEl.querySelector('.pm-input-icon').value;
+    var ing = cardEl.querySelector('.pm-input-ing').value.split(',').map(function(s){ return s.trim(); }).filter(Boolean);
+    var variants = readVariantRows(cardEl);
+
+    if(!name){
+      msgEl.className = 'pm-upload-msg pm-save-msg err'; msgEl.textContent = 'Product name is required.'; return;
+    }
+    if(variants.length === 0){
+      msgEl.className = 'pm-upload-msg pm-save-msg err'; msgEl.textContent = 'Add at least one size/weight with a price.'; return;
+    }
+    for(var i=0;i<variants.length;i++){
+      var v = variants[i];
+      if(!v.l || isNaN(v.p) || v.p <= 0 || isNaN(v.m) || v.m <= 0){
+        msgEl.className = 'pm-upload-msg pm-save-msg err'; msgEl.textContent = 'Each size/weight needs a label, a price, and an MRP.'; return;
+      }
+    }
+
+    var product = { cat:cat, name:name, tag:tag, desc:desc, icon:icon, ing:ing, variants:variants };
+    if(!isDraft) product.id = cardEl.dataset.pid;
+
+    saveBtn.disabled = true;
+    msgEl.className = 'pm-upload-msg pm-save-msg'; msgEl.textContent = 'Saving…';
+
+    fetch('/.netlify/functions/products', {
+      method:'POST',
+      headers:{ 'Content-Type':'application/json' },
+      body: JSON.stringify({ secret: currentSecret(), action:'upsert', product: product })
+    })
+      .then(function(res){ return res.json(); })
+      .then(function(result){
+        saveBtn.disabled = false;
+        if(!result || !result.success) throw new Error((result && result.error) || 'Could not save product.');
+        if(isDraft) NEW_PRODUCT_DRAFT = null;
+        PRODUCTS = result.products || PRODUCTS;
+        renderProductManager();
+      })
+      .catch(function(err){
+        saveBtn.disabled = false;
+        msgEl.className = 'pm-upload-msg pm-save-msg err';
+        msgEl.textContent = (err && err.message) || 'Could not save product — please try again.';
+      });
+  }
+
+  function handleDeleteProduct(cardEl){
+    var isDraft = cardEl.dataset.draft === '1';
+    if(isDraft){
+      NEW_PRODUCT_DRAFT = null;
+      renderProductManager();
+      return;
+    }
+    var pid = cardEl.dataset.pid;
+    var name = cardEl.querySelector('.pm-input-name').value || pid;
+    if(!confirm('Delete "'+name+'"? This removes it from the shop. Its saved photos stay in storage in case you re-add it later.')) return;
+
+    fetch('/.netlify/functions/products', {
+      method:'POST',
+      headers:{ 'Content-Type':'application/json' },
+      body: JSON.stringify({ secret: currentSecret(), action:'delete', id: pid })
+    })
+      .then(function(res){ return res.json(); })
+      .then(function(result){
+        if(!result || !result.success) throw new Error((result && result.error) || 'Could not delete product.');
+        PRODUCTS = result.products || PRODUCTS;
+        renderProductManager();
+      })
+      .catch(function(){ alert('Could not delete that product — please try again.'); });
+  }
+
+  // Event delegation on the whole grid — cards get rebuilt often (on
+  // save/delete/upload), so we bind once here instead of per-render.
+  var pmGridEl = document.getElementById('pm-grid');
+  pmGridEl.addEventListener('click', function(e){
+    var addVariantBtn = e.target.closest('.pm-add-variant-btn');
+    if(addVariantBtn){
+      var rowsWrap = addVariantBtn.closest('.pm-variants-block').querySelector('.pm-variant-rows');
+      rowsWrap.insertAdjacentHTML('beforeend', buildVariantRowHtml());
+      return;
+    }
+    var removeVariantBtn = e.target.closest('.pm-variant-remove-btn');
+    if(removeVariantBtn){
+      var row = removeVariantBtn.closest('.pm-variant-row');
+      var rows = row.parentNode.querySelectorAll('.pm-variant-row');
+      if(rows.length > 1) row.remove();
+      else { row.querySelectorAll('input').forEach(function(inp){ inp.value = ''; }); }
+      return;
+    }
+    var saveBtn = e.target.closest('.pm-save-btn');
+    if(saveBtn){ handleSaveProduct(saveBtn.closest('.pm-card')); return; }
+
+    var deleteBtn = e.target.closest('.pm-delete-btn');
+    if(deleteBtn){ handleDeleteProduct(deleteBtn.closest('.pm-card')); return; }
+
+    var thumbDel = e.target.closest('.pm-thumb-del');
+    if(thumbDel){ deleteProductImage(thumbDel.dataset.pid, parseInt(thumbDel.dataset.idx, 10)); return; }
+  });
+  pmGridEl.addEventListener('change', function(e){
+    var fileInput = e.target.closest('.pm-file-input');
+    if(fileInput){
+      handleFileUpload(fileInput.dataset.pid, fileInput.files);
+      fileInput.value = '';
+    }
+  });
+
+  // =====================================================================
+  // Catalogues (categories) manager — add, rename, reorder, and remove
+  // the category "buckets" (Soaps, Hair Oil, etc) that products belong
+  // to and that show up as tabs on the shop. Lives in the "categories"
+  // backend function, separate from product text/price data.
+  // =====================================================================
+  function renderCataloguesManager(){
+    var listEl = document.getElementById('cat-list');
+    if(!listEl) return;
+    if(!CATEGORIES.length){
+      listEl.innerHTML = '<div class="empty-state">No catalogues yet.</div>';
+      return;
+    }
+    listEl.innerHTML = CATEGORIES.map(function(c, i){
+      return '' +
+        '<div class="cat-row" data-cid="'+c.id+'">' +
+          '<div class="cat-row-arrows">' +
+            '<button type="button" class="cat-arrow-btn cat-up-btn" title="Move up" '+(i===0?'disabled':'')+'>&uarr;</button>' +
+            '<button type="button" class="cat-arrow-btn cat-down-btn" title="Move down" '+(i===CATEGORIES.length-1?'disabled':'')+'>&darr;</button>' +
+          '</div>' +
+          '<input type="text" class="cat-input-label" value="'+escapeHtml(c.label)+'">' +
+          '<span class="cat-row-id">'+escapeHtml(c.id)+'</span>' +
+          '<button type="button" class="cat-row-save-btn">Save</button>' +
+          '<button type="button" class="cat-row-delete-btn">Delete</button>' +
+          '<span class="cat-row-msg"></span>' +
+        '</div>';
+    }).join('');
+  }
+
+  function afterCategoriesChanged(newCategories){
+    CATEGORIES = newCategories || CATEGORIES;
+    rebuildCategoryFilterOptions();
+    renderCataloguesManager();
+    renderProductManager(); // category dropdowns on product cards need refreshing too
+  }
+
+  var catListEl = document.getElementById('cat-list');
+  if(catListEl){
+    catListEl.addEventListener('click', function(e){
+      var row = e.target.closest('.cat-row');
+      if(!row) return;
+      var cid = row.dataset.cid;
+      var msgEl = row.querySelector('.cat-row-msg');
+
+      if(e.target.closest('.cat-row-save-btn')){
+        var newLabel = row.querySelector('.cat-input-label').value.trim();
+        if(!newLabel){
+          msgEl.className = 'cat-row-msg err'; msgEl.textContent = 'Name can\'t be empty.'; return;
+        }
+        msgEl.className = 'cat-row-msg'; msgEl.textContent = 'Saving…';
+        fetch('/.netlify/functions/categories', {
+          method:'POST',
+          headers:{ 'Content-Type':'application/json' },
+          body: JSON.stringify({ secret: currentSecret(), action:'upsert', category:{ id:cid, label:newLabel } })
+        })
+          .then(function(res){ return res.json(); })
+          .then(function(result){
+            if(!result || !result.success) throw new Error((result && result.error) || 'Could not save.');
+            afterCategoriesChanged(result.categories);
+          })
+          .catch(function(err){
+            msgEl.className = 'cat-row-msg err'; msgEl.textContent = (err && err.message) || 'Could not save — please try again.';
+          });
+        return;
+      }
+
+      if(e.target.closest('.cat-row-delete-btn')){
+        var label = row.querySelector('.cat-input-label').value || cid;
+        if(!confirm('Delete the "'+label+'" catalogue? This only works if no products use it.')) return;
+        fetch('/.netlify/functions/categories', {
+          method:'POST',
+          headers:{ 'Content-Type':'application/json' },
+          body: JSON.stringify({ secret: currentSecret(), action:'delete', id: cid })
+        })
+          .then(function(res){ return res.json(); })
+          .then(function(result){
+            if(!result || !result.success) throw new Error((result && result.error) || 'Could not delete.');
+            afterCategoriesChanged(result.categories);
+          })
+          .catch(function(err){
+            msgEl.className = 'cat-row-msg err'; msgEl.textContent = (err && err.message) || 'Could not delete — please try again.';
+          });
+        return;
+      }
+
+      if(e.target.closest('.cat-up-btn') || e.target.closest('.cat-down-btn')){
+        var idx = CATEGORIES.findIndex(function(c){ return c.id === cid; });
+        var dir = e.target.closest('.cat-up-btn') ? -1 : 1;
+        var swapIdx = idx + dir;
+        if(swapIdx < 0 || swapIdx >= CATEGORIES.length) return;
+        var reordered = CATEGORIES.slice();
+        var tmp = reordered[idx]; reordered[idx] = reordered[swapIdx]; reordered[swapIdx] = tmp;
+        var order = reordered.map(function(c){ return c.id; });
+        fetch('/.netlify/functions/categories', {
+          method:'POST',
+          headers:{ 'Content-Type':'application/json' },
+          body: JSON.stringify({ secret: currentSecret(), action:'reorder', order: order })
+        })
+          .then(function(res){ return res.json(); })
+          .then(function(result){
+            if(!result || !result.success) throw new Error((result && result.error) || 'Could not reorder.');
+            afterCategoriesChanged(result.categories);
+          })
+          .catch(function(){ alert('Could not reorder — please try again.'); });
+        return;
+      }
+    });
+  }
+
+  var catAddBtn = document.getElementById('cat-add-btn');
+  if(catAddBtn){
+    catAddBtn.addEventListener('click', function(){
+      var inputEl = document.getElementById('cat-new-label');
+      var msgEl = document.getElementById('cat-add-msg');
+      var label = inputEl.value.trim();
+      if(!label){
+        msgEl.className = 'pm-upload-msg pm-save-msg err'; msgEl.textContent = 'Enter a name for the new catalogue.'; return;
+      }
+      msgEl.className = 'pm-upload-msg pm-save-msg'; msgEl.textContent = 'Adding…';
+      fetch('/.netlify/functions/categories', {
+        method:'POST',
+        headers:{ 'Content-Type':'application/json' },
+        body: JSON.stringify({ secret: currentSecret(), action:'upsert', category:{ label:label } })
+      })
+        .then(function(res){ return res.json(); })
+        .then(function(result){
+          if(!result || !result.success) throw new Error((result && result.error) || 'Could not add catalogue.');
+          inputEl.value = '';
+          msgEl.className = 'pm-upload-msg pm-save-msg'; msgEl.textContent = '';
+          afterCategoriesChanged(result.categories);
+        })
+        .catch(function(err){
+          msgEl.className = 'pm-upload-msg pm-save-msg err'; msgEl.textContent = (err && err.message) || 'Could not add — please try again.';
+        });
+    });
+  }
 
   // Resize + compress an already-loaded data-URL image in-browser, so
   // blobs stay small and uploads stay fast — most phone photos are 3-6 MB

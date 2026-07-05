@@ -6,7 +6,7 @@ order storage, and email receipts.
 
 ```
 index.html                            ← the website (shop, cart, checkout form, SEO tags)
-admin.html                            ← order dashboard + product photo manager + store status
+admin.html                            ← order dashboard + product manager + store status
 robots.txt                            ← tells search engines what to crawl
 sitemap.xml                           ← list of pages for search engines
 netlify.toml                          ← tells Netlify where the functions live
@@ -14,12 +14,35 @@ package.json                          ← dependencies the functions need
 netlify/functions/create-order.js     ← creates a Razorpay order + saves the pending order
 netlify/functions/verify-payment.js   ← confirms payment, saves it as "paid", emails receipts
 netlify/functions/list-orders.js      ← lets you view all saved orders (simple admin view)
+netlify/functions/products.js         ← stores/serves the product catalog (name, price, sizes, etc.)
+netlify/functions/categories.js       ← stores/serves the catalogue/category list (Soaps, Hair Oil, etc.)
 netlify/functions/product-images.js   ← stores/serves up to 8 photos per product (admin uploads)
 netlify/functions/site-images.js      ← stores/serves editable Hero/About/Why/Reviews/Footer-logo images
 netlify/functions/store-settings.js   ← holiday/closure toggle read by the storefront + create-order
 ```
 
 ## What's new in this update
+- **Full product management from the admin panel**: in `admin.html` →
+  **Products** tab, you can now add a brand new product, or edit an
+  existing one's name, category, badge/tag, description, key ingredients,
+  placeholder icon, and any number of size/weight + price variants (e.g.
+  "100 g" at ₹99 with an MRP of ₹179) — all without a code deploy. Use
+  **+ Add new product** to create one from scratch (save it once to unlock
+  photo uploads for it), or **Delete product** to remove one from the shop
+  entirely (its saved photos are kept in storage in case you re-add the
+  same product later). The storefront (`index.html`) now loads the
+  catalog live from the server on every visit, instead of from a
+  hardcoded list, and falls back to the original launch catalog if the
+  server can't be reached. New function: `netlify/functions/products.js`.
+- **Manage catalogues (categories) from the admin panel**: in `admin.html`
+  → new **Catalogues** tab, you can add a brand new catalogue (e.g. "Body
+  Scrubs"), rename one, reorder them with the ↑/↓ arrows (this controls
+  the tab order shown on the shop), or delete one — all without a code
+  deploy. A catalogue can't be deleted while any product still uses it,
+  to avoid orphaning products; move or delete those products first. The
+  **Products** tab's category dropdown, and the storefront's shop tabs,
+  now both pull live from this list instead of a hardcoded one. New
+  function: `netlify/functions/categories.js`.
 - **Cancel an order from the admin panel**: in `admin.html` → **Orders**
   tab, every order that isn't already cancelled or delivered now has a
   **Cancel Order** button (next to Save). Clicking it asks for
@@ -35,7 +58,7 @@ netlify/functions/store-settings.js   ← holiday/closure toggle read by the sto
 - **Editable site images (Hero, About Us, Why Natural, Reviews, Footer
   logo)**: in `admin.html` → **Site Images** tab, upload a photo for any
   of these five sections and the live site swaps it in automatically (no
-  redeploy needed, same as Product Photos). Each section falls back to
+  redeploy needed, same as product photos). Each section falls back to
   its current default look until you upload something:
   - **Hero image** — replaces the illustration next to the homepage
     headline
@@ -44,18 +67,21 @@ netlify/functions/store-settings.js   ← holiday/closure toggle read by the sto
   - **Reviews / Testimonials image** — shown above the review cards
   - **Footer logo** — small mark shown next to "Flora Dew" in the footer
   Photos are resized/compressed in your browser before upload, same as
-  product photos. Click the × on a thumbnail to remove an image and
+  product photos. You can also crop a photo right after choosing it —
+  reposition, zoom, and pick a suggested aspect ratio, or skip cropping to
+  use the original. Click the × on a thumbnail to remove an image and
   revert that section to its default look. New function:
   `netlify/functions/site-images.js`.
-- **Product photos**: in `admin.html` → **Product Photos** tab, pick a
+- **Product photos**: in `admin.html` → **Products** tab, pick a
   category, then upload photos for any product (drag/select multiple at
-  once). Up to **8 images per product**. Photos are automatically resized
-  in your browser before upload (max 1000px, JPEG ~80% quality) so they
-  stay small and fast — no need to resize manually first. Delete any photo
-  with the × on its thumbnail. The storefront (`index.html`) automatically
-  shows the real photos (with prev/next arrows if there's more than one)
-  instead of the placeholder icon, for any product that has at least one
-  photo uploaded. New function: `netlify/functions/product-images.js`.
+  once). Up to **8 images per product**. Each photo opens a crop editor
+  first — reposition/zoom/crop to a suggested aspect ratio, or use the
+  original as-is — then it's automatically resized (max 1000px, JPEG ~80%
+  quality) so uploads stay small and fast. Delete any photo with the × on
+  its thumbnail. The storefront (`index.html`) automatically shows the
+  real photos (with prev/next arrows if there's more than one) instead of
+  the placeholder icon, for any product that has at least one photo
+  uploaded. New function: `netlify/functions/product-images.js`.
 - **Holiday / temporary store closure**: in `admin.html` → **Store Status**
   tab, flip the toggle to "closed", optionally add a message and an
   expected reopen date, and Save. While closed:
@@ -203,9 +229,13 @@ never into `index.html`).
 ## Step 7 — View your orders
 The easiest way is `admin.html` on your live site (e.g.
 `https://YOUR-SITE.netlify.app/admin.html`) — enter your `ADMIN_SECRET` to
-unlock a dashboard with three tabs:
+unlock a dashboard with five tabs:
 - **Orders** — search/filter, update fulfillment status, export CSV
-- **Product Photos** — upload up to 8 photos per product (see below)
+- **Products** — add, edit, or remove products (name, price, sizes,
+  description, photos — see below)
+- **Catalogues** — add, rename, reorder, or remove the categories
+  products belong to (see below)
+- **Site Images** — set the Hero/About/Why/Reviews/Footer-logo photos
 - **Store Status** — pause new orders for a holiday/break (see below)
 
 If you ever want the raw JSON instead, you can still visit:
@@ -213,12 +243,47 @@ If you ever want the raw JSON instead, you can still visit:
 https://YOUR-SITE.netlify.app/.netlify/functions/list-orders?secret=YOUR_ADMIN_SECRET
 ```
 
+### Adding, editing, or removing products
+1. Open `admin.html` → **Products** tab
+2. To add one: click **+ Add new product**, fill in the name, category,
+   badge/tag, description, key ingredients, a placeholder icon (shown
+   until you upload a real photo), and at least one size/weight with a
+   price and MRP — then **Create product**. You can add more sizes with
+   **+ Add size / weight**, or remove one with the × next to it.
+3. To edit one: change any field on its card and click **Save changes**.
+4. To remove one: click **Delete product** and confirm. This takes it out
+   of the shop; any photos already uploaded for it stay in storage, so
+   they come back automatically if you re-add a product with the same
+   name later.
+5. Changes go live on the storefront on next page load — no redeploy
+   needed, since the catalog is stored in Netlify Blobs, not in
+   `index.html` itself.
+
+### Adding, renaming, reordering, or removing catalogues
+Catalogues are the categories products belong to — they show up as the
+tabs on the shop (Soaps, Hair Oil, Lip Balms, Lip Colour, and any you add).
+1. Open `admin.html` → **Catalogues** tab
+2. To add one: type a name in **New catalogue name** and click **+ Add
+   catalogue**. It's added at the end of the list.
+3. To rename one: change its name field and click **Save**.
+4. To reorder: use the ↑/↓ arrows on a row — this changes the order the
+   tabs appear in on the shop.
+5. To remove one: click **Delete** and confirm. This only works if no
+   product currently uses that catalogue — move or delete those products
+   first (in the **Products** tab), then remove the catalogue. You always
+   need to keep at least one catalogue.
+6. Changes go live on the storefront (shop tabs) and in the Products
+   tab's category dropdown on next page load — no redeploy needed.
+
 ### Uploading product photos
-1. Open `admin.html` → **Product Photos** tab
+1. Open `admin.html` → **Products** tab (a product must already be saved
+   before you can add photos to it)
 2. Optionally filter by category, then find the product
 3. Click the file picker under that product and select one or more photos
-   (JPG/PNG) — they're resized in your browser automatically, so originals
-   straight from a phone camera are fine
+   (JPG/PNG) — each one opens a quick crop editor first (drag/zoom,
+   choose a suggested aspect ratio, or "Use original" to skip cropping),
+   then it's resized in your browser automatically, so originals straight
+   from a phone camera are fine
 4. Up to 8 photos per product; delete any with the × on its thumbnail
 5. The storefront picks these up automatically on next page load — no
    redeploy needed, since photos are stored in Netlify Blobs, not in the
@@ -248,7 +313,7 @@ https://YOUR-SITE.netlify.app/.netlify/functions/list-orders?secret=YOUR_ADMIN_S
 On some accounts, Netlify's automatic Blobs configuration doesn't reliably
 kick in for functions, causing a `MissingBlobsEnvironmentError` in the
 function logs even though everything else is set up correctly. This also
-affects product photos and store status, since they use the same Blobs
+affects product photos, catalogues, and store status, since they use the same Blobs
 storage under the hood. The fix is to configure it explicitly:
 
 1. **Get your Site ID**: your site's dashboard → **Project configuration →
