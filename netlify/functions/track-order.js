@@ -45,6 +45,7 @@ exports.handler = async function (event) {
         paidAt: order.paidAt || null,
         shippedAt: order.shippedAt || null,
         deliveredAt: order.deliveredAt || null,
+        cancelledAt: order.cancelledAt || null,
         customerName: order.customer.name,
       }),
     };

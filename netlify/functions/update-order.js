@@ -1,10 +1,11 @@
 // netlify/functions/update-order.js
 //
 // Admin-only: updates an order's fulfillment status (accepted / shipped /
-// delivered) and, for shipped orders, the courier name + AWB/tracking
-// number. Used by admin.html. When an order transitions to "shipped" with
-// a courier + AWB present, automatically emails the customer their
-// tracking details.
+// delivered / cancelled) and, for shipped orders, the courier name +
+// AWB/tracking number. Used by admin.html. When an order transitions to
+// "shipped" with a courier + AWB present, automatically emails the
+// customer their tracking details. When an order transitions to
+// "cancelled", automatically emails the customer a cancellation notice.
 //
 // Required Netlify environment variable:
 //   ADMIN_SECRET
@@ -14,7 +15,7 @@
 const { ordersStore } = require('./lib/blobs');
 const { sendEmail } = require('./lib/email');
 
-const VALID_STATUSES = ['pending', 'accepted', 'shipped', 'delivered'];
+const VALID_STATUSES = ['pending', 'accepted', 'shipped', 'delivered', 'cancelled'];
 
 exports.handler = async function (event) {
   if (event.httpMethod !== 'POST') {
@@ -38,6 +39,7 @@ exports.handler = async function (event) {
     }
 
     const wasShipped = order.fulfillmentStatus === 'shipped';
+    const wasCancelled = order.fulfillmentStatus === 'cancelled';
     order.fulfillmentStatus = fulfillmentStatus;
     order.courier = courier || order.courier || null;
     order.awb = awb || order.awb || null;
@@ -47,6 +49,9 @@ exports.handler = async function (event) {
     }
     if (fulfillmentStatus === 'delivered' && !order.deliveredAt) {
       order.deliveredAt = new Date().toISOString();
+    }
+    if (fulfillmentStatus === 'cancelled' && !order.cancelledAt) {
+      order.cancelledAt = new Date().toISOString();
     }
 
     await store.setJSON(orderId, order);
@@ -67,6 +72,24 @@ exports.handler = async function (event) {
             <p>You can also check status anytime at
                <a href="https://floradew.in/track.html">floradew.in/track.html</a>.</p>
             <p>Thank you for choosing Flora Dew!</p>
+          </div>
+        `,
+      });
+    }
+
+    // Email the customer once, the first time an order becomes "cancelled".
+    if (fulfillmentStatus === 'cancelled' && !wasCancelled && order.customer && order.customer.email) {
+      await sendEmail({
+        to: order.customer.email,
+        subject: 'Your Flora Dew order has been cancelled',
+        html: `
+          <div style="font-family:sans-serif;color:#243623;">
+            <h2>Hi ${order.customer.name},</h2>
+            <p>Your order <strong>${order.orderId}</strong> has been cancelled.</p>
+            <p>If you were charged for this order and weren't expecting the
+               cancellation, please get in touch and we'll help sort out a
+               refund right away.</p>
+            <p>Thank you for your patience — we hope to serve you again soon.</p>
           </div>
         `,
       });
