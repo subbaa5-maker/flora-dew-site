@@ -14,7 +14,7 @@
 //   RAZORPAY_KEY_SECRET
 
 const Razorpay = require('razorpay');
-const { ordersStore } = require('./lib/blobs');
+const { ordersStore, settingsStore } = require('./lib/blobs');
 
 exports.handler = async function (event) {
   if (event.httpMethod !== 'POST') {
@@ -22,6 +22,20 @@ exports.handler = async function (event) {
   }
 
   try {
+    // Refuse new orders while the shop owner has marked the store closed
+    // (holiday / temporary break). Checked server-side so it can't be
+    // bypassed by someone who already had the checkout form open.
+    const settings = await settingsStore().get('store', { type: 'json' });
+    if (settings && settings.closed) {
+      return {
+        statusCode: 403,
+        body: JSON.stringify({
+          error: settings.message || 'We are currently not accepting new orders. Please check back soon.',
+          storeClosed: true,
+        }),
+      };
+    }
+
     const { amount, currency, customer, items } = JSON.parse(event.body || '{}');
 
     if (!amount || amount <= 0) {
