@@ -6,6 +6,7 @@ order storage, and email receipts.
 
 ```
 index.html                            ← the website (shop, cart, checkout form, SEO tags)
+admin.html                            ← order dashboard + product photo manager + store status
 robots.txt                            ← tells search engines what to crawl
 sitemap.xml                           ← list of pages for search engines
 netlify.toml                          ← tells Netlify where the functions live
@@ -13,27 +14,60 @@ package.json                          ← dependencies the functions need
 netlify/functions/create-order.js     ← creates a Razorpay order + saves the pending order
 netlify/functions/verify-payment.js   ← confirms payment, saves it as "paid", emails receipts
 netlify/functions/list-orders.js      ← lets you view all saved orders (simple admin view)
+netlify/functions/product-images.js   ← stores/serves up to 8 photos per product (admin uploads)
+netlify/functions/store-settings.js   ← holiday/closure toggle read by the storefront + create-order
 ```
 
 ## What's new in this update
-- **Checkout form**: pincode now auto-fills city + state (India Post public
-  API) as soon as you type a valid 6-digit pincode; state is now a proper
+- **Product photos**: in `admin.html` → **Product Photos** tab, pick a
+  category, then upload photos for any product (drag/select multiple at
+  once). Up to **8 images per product**. Photos are automatically resized
+  in your browser before upload (max 1000px, JPEG ~80% quality) so they
+  stay small and fast — no need to resize manually first. Delete any photo
+  with the × on its thumbnail. The storefront (`index.html`) automatically
+  shows the real photos (with prev/next arrows if there's more than one)
+  instead of the placeholder icon, for any product that has at least one
+  photo uploaded. New function: `netlify/functions/product-images.js`.
+- **Holiday / temporary store closure**: in `admin.html` → **Store Status**
+  tab, flip the toggle to "closed", optionally add a message and an
+  expected reopen date, and Save. While closed:
+  - the storefront shows a banner above the products and disables "Add to
+    cart" + the checkout button (customers can still browse)
+  - `create-order.js` also refuses to create new orders **server-side**,
+    so the pause holds even if someone already had the checkout form open
+  New function: `netlify/functions/store-settings.js`.
+- **Returning customers skip re-typing their details**: once someone
+  completes a payment, their name/phone/email/address are saved in their
+  browser (not on your server). Next time they open the checkout form on
+  the same device/browser, it's pre-filled automatically, with a small
+  "Not you? Clear saved details" link if someone else is checking out on
+  the same device.
+- **Razorpay test key already set**: `RAZORPAY_KEY_ID` in `index.html` is
+  set to `rzp_test_T9WrTgqzLwOq2z`. You still need to add the matching
+  **Key Secret** as `RAZORPAY_KEY_SECRET` in Netlify's environment
+  variables (Step 4) — that part can't be pre-filled since it's a private
+  key tied to your Razorpay account. If this test key doesn't belong to
+  your Razorpay account, generate your own Test Key ID + Secret (Step 2)
+  and swap both.
+
+## Previously added
+- **Checkout form**: pincode auto-fills city + state (India Post public
+  API) as soon as you type a valid 6-digit pincode; state is a proper
   dropdown of all Indian states/UTs.
-- **Customer order tracking**: a new page, `track.html`, lets any customer
-  check their order status by entering their Order ID + the email they
-  checked out with — no login needed. It shows a Pending → Accepted →
-  Shipped → Delivered progress bar, plus courier + tracking number once
-  shipped. Linked from the site footer and from the post-payment success
-  message.
-- **Admin dashboard fulfillment controls**: each order in `admin.html` now
-  has an editable fulfillment status (Pending/Accepted/Shipped/Delivered)
-  plus courier name + AWB/tracking number fields, with a Save button.
+- **Customer order tracking**: `track.html` lets any customer check their
+  order status by entering their Order ID + the email they checked out
+  with — no login needed. It shows a Pending → Accepted → Shipped →
+  Delivered progress bar, plus courier + tracking number once shipped.
+  Linked from the site footer and the post-payment success message.
+- **Admin dashboard fulfillment controls**: each order in `admin.html`'s
+  Orders tab has an editable fulfillment status (Pending/Accepted/
+  Shipped/Delivered) plus courier name + AWB/tracking number fields.
 - **Automatic "shipped" email**: the first time you mark an order Shipped
   with a courier + AWB filled in, the customer is automatically emailed
   their tracking details (requires email set up — Step 6).
-- Two new functions: `netlify/functions/update-order.js` (admin-only,
-  updates fulfillment status) and `netlify/functions/track-order.js`
-  (public, customer-verified lookup).
+- `netlify/functions/update-order.js` (admin-only, updates fulfillment
+  status) and `netlify/functions/track-order.js` (public, customer-
+  verified lookup).
 
 ## Setting up a real inbox at your domain (e.g. hello@floradew.in)
 Right now, `hello@floradew.in` is used as a "from"/"reply-to" address in
@@ -116,13 +150,14 @@ After adding variables: **Site configuration → Deploys → Trigger deploy** to
 redeploy so the functions pick them up.
 
 ## Step 5 — Add your public Razorpay Key ID to the site
-1. Open `index.html`, find:
-   ```js
-   var RAZORPAY_KEY_ID = 'rzp_test_XXXXXXXXXXXX';
-   ```
-2. Replace with your real test Key ID (safe to expose — only the Key
-   *Secret* must stay hidden)
-3. Redeploy
+This is **already done** — `index.html` currently has:
+```js
+var RAZORPAY_KEY_ID = 'rzp_test_T9WrTgqzLwOq2z';
+```
+If this test key isn't from your own Razorpay account, replace it with
+your real Test/Live Key ID from Step 2 (safe to expose — only the Key
+*Secret* must stay hidden, and that only ever goes into Netlify env vars,
+never into `index.html`).
 
 ## Step 6 — Turn on email receipts (optional, ~5 minutes)
 1. Go to https://resend.com → sign up (free tier covers small stores easily)
@@ -138,14 +173,35 @@ redeploy so the functions pick them up.
    you just won't get emails yet.
 
 ## Step 7 — View your orders
-Visit:
+The easiest way is `admin.html` on your live site (e.g.
+`https://YOUR-SITE.netlify.app/admin.html`) — enter your `ADMIN_SECRET` to
+unlock a dashboard with three tabs:
+- **Orders** — search/filter, update fulfillment status, export CSV
+- **Product Photos** — upload up to 8 photos per product (see below)
+- **Store Status** — pause new orders for a holiday/break (see below)
+
+If you ever want the raw JSON instead, you can still visit:
 ```
 https://YOUR-SITE.netlify.app/.netlify/functions/list-orders?secret=YOUR_ADMIN_SECRET
 ```
-(replace with your real site URL and the `ADMIN_SECRET` you set in Step 4).
-This returns every order — pending and paid — as JSON: customer name, phone,
-email, address, items ordered, and payment status. Bookmark this URL for
-day-to-day fulfillment until you want a nicer dashboard.
+
+### Uploading product photos
+1. Open `admin.html` → **Product Photos** tab
+2. Optionally filter by category, then find the product
+3. Click the file picker under that product and select one or more photos
+   (JPG/PNG) — they're resized in your browser automatically, so originals
+   straight from a phone camera are fine
+4. Up to 8 photos per product; delete any with the × on its thumbnail
+5. The storefront picks these up automatically on next page load — no
+   redeploy needed, since photos are stored in Netlify Blobs, not in the
+   site's files
+
+### Pausing orders for a holiday or break
+1. Open `admin.html` → **Store Status** tab
+2. Flip the toggle to mark the store closed, add a short message customers
+   will see (and optionally a reopen date), then **Save store status**
+3. The storefront shows your message and disables ordering immediately;
+   flip the toggle back off (and Save) whenever you're ready to reopen
 
 ## Step 8 — Test the full flow
 1. Visit your live site → add a product to cart → Checkout with Razorpay
@@ -156,13 +212,16 @@ day-to-day fulfillment until you want a nicer dashboard.
    - Or UPI ID: `success@razorpay`
 4. You should see a success message, the cart clears, and (if Step 6 is
    done) both you and the test customer get an email
-5. Check Step 7's URL — the order should show up with `"status": "paid"`
+5. Check Step 7's dashboard — the order should show up with `"status": "paid"`
+6. Open the checkout form again (new cart) on the same browser — your
+   details should already be filled in
 
 ## Troubleshooting: "Could not list orders" / MissingBlobsEnvironmentError
 On some accounts, Netlify's automatic Blobs configuration doesn't reliably
 kick in for functions, causing a `MissingBlobsEnvironmentError` in the
-function logs even though everything else is set up correctly. The fix is
-to configure it explicitly:
+function logs even though everything else is set up correctly. This also
+affects product photos and store status, since they use the same Blobs
+storage under the hood. The fix is to configure it explicitly:
 
 1. **Get your Site ID**: your site's dashboard → **Project configuration →
    General → Project details** → copy the **Site ID** (looks like
@@ -218,6 +277,15 @@ existing contact email `hello@floradew.in`). Once your real domain is live:
 - **"Delivered" confirmation email** — currently only "confirmed" and
   "shipped" trigger customer emails; a delivered notification could be
   added the same way.
+- **Saved customer details are per-browser, not per-account** — there's no
+  login system, so "remembering" a customer works by saving their details
+  in that browser's storage after checkout. It won't follow them to a
+  different device/browser, and clearing browser data clears it. A real
+  account system (email/OTP login with server-side saved addresses) is a
+  bigger addition — say the word if you'd like that instead.
+- **Automatic reopen date** — the store status toggle has to be flipped
+  back to "open" manually; it doesn't auto-reopen on the date you enter
+  (that field is just a message shown to customers).
 
 ## Ongoing deploys (optional but recommended)
 Dragging a folder in each time works, but connecting Netlify to a GitHub

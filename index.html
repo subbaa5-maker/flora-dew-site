@@ -336,8 +336,43 @@
   .product-card .icon-stage{
     height:150px; display:flex; align-items:center; justify-content:center;
     margin-bottom:18px;
+    position:relative;
   }
   .product-card .icon-stage svg{width:120px; height:120px;}
+  .product-card .icon-stage.has-photo{
+    height:180px; margin:-26px -24px 18px; border-radius:22px 22px 0 0;
+    background:var(--milk-sage-2); overflow:hidden;
+  }
+  .product-card .photo-img{
+    width:100%; height:100%; object-fit:cover; display:block;
+  }
+  .photo-nav{
+    position:absolute; top:50%; transform:translateY(-50%);
+    width:28px; height:28px; border-radius:50%; border:none;
+    background:rgba(255,255,255,0.85); color:var(--moss-ink);
+    font-size:0.9rem; line-height:28px; text-align:center; cursor:pointer;
+    box-shadow:0 2px 8px rgba(36,54,35,0.25); opacity:0; transition:opacity 0.2s;
+  }
+  .icon-stage.has-photo:hover .photo-nav{opacity:1;}
+  .photo-nav.prev{left:8px;} .photo-nav.next{right:8px;}
+  .photo-dots{
+    position:absolute; bottom:8px; left:0; right:0;
+    display:flex; justify-content:center; gap:5px;
+  }
+  .photo-dots span{
+    width:6px; height:6px; border-radius:50%; background:rgba(255,255,255,0.55);
+  }
+  .photo-dots span.active{background:#fff;}
+  .store-closed-banner{
+    background:rgba(194,150,58,0.16);
+    border:1px solid rgba(194,150,58,0.4);
+    color:var(--moss-ink);
+    border-radius:14px;
+    padding:14px 18px;
+    margin-bottom:20px;
+    font-size:0.92rem;
+  }
+  .add-cart-btn:disabled{opacity:0.55; cursor:not-allowed;}
   .product-card h3{font-size:1.5rem; margin-bottom:8px;}
   .product-card p.desc{font-size:0.92rem; color:rgba(36,54,35,0.72); flex-grow:1;}
   .ingredient-row{
@@ -613,6 +648,19 @@
   }
   .modal-order-summary .mos-row{display:flex; justify-content:space-between; padding:3px 0;}
   .modal-order-summary .mos-total{font-weight:700; border-top:1px solid var(--line); margin-top:6px; padding-top:8px;}
+  .saved-customer-note{
+    background:rgba(78,107,76,0.12);
+    border:1px solid rgba(78,107,76,0.3);
+    border-radius:10px;
+    padding:10px 14px;
+    font-size:0.82rem;
+    margin-bottom:16px;
+    color:var(--moss-ink);
+  }
+  .saved-customer-note a{
+    display:inline-block; margin-left:6px;
+    color:var(--rosewater-deep); font-weight:600; text-decoration:underline;
+  }
 
   .checkout-note{
     font-size:0.72rem; color:rgba(36,54,35,0.5);
@@ -1099,6 +1147,11 @@
 
     <div class="modal-order-summary" id="modal-order-summary"></div>
 
+    <div class="saved-customer-note" id="saved-customer-note" style="display:none;">
+      Welcome back! We've filled in your saved details.
+      <a href="#" id="clear-saved-customer">Not you? Clear saved details</a>
+    </div>
+
     <form id="checkout-form" novalidate>
       <div class="form-field" id="field-name">
         <label for="cf-name">Full name</label>
@@ -1278,6 +1331,10 @@
     });
   })();
 
+  // ---------- Store open/closed state (set by loadStoreStatus, below) ----------
+  var STORE_CLOSED = false;
+  var STORE_CLOSED_MESSAGE = '';
+
   // ---------- Real product catalog ----------
   var ICONS = {
     soap: '<svg viewBox="0 0 120 120"><rect x="20" y="45" width="80" height="55" rx="20" fill="#e3d4b7" stroke="#243623" stroke-opacity="0.2"/><path d="M28 60 Q60 45 92 60" stroke="#c2963a" stroke-width="2.5" fill="none" opacity="0.6"/><circle cx="50" cy="75" r="6" fill="#c4707c" opacity="0.7"/><circle cx="72" cy="82" r="4" fill="#4e6b4c" opacity="0.6"/><circle cx="65" cy="65" r="3" fill="#c2963a" opacity="0.6"/></svg>',
@@ -1288,59 +1345,59 @@
   };
 
   var PRODUCTS = [
-    { cat:'soap', name:'Aloe Vera Handmade Soap', tag:'Bathing', icon:'soap',
+    { id:'aloe-vera-soap', cat:'soap', name:'Aloe Vera Handmade Soap', tag:'Bathing', icon:'soap',
       desc:'Pure aloe vera and herbal essential oils, handmade in small batches for soft, glowing skin. Gentle enough for dry, sensitive and acne-prone skin.',
       ing:['Aloe Vera','Herbal Extracts'],
       variants:[{l:'100 g',p:99,m:179},{l:'70–80 g Prism',p:99,m:219},{l:'Combo of 2 (200 g)',p:179,m:358},{l:'Combo of 3 (100 g)',p:249,m:537}] },
-    { cat:'soap', name:'Charcoal Handmade Soap', tag:'Bathing', icon:'soap',
+    { id:'charcoal-soap', cat:'soap', name:'Charcoal Handmade Soap', tag:'Bathing', icon:'soap',
       desc:'Activated charcoal draws out dirt, excess oil and impurities, leaving skin clean and rejuvenated. Suited to oily and acne-prone skin.',
       ing:['Activated Charcoal'],
       variants:[{l:'100 g',p:99,m:179},{l:'Combo of 2',p:179,m:358},{l:'Combo of 3',p:249,m:537}] },
-    { cat:'soap', name:'Charcoal & Multani Mitti Soap', tag:'Bathing', icon:'soap',
+    { id:'charcoal-multani-mitti-soap', cat:'soap', name:'Charcoal & Multani Mitti Soap', tag:'Bathing', icon:'soap',
       desc:'Cold-processed with Multani mitti to deep-cleanse pores, exfoliate gently and absorb excess oil for a clearer, healthier complexion.',
       ing:['Charcoal','Multani Mitti'],
       variants:[{l:'100 g',p:139,m:219}] },
-    { cat:'soap', name:'Neem Handmade Soap', tag:'Bathing', icon:'soap',
+    { id:'neem-soap', cat:'soap', name:'Neem Handmade Soap', tag:'Bathing', icon:'soap',
       desc:'Pure neem extracts with antibacterial and antifungal properties help fight pimples and acne for clearer skin.',
       ing:['Neem','Herbal Extracts'],
       variants:[{l:'100 g',p:99,m:179},{l:'Sunburst 100 g',p:99,m:219},{l:'Combo of 2',p:179,m:358},{l:'Combo of 3',p:249,m:537}] },
-    { cat:'soap', name:'Sandalwood Handmade Soap', tag:'Bathing', icon:'soap',
+    { id:'sandalwood-soap', cat:'soap', name:'Sandalwood Handmade Soap', tag:'Bathing', icon:'soap',
       desc:'Pure sandalwood extracts soothe skin, reduce blemishes and improve complexion, with a long-lasting natural fragrance.',
       ing:['Sandalwood'],
       variants:[{l:'100 g',p:99,m:179},{l:'Sunflower 100 g',p:130,m:219},{l:'Combo of 2',p:179,m:358},{l:'Combo of 3',p:249,m:537}] },
-    { cat:'soap', name:'Hibiscus & Aloe Vera Soap', tag:'Bathing', icon:'soap',
+    { id:'hibiscus-aloe-vera-soap', cat:'soap', name:'Hibiscus & Aloe Vera Soap', tag:'Bathing', icon:'soap',
       desc:'Improves skin elasticity and natural glow while soothing and calming sensitive, dry skin with antioxidants and minerals.',
       ing:['Hibiscus','Aloe Vera'],
       variants:[{l:'100 g',p:139,m:219}] },
-    { cat:'soap', name:'Kesar Oats Bath Soap', tag:'Bathing', icon:'soap',
+    { id:'kesar-oats-soap', cat:'soap', name:'Kesar Oats Bath Soap', tag:'Bathing', icon:'soap',
       desc:'Handcrafted with pure saffron and oats to gently cleanse, nourish and brighten normal to dry skin.',
       ing:['Kesar (Saffron)','Oats'],
       variants:[{l:'100 g',p:159,m:249}] },
-    { cat:'soap', name:'Avarampoo Cold-Processed Soap', tag:'Bathing', icon:'soap',
+    { id:'avarampoo-soap', cat:'soap', name:'Avarampoo Cold-Processed Soap', tag:'Bathing', icon:'soap',
       desc:'Avarampoo extract brightens skin tone and supports a natural glow, rich in antioxidants to purify and rejuvenate.',
       ing:['Avarampoo Extract'],
       variants:[{l:'100 g',p:139,m:219}] },
-    { cat:'soap', name:'Gentle Baby Soap', tag:'Baby Care', icon:'soap',
+    { id:'gentle-baby-soap', cat:'soap', name:'Gentle Baby Soap', tag:'Baby Care', icon:'soap',
       desc:'Vanilla essential oil, olive oil, cocoa and shea butter cleanse while nourishing delicate skin, with vitamins A & E. For kids above 2 years.',
       ing:['Cocoa Butter','Shea Butter','Vanilla'],
       variants:[{l:'Standard bar',p:139,m:199}] },
-    { cat:'soap', name:'Handcrafted Hanging Grape Bunch Soap', tag:'Decorative', icon:'soapDeco',
+    { id:'hanging-grape-soap', cat:'soap', name:'Handcrafted Hanging Grape Bunch Soap', tag:'Decorative', icon:'soapDeco',
       desc:'A luxurious, mess-free hanging soap for kitchen or bathroom that gently cleanses while leaving hands soft and hydrated.',
       ing:['Glycerin Base'],
       variants:[{l:'Blue',p:189,m:219},{l:'Green',p:189,m:219},{l:'Lavender',p:189,m:219},{l:'Orange',p:189,m:219},{l:'Pink',p:189,m:219},{l:'Strawberry',p:189,m:219},{l:'Yellow',p:189,m:219}] },
-    { cat:'oil', name:'12 Herbs Hair Growth Oil', tag:'Haircare', icon:'oil',
+    { id:'12-herbs-hair-oil', cat:'oil', name:'12 Herbs Hair Growth Oil', tag:'Haircare', icon:'oil',
       desc:'An Ayurvedic blend of 12 herbs — Bhringraj, Amla, Brahmi, Neem, Hibiscus and more — that nourishes the scalp, reduces hair fall and restores shine.',
       ing:['Rosemary','Castor','Coconut','Amla'],
       variants:[{l:'100 ml',p:149,m:219},{l:'200 ml',p:269,m:429}] },
-    { cat:'balm', name:'Beetroot & Shea Butter Lip Balm', tag:'Lip Care', icon:'balm',
+    { id:'beetroot-shea-lip-balm', cat:'balm', name:'Beetroot & Shea Butter Lip Balm', tag:'Lip Care', icon:'balm',
       desc:'Beetroot adds a subtle pinkish tint while shea butter keeps lips hydrated, soft and smooth all day — free from parabens and sulfates.',
       ing:['Beetroot','Shea Butter'],
       variants:[{l:'Pack of 1',p:109,m:199}] },
-    { cat:'balm', name:'Natural Creamy Lip Balm', tag:'Lip Care', icon:'balm',
+    { id:'natural-creamy-lip-balm', cat:'balm', name:'Natural Creamy Lip Balm', tag:'Lip Care', icon:'balm',
       desc:'A lightweight, creamy lemon-scented balm that glides on smooth and keeps lips nourished through the day.',
       ing:['Lemon','Vitamin E'],
       variants:[{l:'Lemon',p:109,m:199}] },
-    { cat:'lipstick', name:'Semi-Matte Lipstick', tag:'Lip Colour', icon:'lipstick',
+    { id:'semi-matte-lipstick', cat:'lipstick', name:'Semi-Matte Lipstick', tag:'Lip Colour', icon:'lipstick',
       desc:'A moisturising, creamy semi-matte lipstick with buildable, long-lasting coverage — comfortable enough for daily wear.',
       ing:['Moisturising Base'],
       variants:[{l:'Tomato Red',p:219,m:299},{l:'Velvet Maroon',p:219,m:299},{l:'Pink Blush',p:219,m:299}] }
@@ -1403,7 +1460,7 @@
 
       card.innerHTML =
         '<span class="card-tag">'+prod.tag+'</span>' +
-        '<div class="icon-stage">'+ICONS[prod.icon]+'</div>' +
+        '<div class="icon-stage" id="icon-stage-'+idx+'">'+ICONS[prod.icon]+'</div>' +
         '<h3>'+prod.name+'</h3>' +
         '<p class="desc">'+prod.desc+'</p>' +
         '<div class="ingredient-row">'+ingHtml+'</div>' +
@@ -1467,6 +1524,78 @@
       s.text = JSON.stringify(obj);
       document.head.appendChild(s);
     });
+  })();
+
+  // ---------- Real product photos (uploaded from the admin dashboard) ----------
+  (function loadProductPhotos(){
+    fetch('/.netlify/functions/product-images')
+      .then(function(res){ return res.ok ? res.json() : {}; })
+      .then(function(imagesByProduct){
+        PRODUCTS.forEach(function(prod, idx){
+          var photos = imagesByProduct[prod.id];
+          if(!photos || photos.length === 0) return;
+
+          var stage = document.getElementById('icon-stage-' + idx);
+          if(!stage) return;
+          stage.classList.add('has-photo');
+          stage.dataset.photoIndex = 0;
+
+          function renderPhoto(){
+            var i = parseInt(stage.dataset.photoIndex, 10) || 0;
+            var dots = photos.map(function(_, di){
+              return '<span class="' + (di === i ? 'active' : '') + '"></span>';
+            }).join('');
+            stage.innerHTML =
+              '<img class="photo-img" src="' + photos[i] + '" alt="' + prod.name + '" loading="lazy">' +
+              (photos.length > 1 ?
+                '<button type="button" class="photo-nav prev" aria-label="Previous photo">‹</button>' +
+                '<button type="button" class="photo-nav next" aria-label="Next photo">›</button>' +
+                '<div class="photo-dots">' + dots + '</div>'
+                : '');
+            if(photos.length > 1){
+              stage.querySelector('.photo-nav.prev').addEventListener('click', function(e){
+                e.stopPropagation();
+                stage.dataset.photoIndex = (i - 1 + photos.length) % photos.length;
+                renderPhoto();
+              });
+              stage.querySelector('.photo-nav.next').addEventListener('click', function(e){
+                e.stopPropagation();
+                stage.dataset.photoIndex = (i + 1) % photos.length;
+                renderPhoto();
+              });
+            }
+          }
+          renderPhoto();
+        });
+      })
+      .catch(function(){ /* keep the placeholder icons if this fails */ });
+  })();
+
+  // ---------- Store open/closed (holiday) banner ----------
+  (function loadStoreStatus(){
+    fetch('/.netlify/functions/store-settings')
+      .then(function(res){ return res.ok ? res.json() : null; })
+      .then(function(settings){
+        if(!settings || !settings.closed) return;
+        STORE_CLOSED = true;
+        STORE_CLOSED_MESSAGE = settings.message || "We're taking a short break and aren't accepting new orders right now.";
+
+        var banner = document.createElement('div');
+        banner.className = 'store-closed-banner';
+        var reopenText = settings.reopenDate ? ' We\'ll be back on ' + settings.reopenDate + '.' : '';
+        banner.innerHTML = '<strong>Orders are paused.</strong> ' + STORE_CLOSED_MESSAGE + reopenText;
+        var tabsRow = document.getElementById('shop-tabs');
+        if(tabsRow && tabsRow.parentNode) tabsRow.parentNode.insertBefore(banner, tabsRow);
+
+        // Disable ordering everywhere, but still let people browse the catalog
+        document.querySelectorAll('.add-cart-btn').forEach(function(btn){
+          btn.disabled = true;
+          btn.textContent = 'Currently unavailable';
+        });
+        var checkoutBtn = document.getElementById('checkout-btn');
+        if(checkoutBtn) checkoutBtn.disabled = true;
+      })
+      .catch(function(){ /* if this fails, ordering stays enabled as normal */ });
   })();
 
   // ---------- Cart state & drawer ----------
@@ -1563,7 +1692,8 @@
   document.getElementById('cart-overlay').addEventListener('click', closeCart);
 
   // ---------- Razorpay checkout ----------
-  // TODO: replace with your live/test Razorpay Key ID (public, safe to expose client-side)
+  // Test Key ID (public, safe to expose client-side). Swap for your live
+  // Key ID once Razorpay KYC is approved (see SETUP.md, Step 10).
   var RAZORPAY_KEY_ID = 'rzp_test_T9WrTgqzLwOq2z';
 
   var modalOverlay = document.getElementById('checkout-modal-overlay');
@@ -1611,6 +1741,41 @@
     });
   })();
 
+  // ---- Remember returning customers so they don't retype every detail ----
+  var SAVED_CUSTOMER_KEY = 'fd_customer_details';
+
+  function getSavedCustomer(){
+    try{
+      var raw = localStorage.getItem(SAVED_CUSTOMER_KEY);
+      return raw ? JSON.parse(raw) : null;
+    }catch(e){ return null; }
+  }
+  function saveCustomer(customer){
+    try{ localStorage.setItem(SAVED_CUSTOMER_KEY, JSON.stringify(customer)); }catch(e){ /* ignore (private browsing etc.) */ }
+  }
+  function clearSavedCustomer(){
+    try{ localStorage.removeItem(SAVED_CUSTOMER_KEY); }catch(e){}
+    checkoutForm.reset();
+    document.getElementById('saved-customer-note').style.display = 'none';
+  }
+
+  function prefillCustomerForm(){
+    var saved = getSavedCustomer();
+    var noteEl = document.getElementById('saved-customer-note');
+    if(!saved){
+      if(noteEl) noteEl.style.display = 'none';
+      return;
+    }
+    document.getElementById('cf-name').value = saved.name || '';
+    document.getElementById('cf-phone').value = saved.phone || '';
+    document.getElementById('cf-email').value = saved.email || '';
+    document.getElementById('cf-address').value = saved.address || '';
+    document.getElementById('cf-city').value = saved.city || '';
+    document.getElementById('cf-state').value = saved.state || '';
+    document.getElementById('cf-pincode').value = saved.pincode || '';
+    if(noteEl) noteEl.style.display = 'block';
+  }
+
   function openCheckoutModal(){
     if(CART.length === 0) return;
     var summaryEl = document.getElementById('modal-order-summary');
@@ -1620,6 +1785,7 @@
       return '<div class="mos-row"><span>'+prod.name+' ('+variant.l+') × '+item.qty+'</span><span>₹'+(variant.p*item.qty)+'</span></div>';
     }).join('');
     summaryEl.innerHTML = rows + '<div class="mos-row mos-total"><span>Total</span><span>₹'+cartSubtotal()+'</span></div>';
+    prefillCustomerForm();
     modalOverlay.classList.add('open');
   }
   function closeCheckoutModal(){
@@ -1631,6 +1797,10 @@
     openCheckoutModal();
   });
   document.getElementById('modal-cancel-btn').addEventListener('click', closeCheckoutModal);
+  document.getElementById('clear-saved-customer').addEventListener('click', function(e){
+    e.preventDefault();
+    clearSavedCustomer();
+  });
   modalOverlay.addEventListener('click', function(e){
     if(e.target === modalOverlay) closeCheckoutModal();
   });
@@ -1655,6 +1825,10 @@
   checkoutForm.addEventListener('submit', function(e){
     e.preventDefault();
     if(CART.length === 0) return;
+    if(STORE_CLOSED){
+      alert(STORE_CLOSED_MESSAGE || "We're currently not accepting new orders. Please check back soon.");
+      return;
+    }
 
     var customer = {
       name: document.getElementById('cf-name').value,
@@ -1690,7 +1864,7 @@
         submitBtn.textContent = 'Continue to payment →';
 
         if(order.error){
-          alert('Could not start checkout. Please try again in a moment.');
+          alert(order.storeClosed ? order.error : 'Could not start checkout. Please try again in a moment.');
           return;
         }
 
@@ -1710,6 +1884,7 @@
               .then(function(res){ return res.json(); })
               .then(function(result){
                 if(result.verified){
+                  saveCustomer(customer);
                   CART = [];
                   renderCart();
                   closeCheckoutModal();

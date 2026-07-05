@@ -191,6 +191,64 @@
   .order-contact .oc-label{font-weight:600; color:var(--moss-ink);}
   .order-ids{font-size:0.72rem; color:rgba(36,54,35,0.45); margin-top:12px; word-break:break-all;}
 
+  /* ---------- Tabs ---------- */
+  .tab-nav{display:flex; gap:8px; margin-bottom:22px; flex-wrap:wrap;}
+  .tab-btn{
+    border:1px solid var(--line); background:#fff; color:var(--moss-ink);
+    border-radius:100px; padding:9px 18px; font-size:0.85rem; font-weight:600; cursor:pointer;
+  }
+  .tab-btn.active{background:var(--moss-ink); color:var(--milk-sage); border-color:var(--moss-ink);}
+  .tab-panel{display:none;}
+  .tab-panel.active{display:block;}
+
+  /* ---------- Product image manager ---------- */
+  .pm-controls{display:flex; gap:12px; flex-wrap:wrap; margin-bottom:20px;}
+  .pm-controls select{
+    border:1px solid var(--line); background:#fff; border-radius:10px;
+    padding:11px 14px; font-family:inherit; font-size:0.9rem;
+  }
+  .pm-grid{display:flex; flex-direction:column; gap:14px;}
+  .pm-card{background:var(--paper); border-radius:16px; padding:18px 20px; box-shadow:var(--shadow-soft);}
+  .pm-card-head{display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; flex-wrap:wrap; gap:8px;}
+  .pm-card-head .pm-name{font-weight:600; font-size:1rem;}
+  .pm-card-head .pm-count{font-size:0.78rem; color:rgba(36,54,35,0.55);}
+  .pm-thumbs{display:flex; gap:10px; flex-wrap:wrap; margin-bottom:12px;}
+  .pm-thumb{position:relative; width:76px; height:76px; border-radius:10px; overflow:hidden; border:1px solid var(--line);}
+  .pm-thumb img{width:100%; height:100%; object-fit:cover; display:block;}
+  .pm-thumb .pm-thumb-del{
+    position:absolute; top:2px; right:2px; width:20px; height:20px; border-radius:50%;
+    background:rgba(165,82,94,0.9); color:#fff; border:none; font-size:0.75rem; cursor:pointer; line-height:20px;
+  }
+  .pm-upload-row{display:flex; gap:10px; align-items:center; flex-wrap:wrap;}
+  .pm-upload-row input[type="file"]{font-size:0.82rem;}
+  .pm-upload-msg{font-size:0.78rem; margin-left:4px;}
+  .pm-upload-msg.err{color:var(--rosewater-deep);}
+  .pm-upload-msg.ok{color:var(--fern);}
+
+  /* ---------- Store status panel ---------- */
+  .settings-card{background:var(--paper); border-radius:16px; padding:24px 26px; box-shadow:var(--shadow-soft); max-width:520px;}
+  .settings-card h3{font-size:1.15rem; margin-bottom:16px;}
+  .toggle-row{display:flex; align-items:center; gap:12px; margin-bottom:18px;}
+  .toggle-switch{position:relative; width:46px; height:26px; flex-shrink:0;}
+  .toggle-switch input{opacity:0; width:0; height:0;}
+  .toggle-slider{
+    position:absolute; inset:0; background:rgba(36,54,35,0.2); border-radius:100px; cursor:pointer; transition:background 0.2s;
+  }
+  .toggle-slider:before{
+    content:''; position:absolute; width:20px; height:20px; left:3px; top:3px; background:#fff; border-radius:50%; transition:transform 0.2s;
+  }
+  .toggle-switch input:checked + .toggle-slider{background:var(--rosewater-deep);}
+  .toggle-switch input:checked + .toggle-slider:before{transform:translateX(20px);}
+  .settings-card label{display:block; font-size:0.78rem; text-transform:uppercase; letter-spacing:0.04em; color:rgba(36,54,35,0.55); margin-bottom:6px;}
+  .settings-card textarea, .settings-card input[type="text"]{
+    width:100%; border:1px solid var(--line); background:#fff; border-radius:10px;
+    padding:11px 14px; font-family:inherit; font-size:0.9rem; margin-bottom:16px;
+  }
+  .settings-card textarea{min-height:80px; resize:vertical;}
+  .settings-save-msg{font-size:0.82rem; margin-top:4px; display:none;}
+  .settings-save-msg.ok{color:var(--fern); display:block;}
+  .settings-save-msg.err{color:var(--rosewater-deep); display:block;}
+
   .empty-state{
     text-align:center; padding:60px 20px;
     color:rgba(36,54,35,0.55);
@@ -223,26 +281,68 @@
     </div>
   </div>
 
-  <div class="stats-row" id="stats-row"></div>
-
-  <div class="controls">
-    <input type="text" id="search-input" placeholder="Search by name, phone, email, or order ID…">
-    <select id="status-filter">
-      <option value="all">All payment statuses</option>
-      <option value="paid">Paid</option>
-      <option value="pending">Pending payment</option>
-    </select>
-    <select id="fulfillment-filter">
-      <option value="all">All fulfillment stages</option>
-      <option value="pending">Pending</option>
-      <option value="accepted">Accepted</option>
-      <option value="shipped">Shipped</option>
-      <option value="delivered">Delivered</option>
-    </select>
+  <div class="tab-nav">
+    <button class="tab-btn active" data-tab="orders">Orders</button>
+    <button class="tab-btn" data-tab="products">Product Photos</button>
+    <button class="tab-btn" data-tab="settings">Store Status</button>
   </div>
 
-  <div id="order-list" class="order-list">
-    <div class="loading">Loading orders…</div>
+  <div class="tab-panel active" id="tab-orders">
+    <div class="stats-row" id="stats-row"></div>
+
+    <div class="controls">
+      <input type="text" id="search-input" placeholder="Search by name, phone, email, or order ID…">
+      <select id="status-filter">
+        <option value="all">All payment statuses</option>
+        <option value="paid">Paid</option>
+        <option value="pending">Pending payment</option>
+      </select>
+      <select id="fulfillment-filter">
+        <option value="all">All fulfillment stages</option>
+        <option value="pending">Pending</option>
+        <option value="accepted">Accepted</option>
+        <option value="shipped">Shipped</option>
+        <option value="delivered">Delivered</option>
+      </select>
+    </div>
+
+    <div id="order-list" class="order-list">
+      <div class="loading">Loading orders…</div>
+    </div>
+  </div>
+
+  <div class="tab-panel" id="tab-products">
+    <div class="pm-controls">
+      <select id="pm-category-filter">
+        <option value="all">All categories</option>
+        <option value="soap">Soaps</option>
+        <option value="oil">Hair Oil</option>
+        <option value="balm">Lip Balms</option>
+        <option value="lipstick">Lip Colour</option>
+      </select>
+    </div>
+    <div id="pm-grid" class="pm-grid">
+      <div class="loading">Loading products…</div>
+    </div>
+  </div>
+
+  <div class="tab-panel" id="tab-settings">
+    <div class="settings-card">
+      <h3>Holiday / temporary closure</h3>
+      <div class="toggle-row">
+        <span class="toggle-switch">
+          <input type="checkbox" id="store-closed-toggle">
+          <span class="toggle-slider"></span>
+        </span>
+        <span>Store is currently <strong id="store-status-label">open</strong></span>
+      </div>
+      <label for="store-message">Message shown to customers</label>
+      <textarea id="store-message" placeholder="e.g. We're on a short holiday break and will resume taking orders soon. Thank you for your patience!"></textarea>
+      <label for="store-reopen-date">Expected reopen date (optional, shown as text)</label>
+      <input type="text" id="store-reopen-date" placeholder="e.g. 12 July 2026">
+      <button class="btn btn-primary" id="save-settings-btn">Save store status</button>
+      <div class="settings-save-msg" id="settings-save-msg"></div>
+    </div>
   </div>
 </div>
 
@@ -270,11 +370,22 @@
         gate.style.display = 'none';
         dashboard.style.display = 'block';
         renderAll();
+        loadProductManager();
+        loadStoreSettings();
       })
       .catch(function(){
         gateError.style.display = 'block';
       });
   }
+
+  document.querySelectorAll('.tab-btn').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      document.querySelectorAll('.tab-btn').forEach(function(b){ b.classList.remove('active'); });
+      document.querySelectorAll('.tab-panel').forEach(function(p){ p.classList.remove('active'); });
+      btn.classList.add('active');
+      document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+    });
+  });
 
   document.getElementById('unlock-btn').addEventListener('click', function(){
     gateError.style.display = 'none';
@@ -496,6 +607,219 @@
     a.download = 'flora-dew-orders-' + new Date().toISOString().slice(0,10) + '.csv';
     a.click();
     URL.revokeObjectURL(url);
+  });
+
+  // =====================================================================
+  // Product photo manager
+  // =====================================================================
+  // Mirrors the product catalog in index.html (id/name/category only —
+  // this is just enough to know which products exist and let you attach
+  // photos to each one; prices/descriptions still live in index.html).
+  var PRODUCTS_META = [
+    { id:'aloe-vera-soap', name:'Aloe Vera Handmade Soap', cat:'soap' },
+    { id:'charcoal-soap', name:'Charcoal Handmade Soap', cat:'soap' },
+    { id:'charcoal-multani-mitti-soap', name:'Charcoal & Multani Mitti Soap', cat:'soap' },
+    { id:'neem-soap', name:'Neem Handmade Soap', cat:'soap' },
+    { id:'sandalwood-soap', name:'Sandalwood Handmade Soap', cat:'soap' },
+    { id:'hibiscus-aloe-vera-soap', name:'Hibiscus & Aloe Vera Soap', cat:'soap' },
+    { id:'kesar-oats-soap', name:'Kesar Oats Bath Soap', cat:'soap' },
+    { id:'avarampoo-soap', name:'Avarampoo Cold-Processed Soap', cat:'soap' },
+    { id:'gentle-baby-soap', name:'Gentle Baby Soap', cat:'soap' },
+    { id:'hanging-grape-soap', name:'Handcrafted Hanging Grape Bunch Soap', cat:'soap' },
+    { id:'12-herbs-hair-oil', name:'12 Herbs Hair Growth Oil', cat:'oil' },
+    { id:'beetroot-shea-lip-balm', name:'Beetroot & Shea Butter Lip Balm', cat:'balm' },
+    { id:'natural-creamy-lip-balm', name:'Natural Creamy Lip Balm', cat:'balm' },
+    { id:'semi-matte-lipstick', name:'Semi-Matte Lipstick', cat:'lipstick' }
+  ];
+  var MAX_IMAGES_PER_PRODUCT = 8;
+  var PRODUCT_IMAGES = {}; // productId -> array of data-URLs, loaded from the server
+
+  function loadProductManager(){
+    fetch('/.netlify/functions/product-images')
+      .then(function(res){ return res.json(); })
+      .then(function(images){
+        PRODUCT_IMAGES = images || {};
+        renderProductManager();
+      })
+      .catch(function(){
+        document.getElementById('pm-grid').innerHTML = '<div class="empty-state">Could not load product photos.</div>';
+      });
+  }
+
+  function renderProductManager(){
+    var catFilter = document.getElementById('pm-category-filter').value;
+    var gridEl = document.getElementById('pm-grid');
+    var list = PRODUCTS_META.filter(function(p){ return catFilter === 'all' || p.cat === catFilter; });
+
+    gridEl.innerHTML = list.map(function(p){
+      var images = PRODUCT_IMAGES[p.id] || [];
+      var thumbs = images.map(function(src, i){
+        return '<div class="pm-thumb"><img src="'+src+'" alt=""><button type="button" class="pm-thumb-del" data-pid="'+p.id+'" data-idx="'+i+'">&times;</button></div>';
+      }).join('');
+      var full = images.length >= MAX_IMAGES_PER_PRODUCT;
+
+      return '' +
+        '<div class="pm-card" data-pid="'+p.id+'">' +
+          '<div class="pm-card-head">' +
+            '<span class="pm-name">'+p.name+'</span>' +
+            '<span class="pm-count">'+images.length+' / '+MAX_IMAGES_PER_PRODUCT+' images</span>' +
+          '</div>' +
+          '<div class="pm-thumbs">'+thumbs+'</div>' +
+          '<div class="pm-upload-row">' +
+            '<input type="file" accept="image/*" multiple data-pid="'+p.id+'" class="pm-file-input" '+(full ? 'disabled' : '')+'>' +
+            '<span class="pm-upload-msg" id="pm-msg-'+p.id+'">'+(full ? 'Maximum reached — delete a photo to add another.' : '')+'</span>' +
+          '</div>' +
+        '</div>';
+    }).join('');
+
+    gridEl.querySelectorAll('.pm-file-input').forEach(function(input){
+      input.addEventListener('change', function(){
+        handleFileUpload(input.dataset.pid, input.files);
+        input.value = '';
+      });
+    });
+    gridEl.querySelectorAll('.pm-thumb-del').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        deleteProductImage(btn.dataset.pid, parseInt(btn.dataset.idx, 10));
+      });
+    });
+  }
+
+  document.getElementById('pm-category-filter').addEventListener('change', renderProductManager);
+
+  // Resize + compress an image file in-browser before upload, so blobs
+  // stay small and uploads stay fast — most phone photos are 3-6 MB
+  // straight out of the camera, far larger than needed for the web.
+  function resizeImageFile(file, maxDim, quality){
+    return new Promise(function(resolve, reject){
+      var img = new Image();
+      var reader = new FileReader();
+      reader.onload = function(){
+        img.onload = function(){
+          var w = img.width, h = img.height;
+          if(w > h && w > maxDim){ h = Math.round(h * (maxDim / w)); w = maxDim; }
+          else if(h > maxDim){ w = Math.round(w * (maxDim / h)); h = maxDim; }
+          var canvas = document.createElement('canvas');
+          canvas.width = w; canvas.height = h;
+          canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+          resolve(canvas.toDataURL('image/jpeg', quality));
+        };
+        img.onerror = reject;
+        img.src = reader.result;
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  }
+
+  function handleFileUpload(productId, files){
+    var msgEl = document.getElementById('pm-msg-' + productId);
+    var existingCount = (PRODUCT_IMAGES[productId] || []).length;
+    var fileList = Array.prototype.slice.call(files);
+
+    if(existingCount + fileList.length > MAX_IMAGES_PER_PRODUCT){
+      msgEl.className = 'pm-upload-msg err';
+      msgEl.textContent = 'You can add ' + (MAX_IMAGES_PER_PRODUCT - existingCount) + ' more photo(s) to this product (limit ' + MAX_IMAGES_PER_PRODUCT + ').';
+      fileList = fileList.slice(0, Math.max(0, MAX_IMAGES_PER_PRODUCT - existingCount));
+      if(fileList.length === 0) return;
+    } else {
+      msgEl.className = 'pm-upload-msg';
+      msgEl.textContent = 'Uploading…';
+    }
+
+    // Upload one at a time to keep request sizes small and predictable.
+    var chain = Promise.resolve();
+    fileList.forEach(function(file){
+      chain = chain.then(function(){
+        return resizeImageFile(file, 1000, 0.8).then(function(dataUrl){
+          return fetch('/.netlify/functions/product-images', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ secret: currentSecret(), productId: productId, image: dataUrl })
+          }).then(function(res){ return res.json(); });
+        });
+      }).then(function(result){
+        if(result && result.images) PRODUCT_IMAGES[productId] = result.images;
+      });
+    });
+
+    chain.then(function(){
+      msgEl.className = 'pm-upload-msg ok';
+      msgEl.textContent = 'Saved.';
+      renderProductManager();
+    }).catch(function(){
+      msgEl.className = 'pm-upload-msg err';
+      msgEl.textContent = 'Upload failed — please try again.';
+    });
+  }
+
+  function deleteProductImage(productId, index){
+    fetch('/.netlify/functions/product-images', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ secret: currentSecret(), productId: productId, action: 'delete', index: index })
+    })
+      .then(function(res){ return res.json(); })
+      .then(function(result){
+        if(result && result.images) PRODUCT_IMAGES[productId] = result.images;
+        renderProductManager();
+      })
+      .catch(function(){ alert('Could not delete that photo — please try again.'); });
+  }
+
+  // =====================================================================
+  // Store status (holiday / temporary closure)
+  // =====================================================================
+  function loadStoreSettings(){
+    fetch('/.netlify/functions/store-settings')
+      .then(function(res){ return res.json(); })
+      .then(function(settings){
+        settings = settings || {};
+        document.getElementById('store-closed-toggle').checked = !!settings.closed;
+        document.getElementById('store-message').value = settings.message || '';
+        document.getElementById('store-reopen-date').value = settings.reopenDate || '';
+        updateStoreStatusLabel();
+      })
+      .catch(function(){ /* leave defaults */ });
+  }
+
+  function updateStoreStatusLabel(){
+    var closed = document.getElementById('store-closed-toggle').checked;
+    document.getElementById('store-status-label').textContent = closed ? 'closed' : 'open';
+  }
+
+  document.getElementById('store-closed-toggle').addEventListener('change', updateStoreStatusLabel);
+
+  document.getElementById('save-settings-btn').addEventListener('click', function(){
+    var btn = document.getElementById('save-settings-btn');
+    var msgEl = document.getElementById('settings-save-msg');
+    var payload = {
+      secret: currentSecret(),
+      closed: document.getElementById('store-closed-toggle').checked,
+      message: document.getElementById('store-message').value.trim(),
+      reopenDate: document.getElementById('store-reopen-date').value.trim()
+    };
+
+    btn.disabled = true;
+    fetch('/.netlify/functions/store-settings', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    })
+      .then(function(res){
+        if(!res.ok) throw new Error('save failed');
+        return res.json();
+      })
+      .then(function(){
+        btn.disabled = false;
+        msgEl.className = 'settings-save-msg ok';
+        msgEl.textContent = 'Saved. Customers will see this the next time they load the site.';
+      })
+      .catch(function(){
+        btn.disabled = false;
+        msgEl.className = 'settings-save-msg err';
+        msgEl.textContent = 'Could not save — please try again.';
+      });
   });
 </script>
 
