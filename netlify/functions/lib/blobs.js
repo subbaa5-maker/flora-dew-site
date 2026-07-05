@@ -32,4 +32,11 @@ function settingsStore() {
   return namedStore('settings');
 }
 
-module.exports = { ordersStore, productImagesStore, settingsStore };
+// Stores one image data-URL per named site section ("slot"): hero, about,
+// why, reviews, footerLogo. One image per slot (not an array), unlike
+// productImagesStore.
+function siteImagesStore() {
+  return namedStore('site-images');
+}
+
+module.exports = { ordersStore, productImagesStore, settingsStore, siteImagesStore };
