@@ -391,7 +391,10 @@
     font-size:0.92rem;
   }
   .add-cart-btn:disabled{opacity:0.55; cursor:not-allowed;}
-  .product-card h3{font-size:1.5rem; margin-bottom:8px;}
+  .card-photo-link{display:block; cursor:pointer;}
+  .card-title-link{display:block; text-decoration:none; color:inherit; cursor:pointer;}
+  .card-title-link:hover h3{color:var(--fern);}
+  .product-card h3{font-size:1.5rem; margin-bottom:8px; transition:color 0.2s ease;}
   .product-card p.desc{font-size:0.92rem; color:rgba(36,54,35,0.72); flex-grow:1;}
   .ingredient-row{
     display:flex; flex-wrap:wrap; gap:6px;
@@ -554,8 +557,10 @@
     width:52px; height:52px; flex-shrink:0;
     background:var(--milk-sage); border-radius:12px;
     display:flex; align-items:center; justify-content:center;
+    overflow:hidden;
   }
   .cart-item .ci-icon svg{width:36px; height:36px;}
+  .cart-item .ci-icon .ci-photo{width:100%; height:100%; object-fit:cover; display:block;}
   .cart-item .ci-info{flex:1;}
   .cart-item .ci-name{font-size:0.9rem; font-weight:600;}
   .cart-item .ci-variant{font-size:0.78rem; color:rgba(36,54,35,0.6); margin-top:2px;}
@@ -1514,8 +1519,8 @@
 
       card.innerHTML =
         '<span class="card-tag">'+prod.tag+'</span>' +
-        '<div class="icon-stage" id="icon-stage-'+idx+'">'+ICONS[prod.icon]+'</div>' +
-        '<h3>'+prod.name+'</h3>' +
+        '<a class="card-photo-link" href="product.html?id='+encodeURIComponent(prod.id)+'" aria-label="View '+prod.name+'"><div class="icon-stage" id="icon-stage-'+idx+'">'+ICONS[prod.icon]+'</div></a>' +
+        '<a class="card-title-link" href="product.html?id='+encodeURIComponent(prod.id)+'"><h3>'+prod.name+'</h3></a>' +
         '<p class="desc">'+prod.desc+'</p>' +
         '<div class="ingredient-row">'+ingHtml+'</div>' +
         '<div class="variant-pills">'+pillsHtml+'</div>' +
@@ -1585,6 +1590,7 @@
     fetch('/.netlify/functions/product-images')
       .then(function(res){ return res.ok ? res.json() : {}; })
       .then(function(imagesByProduct){
+        PRODUCT_PHOTOS = imagesByProduct || {};
         PRODUCTS.forEach(function(prod, idx){
           var photos = imagesByProduct[prod.id];
           if(!photos || photos.length === 0) return;
@@ -1726,11 +1732,33 @@
       renderShop();
       loadProductPhotos();
       loadStoreStatus();
+      handleIncomingAddToCart();
     });
   })();
 
+  // If we were sent here from product.html's "Add to cart" button
+  // (?add=<productId>&vi=<variantIndex>&qty=<n>), add that item to the
+  // cart, open it, then clean the URL so a refresh doesn't re-add it.
+  function handleIncomingAddToCart(){
+    var params = new URLSearchParams(window.location.search);
+    var addId = params.get('add');
+    if(!addId) return;
+
+    var vi = parseInt(params.get('vi'), 10) || 0;
+    var qty = parseInt(params.get('qty'), 10) || 1;
+    var pidx = PRODUCTS.findIndex(function(p){ return p.id === addId; });
+
+    if(pidx !== -1 && PRODUCTS[pidx].variants[vi]){
+      for(var i = 0; i < qty; i++) addToCart(pidx, vi);
+    }
+
+    var cleanUrl = window.location.pathname + window.location.hash;
+    window.history.replaceState({}, '', cleanUrl);
+  }
+
   // ---------- Cart state & drawer ----------
   var CART = []; // { pidx, vidx, qty }
+  var PRODUCT_PHOTOS = {}; // productId -> [photoUrl, ...], populated by loadProductPhotos()
 
   function addToCart(pidx, vidx){
     var existing = CART.find(function(c){ return c.pidx === pidx && c.vidx === vidx; });
@@ -1771,8 +1799,12 @@
         var prod = PRODUCTS[item.pidx];
         var variant = prod.variants[item.vidx];
         var lineTotal = variant.p * item.qty;
+        var photos = PRODUCT_PHOTOS[prod.id];
+        var thumbHtml = (photos && photos.length) ?
+          '<img class="ci-photo" src="'+photos[0]+'" alt="'+prod.name+'">' :
+          ICONS[prod.icon];
         return '<div class="cart-item" data-ci="'+ci+'">' +
-          '<div class="ci-icon">'+ICONS[prod.icon]+'</div>' +
+          '<div class="ci-icon">'+thumbHtml+'</div>' +
           '<div class="ci-info">' +
             '<div class="ci-name">'+prod.name+'</div>' +
             '<div class="ci-variant">'+variant.l+' · ₹'+variant.p+'</div>' +
