@@ -253,12 +253,13 @@
   }
   /* Admin-uploaded hero photo — hidden until one is set, then replaces
      the default illustration */
-  .soap-stage img.hero-photo-img{display:none;}
+  .soap-stage img.hero-photo-img{display:none; opacity:0; transition:opacity 0.35s ease;}
   .soap-stage.has-hero-photo svg{display:none;}
   .soap-stage.has-hero-photo img.hero-photo-img{
     display:block; width:100%; max-width:420px; height:380px;
     border-radius:24px; object-fit:cover; box-shadow:var(--shadow-soft);
   }
+  .soap-stage.has-hero-photo img.hero-photo-img.loaded{opacity:1;}
 
   /* ---------- Marquee ---------- */
   .marquee-band{
@@ -1587,7 +1588,7 @@
 
   // ---------- Real product photos (uploaded from the admin dashboard) ----------
   function loadProductPhotos(){
-    fetch('/.netlify/functions/product-images')
+    return fetch('/.netlify/functions/product-images')
       .then(function(res){ return res.ok ? res.json() : {}; })
       .then(function(imagesByProduct){
         PRODUCT_PHOTOS = imagesByProduct || {};
@@ -1628,60 +1629,88 @@
           renderPhoto();
         });
       })
-      .catch(function(){ /* keep the placeholder icons if this fails */ });
+      .catch(function(){ /* keep the placeholder icons if this fails */ })
+      .then(function(){
+        if(CART.length) renderCart(); // photos may have finished loading after items were already added
+      });
   }
 
   // ---------- Editable site images (uploaded from the admin dashboard) ----------
   // Hero, About Us / Mission, Why Natural, Reviews, and the Footer logo
   // each fall back to their built-in default look until an image is set
   // for that slot in admin.html -> Site Images.
+  //
+  // These are also cached in sessionStorage so that once they've loaded
+  // once, navigating away (e.g. to a product page) and back doesn't
+  // show the placeholder illustration again while the photo re-fetches
+  // — the cached photo applies instantly, and a fresh copy is still
+  // fetched quietly in the background to catch any admin updates.
   (function loadSiteImages(){
+    var CACHE_KEY = 'fd_site_images';
+
+    function applyImages(images){
+      images = images || {};
+
+      if(images.hero){
+        var heroStage = document.getElementById('hero-photo-stage');
+        var heroImg = document.getElementById('hero-photo-img');
+        if(heroStage && heroImg && heroImg.src !== images.hero){
+          heroImg.classList.remove('loaded');
+          heroImg.addEventListener('load', function onLoad(){
+            heroImg.classList.add('loaded');
+            heroImg.removeEventListener('load', onLoad);
+          });
+          heroImg.src = images.hero;
+          heroStage.classList.add('has-hero-photo');
+        }
+      }
+      if(images.about){
+        var missionWrap = document.getElementById('mission-photo-wrap');
+        var missionImg = document.getElementById('mission-photo-img');
+        if(missionWrap && missionImg){
+          missionImg.src = images.about;
+          missionWrap.classList.add('active');
+        }
+      }
+      if(images.why){
+        var whyWrap = document.getElementById('why-photo-wrap');
+        var whyImg = document.getElementById('why-photo-img');
+        if(whyWrap && whyImg){
+          whyImg.src = images.why;
+          whyWrap.classList.add('active');
+        }
+      }
+      if(images.reviews){
+        var reviewsWrap = document.getElementById('reviews-photo-wrap');
+        var reviewsImg = document.getElementById('reviews-photo-img');
+        if(reviewsWrap && reviewsImg){
+          reviewsImg.src = images.reviews;
+          reviewsWrap.classList.add('active');
+        }
+      }
+      if(images.footerLogo){
+        var footerLogoImg = document.getElementById('footer-logo-img');
+        if(footerLogoImg){
+          footerLogoImg.src = images.footerLogo;
+          footerLogoImg.classList.add('active');
+        }
+      }
+    }
+
+    // Apply a cached copy immediately, if we have one from earlier this
+    // session, so there's no flash of the placeholder illustration.
+    try{
+      var cached = sessionStorage.getItem(CACHE_KEY);
+      if(cached) applyImages(JSON.parse(cached));
+    }catch(e){ /* private browsing etc — just skip the cache */ }
+
     fetch('/.netlify/functions/site-images')
       .then(function(res){ return res.ok ? res.json() : {}; })
       .then(function(images){
-        images = images || {};
-
-        if(images.hero){
-          var heroStage = document.getElementById('hero-photo-stage');
-          var heroImg = document.getElementById('hero-photo-img');
-          if(heroStage && heroImg){
-            heroImg.src = images.hero;
-            heroStage.classList.add('has-hero-photo');
-          }
-        }
-        if(images.about){
-          var missionWrap = document.getElementById('mission-photo-wrap');
-          var missionImg = document.getElementById('mission-photo-img');
-          if(missionWrap && missionImg){
-            missionImg.src = images.about;
-            missionWrap.classList.add('active');
-          }
-        }
-        if(images.why){
-          var whyWrap = document.getElementById('why-photo-wrap');
-          var whyImg = document.getElementById('why-photo-img');
-          if(whyWrap && whyImg){
-            whyImg.src = images.why;
-            whyWrap.classList.add('active');
-          }
-        }
-        if(images.reviews){
-          var reviewsWrap = document.getElementById('reviews-photo-wrap');
-          var reviewsImg = document.getElementById('reviews-photo-img');
-          if(reviewsWrap && reviewsImg){
-            reviewsImg.src = images.reviews;
-            reviewsWrap.classList.add('active');
-          }
-        }
-        if(images.footerLogo){
-          var footerLogoImg = document.getElementById('footer-logo-img');
-          if(footerLogoImg){
-            footerLogoImg.src = images.footerLogo;
-            footerLogoImg.classList.add('active');
-          }
-        }
+        applyImages(images);
+        try{ sessionStorage.setItem(CACHE_KEY, JSON.stringify(images || {})); }catch(e){ /* ignore */ }
       })
-      .catch(function(){ /* keep the defaults for every section if this fails */ });
+      .catch(function(){ /* keep the defaults (or cached copy) for every section if this fails */ });
   })();
 
   // ---------- Store open/closed (holiday) banner ----------
@@ -1730,8 +1759,9 @@
       CATS = [{id:'all', label:'All Products'}].concat(cats);
     }).then(function(){
       renderShop();
-      loadProductPhotos();
       loadStoreStatus();
+      return loadProductPhotos();
+    }).then(function(){
       handleIncomingAddToCart();
     });
   })();
