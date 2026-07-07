@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title id="page-title">Product — Flora Dew</title>
+<meta name="description" id="page-desc" content="Shop handmade natural skincare from Flora Dew.">
+<meta name="robots" content="index, follow, max-image-preview:large">
+<link rel="canonical" id="page-canonical" href="https://www.floradew.in/">
+<meta name="theme-color" content="#243623">
+
+<!-- Open Graph -->
+<meta property="og:type" content="product">
+<meta property="og:site_name" content="Flora Dew">
+<meta property="og:title" id="og-title" content="Flora Dew">
+<meta property="og:description" id="og-desc" content="Chemical-free, cruelty-free skincare handmade in small batches.">
+<meta property="og:url" id="og-url" content="https://www.floradew.in/">
+<meta property="og:image" id="og-image" content="https://www.floradew.in/og-image.jpg">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,450;0,9..144,600;1,9..144,450;1,9..144,600&family=Work+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script type="application/ld+json" id="product-schema"></script>
+<style>
+  :root{
+    --moss-ink:#243623; --milk-sage:#eef1e6; --milk-sage-2:#e3e8d6;
+    --rosewater:#c4707c; --rosewater-deep:#a5525e; --honey-oil:#c2963a;
+    --fern:#4e6b4c; --paper:#f8f8f3; --line: rgba(36,54,35,0.14);
+    --shadow-soft: 0 20px 40px -24px rgba(36,54,35,0.35);
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    background:var(--milk-sage); color:var(--moss-ink);
+    font-family:'Work Sans', sans-serif; font-weight:400; line-height:1.5;
+  }
+  h1,h2{font-family:'Fraunces', serif; font-weight:450; letter-spacing:-0.01em;}
+  a{color:inherit; text-decoration:none;}
+
+  header{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:20px clamp(20px,5vw,64px);
+  }
+  .logo{display:flex; align-items:center; gap:8px; font-family:'Fraunces',serif; font-size:1.3rem; font-weight:600;}
+  .logo .dot{width:9px;height:9px;border-radius:50%;background:var(--rosewater);}
+  .back-link{
+    font-size:0.85rem; font-weight:600; color:var(--fern);
+    display:flex; align-items:center; gap:6px;
+  }
+  .back-link:hover{color:var(--moss-ink);}
+
+  main{max-width:1080px; margin:0 auto; padding:10px clamp(20px,5vw,64px) 80px;}
+  .pd-loading, .pd-error{padding:60px 0; text-align:center; color:rgba(36,54,35,0.6);}
+  .pd-error a{color:var(--fern); font-weight:600; text-decoration:underline;}
+
+  .pd-crumbs{font-size:0.8rem; color:rgba(36,54,35,0.55); margin-bottom:22px;}
+  .pd-crumbs a{color:rgba(36,54,35,0.55); text-decoration:underline;}
+  .pd-crumbs a:hover{color:var(--moss-ink);}
+
+  .pd-grid{display:grid; grid-template-columns:1fr 1fr; gap:clamp(28px,4vw,56px);}
+  @media (max-width:820px){ .pd-grid{grid-template-columns:1fr;} }
+
+  /* Gallery */
+  .pd-gallery{position:relative;}
+  .pd-main-stage{
+    aspect-ratio:1/1; border-radius:22px; overflow:hidden;
+    background:var(--paper); border:1px solid var(--line);
+    display:flex; align-items:center; justify-content:center; position:relative;
+  }
+  .pd-main-stage img{width:100%; height:100%; object-fit:cover; display:block;}
+  .pd-main-stage svg{width:55%; height:55%;}
+  .pd-nav{
+    position:absolute; top:50%; transform:translateY(-50%);
+    width:40px; height:40px; border-radius:50%; border:none;
+    background:rgba(255,255,255,0.9); color:var(--moss-ink);
+    font-size:1.1rem; cursor:pointer; box-shadow:var(--shadow-soft);
+    display:flex; align-items:center; justify-content:center;
+  }
+  .pd-nav.prev{left:14px;} .pd-nav.next{right:14px;}
+  .pd-thumbs{display:flex; gap:10px; margin-top:14px; flex-wrap:wrap;}
+  .pd-thumb{
+    width:64px; height:64px; border-radius:12px; overflow:hidden;
+    border:2px solid transparent; cursor:pointer; background:var(--paper);
+    flex-shrink:0;
+  }
+  .pd-thumb.active{border-color:var(--fern);}
+  .pd-thumb img{width:100%; height:100%; object-fit:cover; display:block;}
+
+  /* Details */
+  .pd-tag{
+    font-size:0.72rem; font-weight:700; letter-spacing:0.08em; text-transform:uppercase;
+    color:var(--rosewater-deep); margin-bottom:10px; display:block;
+  }
+  .pd-title{font-size:clamp(1.8rem,3.2vw,2.4rem); margin-bottom:14px;}
+  .pd-desc{font-size:0.98rem; color:rgba(36,54,35,0.78); margin-bottom:20px;}
+  .pd-ing-row{display:flex; flex-wrap:wrap; gap:6px; margin-bottom:24px;}
+  .pd-ing-row span{
+    font-size:0.75rem; border:1px solid var(--line); border-radius:100px;
+    padding:5px 12px; color:rgba(36,54,35,0.75); background:rgba(255,255,255,0.5);
+  }
+
+  .pd-label{font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; color:rgba(36,54,35,0.55); margin-bottom:8px; display:block;}
+  .pd-variants{display:flex; flex-wrap:wrap; gap:8px; margin-bottom:22px;}
+  .pd-variant-pill{
+    font-size:0.82rem; font-weight:600; border:1px solid var(--line); border-radius:100px;
+    padding:8px 16px; background:rgba(255,255,255,0.6); color:rgba(36,54,35,0.75); cursor:pointer;
+    transition:all 0.2s ease;
+  }
+  .pd-variant-pill.active{background:var(--fern); border-color:var(--fern); color:var(--milk-sage);}
+
+  .pd-price-row{display:flex; align-items:baseline; gap:10px; margin-bottom:22px;}
+  .pd-price-now{font-family:'Fraunces', serif; font-size:2rem; font-weight:600;}
+  .pd-price-mrp{font-size:1rem; text-decoration:line-through; color:rgba(36,54,35,0.4);}
+  .pd-price-off{
+    font-size:0.78rem; font-weight:700; color:var(--rosewater-deep);
+    background:rgba(196,112,124,0.14); padding:3px 10px; border-radius:100px;
+  }
+
+  .pd-qty-cart-row{display:flex; align-items:center; gap:14px; margin-bottom:16px;}
+  .pd-qty-stepper{
+    display:flex; align-items:center; gap:14px;
+    border:1px solid var(--line); border-radius:100px; padding:8px 16px;
+  }
+  .pd-qty-stepper button{
+    background:none; border:none; font-size:1.1rem; cursor:pointer; color:var(--moss-ink); line-height:1;
+  }
+  .pd-qty-stepper span{font-weight:600; min-width:16px; text-align:center;}
+  .pd-add-btn{
+    flex:1; background:var(--moss-ink); color:var(--milk-sage); border:1px solid var(--moss-ink);
+    border-radius:100px; padding:14px 20px; font-size:0.92rem; font-weight:600; cursor:pointer;
+    transition:background 0.25s ease;
+  }
+  .pd-add-btn:hover{background:var(--fern); border-color:var(--fern);}
+  .pd-add-btn.added{background:var(--fern); border-color:var(--fern);}
+  .pd-trust{font-size:0.78rem; color:rgba(36,54,35,0.55);}
+</style>
+</head>
+<body>
+
+<header>
+  <a href="index.html" class="logo"><span class="dot"></span>Flora Dew</a>
+  <a href="index.html" class="back-link">← Back to Shop</a>
+</header>
+
+<main>
+  <div class="pd-loading" id="pd-loading">Loading product…</div>
+  <div class="pd-error" id="pd-error" style="display:none;">
+    We couldn't find that product. <a href="index.html">Back to the shop</a>
+  </div>
+
+  <div id="pd-content" style="display:none;">
+    <div class="pd-crumbs">
+      <a href="index.html">Shop</a> &nbsp;/&nbsp; <span id="pd-crumb-cat"></span> &nbsp;/&nbsp; <span id="pd-crumb-name"></span>
+    </div>
+    <div class="pd-grid">
+      <div class="pd-gallery">
+        <div class="pd-main-stage" id="pd-main-stage"></div>
+        <div class="pd-thumbs" id="pd-thumbs"></div>
+      </div>
+      <div class="pd-details">
+        <span class="pd-tag" id="pd-tag"></span>
+        <h1 class="pd-title" id="pd-title"></h1>
+        <p class="pd-desc" id="pd-desc"></p>
+        <div class="pd-ing-row" id="pd-ing-row"></div>
+
+        <span class="pd-label" id="pd-variant-label" style="display:none;">Choose size</span>
+        <div class="pd-variants" id="pd-variants"></div>
+
+        <div class="pd-price-row">
+          <span class="pd-price-now" id="pd-price-now"></span>
+          <span class="pd-price-mrp" id="pd-price-mrp"></span>
+          <span class="pd-price-off" id="pd-price-off"></span>
+        </div>
+
+        <div class="pd-qty-cart-row">
+          <div class="pd-qty-stepper">
+            <button type="button" id="pd-qty-minus">−</button>
+            <span id="pd-qty">1</span>
+            <button type="button" id="pd-qty-plus">+</button>
+          </div>
+          <button type="button" class="pd-add-btn" id="pd-add-btn">Add to cart</button>
+        </div>
+        <div class="pd-trust">Free delivery on all orders · Secure checkout via Razorpay</div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script>
+  var ICONS = {
+    soap: '<svg viewBox="0 0 120 120"><rect x="20" y="45" width="80" height="55" rx="20" fill="#e3d4b7" stroke="#243623" stroke-opacity="0.2"/><path d="M28 60 Q60 45 92 60" stroke="#c2963a" stroke-width="2.5" fill="none" opacity="0.6"/><circle cx="50" cy="75" r="6" fill="#c4707c" opacity="0.7"/><circle cx="72" cy="82" r="4" fill="#4e6b4c" opacity="0.6"/><circle cx="65" cy="65" r="3" fill="#c2963a" opacity="0.6"/></svg>',
+    soapDeco: '<svg viewBox="0 0 120 120"><circle cx="60" cy="70" r="14" fill="#c4707c" opacity="0.85"/><circle cx="42" cy="55" r="11" fill="#c2963a" opacity="0.8"/><circle cx="78" cy="55" r="11" fill="#4e6b4c" opacity="0.75"/><circle cx="60" cy="42" r="10" fill="#c4707c" opacity="0.7"/><rect x="57" y="18" width="6" height="20" rx="3" fill="#4e6b4c"/></svg>',
+    oil: '<svg viewBox="0 0 120 120"><path d="M50 25 C 40 40 40 55 50 65 C 60 55 60 40 50 25 Z" fill="#c2963a" opacity="0.75"/><rect x="42" y="60" width="16" height="40" rx="6" fill="#e3d4b7" stroke="#243623" stroke-opacity="0.2"/><rect x="46" y="52" width="8" height="10" fill="#4e6b4c"/><circle cx="78" cy="80" r="3" fill="#c2963a" opacity="0.6"/><circle cx="85" cy="65" r="2.5" fill="#c4707c" opacity="0.6"/></svg>',
+    balm: '<svg viewBox="0 0 120 120"><rect x="52" y="35" width="16" height="24" rx="6" fill="#4e6b4c"/><rect x="50" y="55" width="20" height="34" rx="8" fill="#c4707c" opacity="0.8"/><ellipse cx="60" cy="55" rx="10" ry="6" fill="#e3d4b7"/></svg>',
+    lipstick: '<svg viewBox="0 0 120 120"><rect x="50" y="30" width="20" height="18" rx="4" fill="#a5525e"/><rect x="48" y="46" width="24" height="44" rx="10" fill="#e3d4b7" stroke="#243623" stroke-opacity="0.2"/><rect x="53" y="70" width="14" height="6" fill="#c2963a" opacity="0.6"/></svg>'
+  };
+
+  function qs(name){
+    return new URLSearchParams(window.location.search).get(name);
+  }
+
+  var productId = qs('id');
+  var prod = null;
+  var photos = [];
+  var photoIndex = 0;
+  var variantIndex = 0;
+  var qty = 1;
+
+  if(!productId){
+    showError();
+  } else {
+    Promise.all([
+      fetch('/.netlify/functions/products').then(function(r){ return r.ok ? r.json() : []; }).catch(function(){ return []; }),
+      fetch('/.netlify/functions/categories').then(function(r){ return r.ok ? r.json() : []; }).catch(function(){ return []; }),
+      fetch('/.netlify/functions/product-images').then(function(r){ return r.ok ? r.json() : {}; }).catch(function(){ return {}; })
+    ]).then(function(results){
+      var products = results[0] || [];
+      var categories = results[1] || [];
+      var imagesByProduct = results[2] || {};
+
+      prod = products.find(function(p){ return p.id === productId; });
+      if(!prod){ showError(); return; }
+
+      photos = imagesByProduct[prod.id] || [];
+      var catObj = categories.find(function(c){ return c.id === prod.cat; });
+      renderProduct(catObj ? catObj.label : prod.cat);
+    }).catch(function(){ showError(); });
+  }
+
+  function showError(){
+    document.getElementById('pd-loading').style.display = 'none';
+    document.getElementById('pd-error').style.display = 'block';
+  }
+
+  function renderProduct(catLabel){
+    document.getElementById('pd-loading').style.display = 'none';
+    document.getElementById('pd-content').style.display = 'block';
+
+    // SEO meta
+    var title = prod.name + ' — Flora Dew';
+    document.title = title;
+    document.getElementById('page-title').textContent = title;
+    document.getElementById('page-desc').setAttribute('content', prod.desc);
+    document.getElementById('og-title').setAttribute('content', prod.name);
+    document.getElementById('og-desc').setAttribute('content', prod.desc);
+    var canonicalUrl = 'https://www.floradew.in/product/' + encodeURIComponent(prod.id);
+    document.getElementById('page-canonical').setAttribute('href', canonicalUrl);
+    document.getElementById('og-url').setAttribute('content', canonicalUrl);
+    if(photos.length) document.getElementById('og-image').setAttribute('content', photos[0]);
+
+    document.getElementById('product-schema').textContent = JSON.stringify({
+      "@context":"https://schema.org", "@type":"Product",
+      "name":prod.name, "description":prod.desc,
+      "image": photos.length ? photos : undefined,
+      "offers":{
+        "@type":"AggregateOffer", "priceCurrency":"INR",
+        "lowPrice": Math.min.apply(null, prod.variants.map(function(v){return v.p;})),
+        "highPrice": Math.max.apply(null, prod.variants.map(function(v){return v.p;})),
+        "availability":"https://schema.org/InStock"
+      }
+    });
+
+    document.getElementById('pd-crumb-cat').textContent = catLabel;
+    document.getElementById('pd-crumb-name').textContent = prod.name;
+    document.getElementById('pd-tag').textContent = prod.tag || '';
+    document.getElementById('pd-title').textContent = prod.name;
+    document.getElementById('pd-desc').textContent = prod.desc;
+    document.getElementById('pd-ing-row').innerHTML = (prod.ing || []).map(function(i){ return '<span>'+i+'</span>'; }).join('');
+
+    renderGallery();
+    renderVariants();
+    updateAddBtnState();
+
+    document.getElementById('pd-qty-minus').addEventListener('click', function(){
+      if(qty > 1){ qty--; document.getElementById('pd-qty').textContent = qty; }
+    });
+    document.getElementById('pd-qty-plus').addEventListener('click', function(){
+      qty++; document.getElementById('pd-qty').textContent = qty;
+    });
+    document.getElementById('pd-add-btn').addEventListener('click', function(){
+      var url = 'index.html?add=' + encodeURIComponent(prod.id) + '&vi=' + variantIndex + '&qty=' + qty;
+      window.location.href = url;
+    });
+  }
+
+  function renderGallery(){
+    var stage = document.getElementById('pd-main-stage');
+    var thumbsEl = document.getElementById('pd-thumbs');
+
+    if(!photos.length){
+      stage.innerHTML = ICONS[prod.icon] || ICONS.soap;
+      thumbsEl.innerHTML = '';
+      return;
+    }
+
+    function paint(){
+      stage.innerHTML =
+        '<img src="'+photos[photoIndex]+'" alt="'+prod.name+'">' +
+        (photos.length > 1 ?
+          '<button type="button" class="pd-nav prev" aria-label="Previous photo">‹</button>' +
+          '<button type="button" class="pd-nav next" aria-label="Next photo">›</button>' : '');
+      if(photos.length > 1){
+        stage.querySelector('.pd-nav.prev').addEventListener('click', function(){
+          photoIndex = (photoIndex - 1 + photos.length) % photos.length; paint();
+        });
+        stage.querySelector('.pd-nav.next').addEventListener('click', function(){
+          photoIndex = (photoIndex + 1) % photos.length; paint();
+        });
+      }
+      thumbsEl.querySelectorAll('.pd-thumb').forEach(function(t, i){
+        t.classList.toggle('active', i === photoIndex);
+      });
+    }
+
+    thumbsEl.innerHTML = photos.map(function(src, i){
+      return '<div class="pd-thumb'+(i===0?' active':'')+'" data-i="'+i+'"><img src="'+src+'" alt="'+prod.name+' photo '+(i+1)+'"></div>';
+    }).join('');
+    thumbsEl.querySelectorAll('.pd-thumb').forEach(function(t){
+      t.addEventListener('click', function(){
+        photoIndex = parseInt(t.dataset.i, 10);
+        paint();
+      });
+    });
+
+    paint();
+  }
+
+  function renderVariants(){
+    var wrap = document.getElementById('pd-variants');
+    var label = document.getElementById('pd-variant-label');
+    if(prod.variants.length > 1) label.style.display = 'block';
+
+    wrap.innerHTML = prod.variants.map(function(v, vi){
+      return '<button type="button" class="pd-variant-pill'+(vi===0?' active':'')+'" data-vi="'+vi+'">'+v.l+'</button>';
+    }).join('');
+
+    wrap.querySelectorAll('.pd-variant-pill').forEach(function(pill){
+      pill.addEventListener('click', function(){
+        wrap.querySelectorAll('.pd-variant-pill').forEach(function(p2){ p2.classList.remove('active'); });
+        pill.classList.add('active');
+        variantIndex = parseInt(pill.dataset.vi, 10);
+        updatePriceRow();
+      });
+    });
+
+    updatePriceRow();
+  }
+
+  function updatePriceRow(){
+    var v = prod.variants[variantIndex];
+    var off = Math.round((1 - v.p / v.m) * 100);
+    document.getElementById('pd-price-now').textContent = '₹'+v.p;
+    document.getElementById('pd-price-mrp').textContent = '₹'+v.m;
+    document.getElementById('pd-price-off').textContent = off > 0 ? off+'% off' : '';
+  }
+
+  function updateAddBtnState(){
+    // Placeholder for future stock-aware logic; currently always enabled.
+  }
+</script>
+
+</body>
+</html>
