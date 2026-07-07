@@ -4,3 +4,8 @@
 
 [functions]
   node_bundler = "esbuild"
+
+[[redirects]]
+  from = "/product/:id"
+  to = "/product.html?id=:id"
+  status = 200
