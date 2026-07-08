@@ -19,6 +19,7 @@
 const crypto = require('crypto');
 const { ordersStore } = require('./lib/blobs');
 const { sendEmail, renderOrderRows, orderTotal } = require('./lib/email');
+const { createZohoInvoiceForOrder } = require('./lib/zoho');
 
 exports.handler = async function (event) {
   if (event.httpMethod !== 'POST') {
@@ -56,6 +57,16 @@ exports.handler = async function (event) {
     order.paymentId = razorpay_payment_id;
     order.paidAt = new Date().toISOString();
     await store.setJSON(razorpay_order_id, order);
+
+    // Auto-generate and email a Zoho Invoice for this order. Best-effort —
+    // if Zoho isn't configured or the API call fails, this returns null and
+    // the checkout still succeeds; see lib/zoho.js.
+    const zohoInvoice = await createZohoInvoiceForOrder(order);
+    if (zohoInvoice) {
+      order.zohoInvoiceId = zohoInvoice.invoiceId;
+      order.zohoInvoiceNumber = zohoInvoice.invoiceNumber;
+      await store.setJSON(razorpay_order_id, order);
+    }
 
     const total = orderTotal(order.items);
     const rows = renderOrderRows(order.items);
