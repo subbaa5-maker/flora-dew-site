@@ -351,7 +351,7 @@
   .settings-card{background:var(--paper); border-radius:16px; padding:24px 26px; box-shadow:var(--shadow-soft); max-width:520px;}
   .settings-card h3{font-size:1.15rem; margin-bottom:16px;}
   .toggle-row{display:flex; align-items:center; gap:12px; margin-bottom:18px;}
-  .toggle-switch{position:relative; width:46px; height:26px; flex-shrink:0;}
+  .toggle-switch{position:relative; width:46px; height:26px; flex-shrink:0; cursor:pointer;}
   .toggle-switch input{opacity:0; width:0; height:0;}
   .toggle-slider{
     position:absolute; inset:0; background:rgba(36,54,35,0.2); border-radius:100px; cursor:pointer; transition:background 0.2s;
@@ -472,9 +472,9 @@
       <h3>Holiday / temporary closure</h3>
       <div class="toggle-row">
         <label class="toggle-switch">
-  <input type="checkbox" id="store-closed-toggle">
-  <span class="toggle-slider"></span>
-</label>
+          <input type="checkbox" id="store-closed-toggle">
+          <span class="toggle-slider"></span>
+        </label>
         <span>Store is currently <strong id="store-status-label">open</strong></span>
       </div>
       <label for="store-message">Message shown to customers</label>
@@ -648,7 +648,7 @@
               '<div><span class="oc-label">Address:</span> '+(c.address || '—')+', '+(c.city || '')+', '+(c.state || '')+' - '+(c.pincode || '')+'</div>' +
             '</div>' +
           '</div>' +
-          '<div class="order-ids">Order: '+order.orderId+(order.paymentId ? ' · Payment: '+order.paymentId : '')+'</div>' +
+          '<div class="order-ids">Order: '+order.orderId+(order.paymentId ? ' · Payment: '+order.paymentId : '')+(order.zohoInvoiceNumber ? ' · Invoice: '+order.zohoInvoiceNumber : '')+'</div>' +
           '<div class="fulfillment-controls">' +
             '<div>' +
               '<label>Fulfillment status</label>' +

@@ -226,6 +226,57 @@ never into `index.html`).
 6. Redeploy. If `RESEND_API_KEY` isn't set, orders still save correctly —
    you just won't get emails yet.
 
+## Step 6b — Turn on Zoho Invoice auto-invoicing (optional)
+Every time a Razorpay payment is verified, the site can auto-create a Zoho
+Invoice for that order and email it to the customer. This is entirely
+separate from the Resend receipt email above — the receipt is a quick
+"thanks, we got your order" email, the Zoho invoice is the actual GST
+invoice document.
+
+You said your account is on Zoho's **India** data center
+(`zoho.in` / `zohoapis.in`) and the product is **Zoho Invoice**, so the code
+is already set up for that.
+
+1. In the [Zoho API Console](https://api-console.zoho.in), create a
+   **Self Client**.
+2. Generate an authorization code with scope `ZohoInvoice.fullaccess.all`,
+   then exchange it for a refresh token (the Self Client screen in the API
+   Console walks you through this, or you can use a one-time curl/Postman
+   call to `https://accounts.zoho.in/oauth/v2/token`).
+3. In Zoho Invoice, go to **Settings → Organization Profile** to find your
+   **Organization ID**.
+4. In Netlify, set these four environment variables (you've already added
+   them):
+   - `ZOHO_CLIENT_ID`
+   - `ZOHO_CLIENT_SECRET`
+   - `ZOHO_REFRESH_TOKEN`
+   - `ZOHO_ORG_ID`
+5. Redeploy the site (Netlify → **Deploys → Trigger deploy**) so the
+   functions pick up the new variables.
+6. Test with a real (or Razorpay test-mode) order. After payment is
+   verified:
+   - A Zoho **Contact** is created for the customer if one doesn't already
+     exist (matched by email).
+   - An **Invoice** is created with one line item per cart item.
+   - The invoice is emailed to the customer directly by Zoho.
+   - The invoice number appears next to the Order/Payment IDs in
+     `admin.html` so you can cross-reference it.
+7. If Zoho invoicing isn't configured yet (any of the four variables
+   missing) or the Zoho API call fails for any reason, this step is simply
+   skipped — checkout, payment verification, and the Resend receipt email
+   all continue to work normally. Check the Netlify function logs
+   (**Functions → verify-payment → Logs**) if an invoice doesn't show up
+   and you expect one.
+
+**Not yet included, ask if you want it:**
+- Marking the Zoho invoice as "paid" automatically (right now it's created
+  as a standard sent invoice; recording the Razorpay payment against it in
+  Zoho requires an extra `/invoices/{id}/payments` API call).
+- Adding GST/tax rates or an HSN code per line item (currently line items
+  are created with just name, rate, and quantity — no tax settings).
+- A "Resend invoice" button in `admin.html` for cases where the auto-email
+  fails or bounces.
+
 ## Step 7 — View your orders
 The easiest way is `admin.html` on your live site (e.g.
 `https://YOUR-SITE.netlify.app/admin.html`) — enter your `ADMIN_SECRET` to
