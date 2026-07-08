@@ -40,7 +40,14 @@ exports.handler = async function (event) {
           if (Array.isArray(val)) result[b.key] = val;
         })
       );
-      return { statusCode: 200, body: JSON.stringify(result) };
+      // Public GET, same response for every visitor — cache at the edge
+      // so most page loads never re-hit Blobs. See site-images.js for
+      // the same pattern and reasoning.
+      return {
+        statusCode: 200,
+        headers: { 'Cache-Control': 'public, max-age=60, stale-while-revalidate=600' },
+        body: JSON.stringify(result),
+      };
     } catch (err) {
       console.error('product-images GET error:', err);
       return { statusCode: 500, body: JSON.stringify({ error: 'Could not load product images' }) };

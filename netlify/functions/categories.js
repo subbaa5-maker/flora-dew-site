@@ -67,7 +67,13 @@ exports.handler = async function (event) {
         categories = DEFAULT_CATEGORIES;
         await store.setJSON('all', categories);
       }
-      return { statusCode: 200, body: JSON.stringify(categories) };
+      // Public GET, same response for every visitor — cache at the edge.
+      // See site-images.js for the same pattern and reasoning.
+      return {
+        statusCode: 200,
+        headers: { 'Cache-Control': 'public, max-age=60, stale-while-revalidate=600' },
+        body: JSON.stringify(categories),
+      };
     } catch (err) {
       console.error('categories GET error:', err);
       return { statusCode: 500, body: JSON.stringify({ error: 'Could not load categories' }) };

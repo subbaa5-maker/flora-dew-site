@@ -42,7 +42,17 @@ exports.handler = async function (event) {
           if (val) result[b.key] = val;
         })
       );
-      return { statusCode: 200, body: JSON.stringify(result) };
+      // Public GET, same response for every visitor — let Netlify's CDN
+      // cache it at the edge so most page loads never re-hit Blobs at
+      // all. Short max-age keeps admin edits showing up quickly;
+      // stale-while-revalidate means visitors still get an instant
+      // (possibly one-request-stale) response while it refreshes in the
+      // background rather than ever blocking on a cache miss.
+      return {
+        statusCode: 200,
+        headers: { 'Cache-Control': 'public, max-age=60, stale-while-revalidate=600' },
+        body: JSON.stringify(result),
+      };
     } catch (err) {
       console.error('site-images GET error:', err);
       return { statusCode: 500, body: JSON.stringify({ error: 'Could not load site images' }) };

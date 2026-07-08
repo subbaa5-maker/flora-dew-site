@@ -144,7 +144,13 @@ exports.handler = async function (event) {
         products = DEFAULT_PRODUCTS;
         await store.setJSON('all', products);
       }
-      return { statusCode: 200, body: JSON.stringify(products) };
+      // Public GET, same response for every visitor — cache at the edge.
+      // See site-images.js for the same pattern and reasoning.
+      return {
+        statusCode: 200,
+        headers: { 'Cache-Control': 'public, max-age=60, stale-while-revalidate=600' },
+        body: JSON.stringify(products),
+      };
     } catch (err) {
       console.error('products GET error:', err);
       return { statusCode: 500, body: JSON.stringify({ error: 'Could not load products' }) };
