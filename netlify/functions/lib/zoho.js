@@ -11,6 +11,21 @@
 //   ZOHO_CLIENT_SECRET
 //   ZOHO_REFRESH_TOKEN
 //   ZOHO_ORG_ID
+//   ZOHO_GST_PERCENTAGE   e.g. "5" — fallback GST rate used only for line
+//                         items whose product has no GST rate set in
+//                         Admin. The shop is GST-registered, so every
+//                         invoice line item must carry a tax_id or Zoho
+//                         rejects the invoice (error 110802). Each
+//                         product can carry its own GST rate (set per
+//                         product in Admin, since the catalog spans
+//                         multiple slabs e.g. 5% / 12% / 18%); this env
+//                         var is only the fallback for older products
+//                         that haven't been given a rate yet.
+//
+//   All rates used (per-product or this fallback) must exactly match a
+//   tax rate already configured in Zoho Invoice under Settings > Taxes —
+//   we look up the matching tax_id by percentage rather than hardcoding
+//   one, so nothing breaks if a rate is edited in Zoho later.
 //
 // Account is on the India data center, so we use the .in domains:
 //   https://accounts.zoho.in  (OAuth token refresh)
@@ -20,8 +35,9 @@ const ACCOUNTS_DOMAIN = 'https://accounts.zoho.in';
 const API_DOMAIN = 'https://www.zohoapis.in/invoice/v3';
 
 // Cached in module scope so a warm Netlify function container can reuse an
-// access token across invocations instead of refreshing on every call.
+// access token / tax list across invocations instead of re-fetching every call.
 let cachedToken = null; // { accessToken, expiresAt }
+let cachedTaxList = null; // { taxes: [{tax_id, tax_percentage}, ...], expiresAt }
 
 function zohoConfigured() {
   return !!(
@@ -81,6 +97,34 @@ async function zohoFetch(path, options = {}) {
   return data;
 }
 
+// Fetches (and caches for an hour) the full list of tax rates configured
+// in Zoho Invoice under Settings > Taxes.
+async function getTaxList() {
+  if (cachedTaxList && cachedTaxList.expiresAt > Date.now()) {
+    return cachedTaxList.taxes;
+  }
+  const data = await zohoFetch('/settings/taxes');
+  const taxes = data.taxes || [];
+  cachedTaxList = { taxes, expiresAt: Date.now() + 60 * 60 * 1000 };
+  return taxes;
+}
+
+// Resolves a GST percentage (e.g. 5, 12, 18) to its Zoho tax_id. Throws if
+// no matching rate is configured in Zoho, so the failure is visible in
+// logs rather than silently omitting tax.
+async function getTaxIdForPercentage(percentage) {
+  const taxes = await getTaxList();
+  const match = taxes.find((t) => parseFloat(t.tax_percentage) === percentage);
+
+  if (!match) {
+    throw new Error(
+      `No tax rate of ${percentage}% found in Zoho Invoice (Settings > Taxes). ` +
+        `Available rates: ${taxes.map((t) => t.tax_percentage).join(', ')}`
+    );
+  }
+  return match.tax_id;
+}
+
 // Finds an existing contact by email, or creates a new one from the
 // order's customer details. Returns the Zoho contact_id.
 async function findOrCreateContact(customer) {
@@ -114,13 +158,43 @@ async function findOrCreateContact(customer) {
   return created.contact.contact_id;
 }
 
-// Creates the invoice itself from the order's line items.
+// Creates the invoice itself from the order's line items. Each line item
+// carries its own GST tax_id: the rate set on the product at checkout
+// time (order.items[i].gst), falling back to ZOHO_GST_PERCENTAGE for
+// items that don't have a per-product rate. This Zoho org is GST-enabled
+// and requires a tax or exemption per item.
 async function createInvoice(customerId, order) {
-  const line_items = order.items.map((it) => ({
-    name: `${it.name} (${it.variant})`,
-    rate: it.price,
-    quantity: it.qty,
-  }));
+  const fallbackPercentage = parseFloat(process.env.ZOHO_GST_PERCENTAGE);
+
+  // Resolve each distinct percentage's tax_id once, not once per line item.
+  const percentagesNeeded = Array.from(
+    new Set(
+      order.items.map((it) => {
+        const p = typeof it.gst === 'number' && !isNaN(it.gst) ? it.gst : fallbackPercentage;
+        if (isNaN(p)) {
+          throw new Error(
+            `Item "${it.name}" has no GST rate set (add one in Admin) and ZOHO_GST_PERCENTAGE fallback is not set either.`
+          );
+        }
+        return p;
+      })
+    )
+  );
+
+  const taxIdByPercentage = {};
+  for (const p of percentagesNeeded) {
+    taxIdByPercentage[p] = await getTaxIdForPercentage(p);
+  }
+
+  const line_items = order.items.map((it) => {
+    const p = typeof it.gst === 'number' && !isNaN(it.gst) ? it.gst : fallbackPercentage;
+    return {
+      name: `${it.name} (${it.variant})`,
+      rate: it.price,
+      quantity: it.qty,
+      tax_id: taxIdByPercentage[p],
+    };
+  });
 
   const created = await zohoFetch('/invoices', {
     method: 'POST',
