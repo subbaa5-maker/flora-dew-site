@@ -1,9 +1,9 @@
 // netlify/functions/products.js
 //
 // Manages the product catalog (name, category, tag, description, key
-// ingredients, icon, and size/weight + price variants) so the shop owner
-// can add, edit, or remove products from the admin dashboard without a
-// code deploy. Product photos are stored separately (see
+// ingredients, icon, GST rate, and size/weight + price variants) so the
+// shop owner can add, edit, or remove products from the admin dashboard
+// without a code deploy. Product photos are stored separately (see
 // product-images.js) — this function only stores each product's text
 // and pricing data, kept together as one JSON array under the key "all".
 //
@@ -131,6 +131,13 @@ function validateProduct(p, validCategoryIds) {
     if (typeof v.p !== 'number' || isNaN(v.p) || v.p <= 0) return 'Each size/weight needs a valid selling price';
     if (typeof v.m !== 'number' || isNaN(v.m) || v.m <= 0) return 'Each size/weight needs a valid MRP';
   }
+  // GST rate is optional (older products may not have one set yet — the
+  // Zoho invoicing integration falls back to ZOHO_GST_PERCENTAGE for
+  // those), but if provided it must be a sane non-negative percentage.
+  if (p.gst !== null && p.gst !== undefined && p.gst !== '') {
+    const gstNum = Number(p.gst);
+    if (isNaN(gstNum) || gstNum < 0 || gstNum > 100) return 'GST rate must be a percentage between 0 and 100';
+  }
   return null;
 }
 
@@ -204,6 +211,7 @@ exports.handler = async function (event) {
         desc: String(product.desc || '').trim(),
         icon: VALID_ICONS.includes(product.icon) ? product.icon : 'soap',
         ing: Array.isArray(product.ing) ? product.ing.map(String).map((s) => s.trim()).filter(Boolean) : [],
+        gst: (product.gst === null || product.gst === undefined || product.gst === '') ? null : Number(product.gst),
         variants: product.variants.map((v) => ({
           l: String(v.l).trim(),
           p: Math.round(Number(v.p)),
