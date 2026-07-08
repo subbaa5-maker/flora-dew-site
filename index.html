@@ -2038,7 +2038,7 @@
     var items = CART.map(function(item){
       var prod = PRODUCTS[item.pidx];
       var variant = prod.variants[item.vidx];
-      return { name: prod.name, variant: variant.l, price: variant.p, qty: item.qty };
+      return { name: prod.name, variant: variant.l, price: variant.p, qty: item.qty, gst: (prod.gst === null || prod.gst === undefined) ? null : prod.gst };
     });
 
     var amountPaise = cartSubtotal() * 100;

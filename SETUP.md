@@ -245,35 +245,54 @@ is already set up for that.
    call to `https://accounts.zoho.in/oauth/v2/token`).
 3. In Zoho Invoice, go to **Settings → Organization Profile** to find your
    **Organization ID**.
-4. In Netlify, set these four environment variables (you've already added
-   them):
+4. In Zoho Invoice, go to **Settings → Taxes** and make sure every GST
+   rate your products use (e.g. 5%, 12%, 18%) is set up there. Your org is
+   GST-registered, so Zoho requires a tax (or an exemption) on every
+   invoice line item — without a matching rate, invoice creation fails
+   with error `110802`.
+5. In Netlify, set these five environment variables (you've already added
+   the first four; `ZOHO_GST_PERCENTAGE` is new):
    - `ZOHO_CLIENT_ID`
    - `ZOHO_CLIENT_SECRET`
    - `ZOHO_REFRESH_TOKEN`
    - `ZOHO_ORG_ID`
-5. Redeploy the site (Netlify → **Deploys → Trigger deploy**) so the
-   functions pick up the new variables.
-6. Test with a real (or Razorpay test-mode) order. After payment is
+   - `ZOHO_GST_PERCENTAGE` — e.g. `5` (just the number, no `%` sign). This
+     is only a **fallback** used for products that don't have their own
+     GST rate set (see next step) — it's a safety net so an older product
+     doesn't silently block its order's invoice.
+6. **Set the GST rate per product.** Since your catalogue spans multiple
+   GST slabs, each product now has its own **GST rate (%)** field in
+   `admin.html` (Product Manager → edit a product). Set it once per
+   product — it must exactly match a rate already configured in Zoho
+   Invoice (step 4). Leave it blank to fall back to
+   `ZOHO_GST_PERCENTAGE`. This rate travels with the order at checkout, so
+   changing it later doesn't affect invoices already generated.
+7. Redeploy the site (Netlify → **Deploys → Trigger deploy**) so the
+   functions pick up the new variables and code.
+8. Test with a real (or Razorpay test-mode) order. After payment is
    verified:
    - A Zoho **Contact** is created for the customer if one doesn't already
      exist (matched by email).
-   - An **Invoice** is created with one line item per cart item.
+   - An **Invoice** is created with one line item per cart item, each
+     taxed at its product's own GST rate.
    - The invoice is emailed to the customer directly by Zoho.
    - The invoice number appears next to the Order/Payment IDs in
      `admin.html` so you can cross-reference it.
-7. If Zoho invoicing isn't configured yet (any of the four variables
-   missing) or the Zoho API call fails for any reason, this step is simply
+9. If Zoho invoicing isn't configured yet (any of the four core variables
+   missing) or the Zoho API call fails for any reason (e.g. a product's
+   GST rate doesn't match any rate in Zoho), this step is simply
    skipped — checkout, payment verification, and the Resend receipt email
    all continue to work normally. Check the Netlify function logs
    (**Functions → verify-payment → Logs**) if an invoice doesn't show up
-   and you expect one.
+   and you expect one — look for a line starting with
+   `createZohoInvoiceForOrder error:`, which includes Zoho's exact error.
 
 **Not yet included, ask if you want it:**
 - Marking the Zoho invoice as "paid" automatically (right now it's created
   as a standard sent invoice; recording the Razorpay payment against it in
   Zoho requires an extra `/invoices/{id}/payments` API call).
-- Adding GST/tax rates or an HSN code per line item (currently line items
-  are created with just name, rate, and quantity — no tax settings).
+- HSN codes per line item (currently line items send name, rate,
+  quantity, and tax — no HSN/SAC code).
 - A "Resend invoice" button in `admin.html` for cases where the auto-email
   fails or bounces.
 
