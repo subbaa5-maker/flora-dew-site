@@ -208,6 +208,19 @@
   var variantIndex = 0;
   var qty = 1;
 
+  // Accepts either the current { src, variant } shape or the older
+  // plain-string shape (in case a cached/stale API response briefly
+  // serves pre-upgrade data right after a deploy) and always returns the
+  // current shape, so the UI never breaks either way.
+  function normalizeProductImage(entry){
+    if(typeof entry === 'string') return { src: entry, variant: '' };
+    if(entry && typeof entry.src === 'string') return { src: entry.src, variant: typeof entry.variant === 'string' ? entry.variant : '' };
+    return null;
+  }
+  function normalizeProductImages(arr){
+    return (Array.isArray(arr) ? arr : []).map(normalizeProductImage).filter(Boolean);
+  }
+
   // A size's own tagged photos take priority; if it has none, fall back
   // to the general (untagged) photos so most products don't need
   // per-size photos at all — only sizes that genuinely look different.
@@ -232,7 +245,7 @@
       prod = products.find(function(p){ return p.id === productId; });
       if(!prod){ showError(); return; }
 
-      allImages = imagesByProduct[prod.id] || [];
+      allImages = normalizeProductImages(imagesByProduct[prod.id]);
       photos = photosForVariant(allImages, prod.variants[variantIndex].l);
       var catObj = categories.find(function(c){ return c.id === prod.cat; });
       renderProduct(catObj ? catObj.label : prod.cat);

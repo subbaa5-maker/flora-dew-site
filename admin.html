@@ -235,8 +235,9 @@
   }
   .pm-thumb-wrap{width:76px;}
   .pm-thumb-variant{
-    width:100%; margin-top:4px; font-size:0.65rem; padding:2px 3px; border-radius:6px;
+    width:100%; margin-top:4px; font-size:0.65rem; padding:2px 16px 2px 4px; border-radius:6px;
     border:1px solid var(--line); background:#fff; color:var(--moss-ink);
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
   }
   .pm-upload-row{display:flex; gap:10px; align-items:center; flex-wrap:wrap;}
   .pm-upload-row input[type="file"]{font-size:0.82rem;}
@@ -878,6 +879,19 @@
     });
   }
 
+  // Accepts either the current { src, variant } shape or the older
+  // plain-string shape (in case a cached/stale API response briefly
+  // serves pre-upgrade data right after a deploy) and always returns the
+  // current shape, so the UI never breaks either way.
+  function normalizeProductImage(entry){
+    if(typeof entry === 'string') return { src: entry, variant: '' };
+    if(entry && typeof entry.src === 'string') return { src: entry.src, variant: typeof entry.variant === 'string' ? entry.variant : '' };
+    return null;
+  }
+  function normalizeProductImages(arr){
+    return (Array.isArray(arr) ? arr : []).map(normalizeProductImage).filter(Boolean);
+  }
+
   function loadProductManager(){
     return Promise.all([
       loadCategories(),
@@ -885,7 +899,9 @@
       fetch('/.netlify/functions/product-images').then(function(res){ return res.json(); })
     ]).then(function(results){
       PRODUCTS = results[1] || [];
-      PRODUCT_IMAGES = results[2] || {};
+      var rawImages = results[2] || {};
+      PRODUCT_IMAGES = {};
+      Object.keys(rawImages).forEach(function(pid){ PRODUCT_IMAGES[pid] = normalizeProductImages(rawImages[pid]); });
       renderProductManager();
       renderCataloguesManager();
     }).catch(function(){
@@ -914,21 +930,26 @@
     var key = isDraft ? 'draft' : p.id;
     var images = isDraft ? [] : (PRODUCT_IMAGES[p.id] || []);
     var variantLabels = (p.variants || []).map(function(v){ return v.l; }).filter(Boolean);
-    var variantOptions = [{ v:'', l:'All sizes (general)' }].concat(variantLabels.map(function(l){ return { v:l, l:l }; }));
+    // Two label lengths: the per-thumbnail select is only ~76px wide, so
+    // "All sizes (general)" doesn't fit and collides with the browser's
+    // native dropdown arrow — "All sizes" alone fits comfortably there.
+    // The upload-row select has room to spell it out in full.
+    var thumbVariantOptions = [{ v:'', l:'All sizes' }].concat(variantLabels.map(function(l){ return { v:l, l:l }; }));
+    var uploadVariantOptions = [{ v:'', l:'All sizes (general)' }].concat(variantLabels.map(function(l){ return { v:l, l:l }; }));
 
     var thumbs = images.map(function(img, i){
       // An image tagged to a variant label that no longer exists on this
       // product (renamed/removed) won't match any dropdown option —
       // still show it, flagged, so the admin notices and can re-tag it.
       var isOrphaned = img.variant && variantLabels.indexOf(img.variant) === -1;
-      var thumbOptions = isOrphaned ? variantOptions.concat([{ v: img.variant, l: img.variant + ' (removed size — re-tag this)' }]) : variantOptions;
+      var thumbOptions = isOrphaned ? thumbVariantOptions.concat([{ v: img.variant, l: img.variant + ' (removed)' }]) : thumbVariantOptions;
       return '' +
         '<div class="pm-thumb-wrap">' +
           '<div class="pm-thumb">' +
             '<img src="'+img.src+'" alt="">' +
             '<button type="button" class="pm-thumb-del" data-pid="'+p.id+'" data-idx="'+i+'">&times;</button>' +
           '</div>' +
-          '<select class="pm-thumb-variant" data-pid="'+p.id+'" data-idx="'+i+'" title="Which size this photo is for">'+buildSelectOptions(thumbOptions, img.variant || '')+'</select>' +
+          '<select class="pm-thumb-variant" data-pid="'+p.id+'" data-idx="'+i+'" title="Which size this photo is for'+(isOrphaned ? ' — currently tagged to a removed size: '+img.variant : '')+'">'+buildSelectOptions(thumbOptions, img.variant || '')+'</select>' +
         '</div>';
     }).join('');
     var full = images.length >= MAX_IMAGES_PER_PRODUCT;
@@ -939,7 +960,7 @@
         '<div class="pm-thumbs">'+thumbs+'</div>' +
         '<div class="pm-upload-row">' +
           '<input type="file" accept="image/*" multiple data-pid="'+p.id+'" class="pm-file-input" '+(full ? 'disabled' : '')+'>' +
-          (variantLabels.length ? '<select class="pm-upload-variant" data-pid="'+p.id+'" title="Which size this photo is for">'+buildSelectOptions(variantOptions, '')+'</select>' : '') +
+          (variantLabels.length ? '<select class="pm-upload-variant" data-pid="'+p.id+'" title="Which size this photo is for">'+buildSelectOptions(uploadVariantOptions, '')+'</select>' : '') +
           '<span class="pm-upload-msg" id="pm-msg-'+p.id+'">'+(full ? 'Maximum reached — delete a photo to add another.' : '')+'</span>' +
           '<span class="pm-dim-hint">Best results: square or 4:3, at least 1000px on the shortest side.</span>' +
         '</div>' +
@@ -1472,7 +1493,7 @@
           body: JSON.stringify({ secret: currentSecret(), productId: productId, image: dataUrl, variant: variant || '' })
         }).then(function(res){ return res.json(); });
       }).then(function(result){
-        if(result && result.images){ PRODUCT_IMAGES[productId] = result.images; uploadedCount++; }
+        if(result && result.images){ PRODUCT_IMAGES[productId] = normalizeProductImages(result.images); uploadedCount++; }
       });
     });
 
@@ -1499,7 +1520,7 @@
     })
       .then(function(res){ return res.json(); })
       .then(function(result){
-        if(result && result.images) PRODUCT_IMAGES[productId] = result.images;
+        if(result && result.images) PRODUCT_IMAGES[productId] = normalizeProductImages(result.images);
         renderProductManager();
       })
       .catch(function(){ alert('Could not delete that photo — please try again.'); });
@@ -1513,7 +1534,7 @@
     })
       .then(function(res){ return res.json(); })
       .then(function(result){
-        if(result && result.images) PRODUCT_IMAGES[productId] = result.images;
+        if(result && result.images) PRODUCT_IMAGES[productId] = normalizeProductImages(result.images);
         renderProductManager();
       })
       .catch(function(){ alert('Could not update that photo\'s size tag — please try again.'); });

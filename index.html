@@ -1596,6 +1596,19 @@
   }
 
   // ---------- Real product photos (uploaded from the admin dashboard) ----------
+  // Accepts either the current { src, variant } shape or the older
+  // plain-string shape (in case a cached/stale API response briefly
+  // serves pre-upgrade data right after a deploy) and always returns the
+  // current shape, so the UI never breaks either way.
+  function normalizeProductImage(entry){
+    if(typeof entry === 'string') return { src: entry, variant: '' };
+    if(entry && typeof entry.src === 'string') return { src: entry.src, variant: typeof entry.variant === 'string' ? entry.variant : '' };
+    return null;
+  }
+  function normalizeProductImages(arr){
+    return (Array.isArray(arr) ? arr : []).map(normalizeProductImage).filter(Boolean);
+  }
+
   // A size's own tagged photos take priority; if it has none, fall back to
   // the general (untagged) photos — see product-images.js for the same
   // logic on the server side of tagging.
@@ -1659,7 +1672,8 @@
     return fetch('/.netlify/functions/product-images')
       .then(function(res){ return res.ok ? res.json() : {}; })
       .then(function(imagesByProduct){
-        PRODUCT_PHOTOS = imagesByProduct || {};
+        PRODUCT_PHOTOS = {};
+        Object.keys(imagesByProduct || {}).forEach(function(pid){ PRODUCT_PHOTOS[pid] = normalizeProductImages(imagesByProduct[pid]); });
         PRODUCTS.forEach(function(prod, idx){ applyCardPhotos(idx); });
       })
       .catch(function(){ /* keep the placeholder icons if this fails */ })
