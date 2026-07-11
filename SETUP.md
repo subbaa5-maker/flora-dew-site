@@ -260,13 +260,18 @@ is already set up for that.
      is only a **fallback** used for products that don't have their own
      GST rate set (see next step) — it's a safety net so an older product
      doesn't silently block its order's invoice.
-6. **Set the GST rate per product.** Since your catalogue spans multiple
-   GST slabs, each product now has its own **GST rate (%)** field in
-   `admin.html` (Product Manager → edit a product). Set it once per
-   product — it must exactly match a rate already configured in Zoho
-   Invoice (step 4). Leave it blank to fall back to
-   `ZOHO_GST_PERCENTAGE`. This rate travels with the order at checkout, so
-   changing it later doesn't affect invoices already generated.
+6. **Set the GST rate and HSN/SAC code per product.** Since your catalogue
+   spans multiple GST slabs, each product now has its own **GST rate (%)**
+   and **HSN / SAC code** fields in `admin.html` (Product Manager → edit a
+   product). Set the GST rate once per product — it must exactly match a
+   rate already configured in Zoho Invoice (step 4); leave it blank to
+   fall back to `ZOHO_GST_PERCENTAGE`. The HSN/SAC code is sent as-is to
+   Zoho on each invoice line item (`hsn_or_sac`) — leaving it blank just
+   means that line item's invoice won't carry a code, which Zoho only
+   hard-requires for GST e-invoicing once your turnover crosses the
+   government's threshold (currently ₹5 crore). Both fields travel with
+   the order at checkout, so changing them later doesn't affect invoices
+   already generated.
 7. Redeploy the site (Netlify → **Deploys → Trigger deploy**) so the
    functions pick up the new variables and code.
 8. Test with a real (or Razorpay test-mode) order. After payment is
@@ -291,8 +296,6 @@ is already set up for that.
 - Marking the Zoho invoice as "paid" automatically (right now it's created
   as a standard sent invoice; recording the Razorpay payment against it in
   Zoho requires an extra `/invoices/{id}/payments` API call).
-- HSN codes per line item (currently line items send name, rate,
-  quantity, and tax — no HSN/SAC code).
 - A "Resend invoice" button in `admin.html` for cases where the auto-email
   fails or bounces.
 

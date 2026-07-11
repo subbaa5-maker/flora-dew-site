@@ -848,7 +848,7 @@
   }
 
   function blankDraftProduct(){
-    return { cat:(CATEGORIES[0] && CATEGORIES[0].id) || '', name:'', tag:'', desc:'', icon:'soap', ing:[], gst:'', variants:[{ l:'', p:'', m:'' }] };
+    return { cat:(CATEGORIES[0] && CATEGORIES[0].id) || '', name:'', tag:'', desc:'', icon:'soap', ing:[], gst:'', hsn:'', variants:[{ l:'', p:'', m:'' }] };
   }
 
   function rebuildCategoryFilterOptions(){
@@ -934,9 +934,12 @@
           '<div class="pm-field"><label>Category</label><select class="pm-input-cat">'+buildSelectOptions(categoryOptions(), p.cat)+'</select></div>' +
           '<div class="pm-field"><label>Badge / tag</label><input type="text" class="pm-input-tag" placeholder="e.g. Bathing" value="'+escapeHtml(p.tag)+'"></div>' +
           '<div class="pm-field"><label>Placeholder icon</label><select class="pm-input-icon">'+buildSelectOptions(ICON_OPTIONS, p.icon)+'</select></div>' +
+        '</div>' +
+        '<div class="pm-field-grid" style="grid-template-columns:1fr 1fr;">' +
+          '<div class="pm-field"><label>HSN / SAC code</label><input type="text" class="pm-input-hsn" placeholder="e.g. 3401" value="'+escapeHtml(p.hsn || '')+'"></div>' +
           '<div class="pm-field"><label>GST rate (%)</label><input type="number" min="0" max="100" step="0.01" class="pm-input-gst" placeholder="e.g. 5" value="'+(p.gst === null || p.gst === undefined ? '' : escapeHtml(p.gst))+'"></div>' +
         '</div>' +
-        '<p class="pm-gst-hint" style="font-size:0.72rem; color:rgba(36,54,35,0.55); margin:-6px 0 14px;">Used for the auto-generated Zoho invoice. Must match a tax rate already set up in Zoho (Settings &rarr; Taxes). Leave blank to use the site-wide fallback rate.</p>' +
+        '<p class="pm-gst-hint" style="font-size:0.72rem; color:rgba(36,54,35,0.55); margin:-6px 0 14px;">HSN/SAC and GST rate are used on the auto-generated Zoho invoice for this item. GST rate must match a tax rate already set up in Zoho (Settings &rarr; Taxes) — leave it blank to use the site-wide fallback rate. Leaving HSN/SAC blank means Zoho invoices for this item won&rsquo;t carry a code (required for GST e-invoicing above the govt. turnover threshold).</p>' +
 
         '<div class="pm-field pm-field-full"><label>Description</label><textarea class="pm-input-desc">'+escapeHtml(p.desc)+'</textarea></div>' +
         '<div class="pm-field pm-field-full"><label>Key ingredients (comma separated)</label><input type="text" class="pm-input-ing" placeholder="e.g. Aloe Vera, Herbal Extracts" value="'+escapeHtml((p.ing || []).join(', '))+'"></div>' +
@@ -1003,6 +1006,7 @@
     var variants = readVariantRows(cardEl);
     var gstRaw = cardEl.querySelector('.pm-input-gst').value.trim();
     var gst = gstRaw === '' ? null : parseFloat(gstRaw);
+    var hsn = cardEl.querySelector('.pm-input-hsn').value.trim();
 
     if(!name){
       msgEl.className = 'pm-upload-msg pm-save-msg err'; msgEl.textContent = 'Product name is required.'; return;
@@ -1020,7 +1024,7 @@
       msgEl.className = 'pm-upload-msg pm-save-msg err'; msgEl.textContent = 'GST rate must be a percentage between 0 and 100 (or left blank).'; return;
     }
 
-    var product = { cat:cat, name:name, tag:tag, desc:desc, icon:icon, ing:ing, gst:gst, variants:variants };
+    var product = { cat:cat, name:name, tag:tag, desc:desc, icon:icon, ing:ing, gst:gst, hsn:hsn, variants:variants };
     if(!isDraft) product.id = cardEl.dataset.pid;
 
     saveBtn.disabled = true;
