@@ -52,7 +52,10 @@ const { productImagesStore } = require('./lib/blobs');
 const MAX_IMAGES_PER_PRODUCT = 35;
 // Generous but bounded — a resized/compressed JPEG data-URL should be well
 // under this. Guards against someone uploading a huge original by mistake.
-const MAX_IMAGE_BYTES = 1.5 * 1024 * 1024;
+const MAX_IMAGE_BYTES = 4 * 1024 * 1024;
+// Netlify Functions hard-cap request bodies at 6MB — base64 adds ~1.37x
+// overhead, so 4MB raw (~5.5MB encoded) leaves headroom for JSON overhead
+// while staying comfortably under that ceiling.
 const MAX_VARIANT_LABEL_LEN = 60;
 
 // Accepts either the old plain-string shape or the new { src, variant }
