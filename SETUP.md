@@ -352,15 +352,30 @@ tabs on the shop (Soaps, Hair Oil, Lip Balms, Lip Colour, and any you add).
 1. Open `admin.html` → **Products** tab (a product must already be saved
    before you can add photos to it)
 2. Optionally filter by category, then find the product
-3. Click the file picker under that product and select one or more photos
-   (JPG/PNG) — each one opens a quick crop editor first (drag/zoom,
-   choose a suggested aspect ratio, or "Use original" to skip cropping),
-   then it's resized in your browser automatically, so originals straight
-   from a phone camera are fine
-4. Up to 8 photos per product; delete any with the × on its thumbnail
-5. The storefront picks these up automatically on next page load — no
+3. If the product has more than one size/weight, pick a tag next to the
+   file picker: **"All sizes (general)"** (the default — shown for any
+   size that doesn't have its own photos) or a specific size. Most
+   products can just use general photos; only tag photos to a specific
+   size if that size actually looks different (e.g. a gift box vs a
+   single bar).
+4. Click the file picker and select one or more photos (JPG/PNG) — each
+   one opens a quick crop editor first (drag/zoom, choose a suggested
+   aspect ratio, or "Use original" to skip cropping), then it's resized
+   in your browser automatically, so originals straight from a phone
+   camera are fine
+5. Up to 8 photos per product (combined across all sizes); delete any
+   with the × on its thumbnail, or change which size a photo is tagged
+   to any time using the dropdown under its thumbnail
+6. The storefront picks these up automatically on next page load — no
    redeploy needed, since photos are stored in Netlify Blobs, not in the
-   site's files
+   site's files. On the shop and product page, tapping a different size
+   swaps to that size's own photos if it has any, otherwise it just
+   keeps showing the general ones.
+
+   One thing to know: photos are tagged by the size's label text (e.g.
+   "100 g"), not something more permanent — if you rename a size's label
+   later, any photos tagged to the old label stop showing anywhere until
+   you re-tag them from the dropdown.
 
 ### Pausing orders for a holiday or break
 1. Open `admin.html` → **Store Status** tab

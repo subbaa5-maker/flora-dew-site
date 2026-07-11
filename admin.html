@@ -233,6 +233,11 @@
     position:absolute; top:2px; right:2px; width:20px; height:20px; border-radius:50%;
     background:rgba(165,82,94,0.9); color:#fff; border:none; font-size:0.75rem; cursor:pointer; line-height:20px;
   }
+  .pm-thumb-wrap{width:76px;}
+  .pm-thumb-variant{
+    width:100%; margin-top:4px; font-size:0.65rem; padding:2px 3px; border-radius:6px;
+    border:1px solid var(--line); background:#fff; color:var(--moss-ink);
+  }
   .pm-upload-row{display:flex; gap:10px; align-items:center; flex-wrap:wrap;}
   .pm-upload-row input[type="file"]{font-size:0.82rem;}
   .pm-upload-msg{font-size:0.78rem; margin-left:4px;}
@@ -908,8 +913,23 @@
   function buildProductCardHtml(p, isDraft){
     var key = isDraft ? 'draft' : p.id;
     var images = isDraft ? [] : (PRODUCT_IMAGES[p.id] || []);
-    var thumbs = images.map(function(src, i){
-      return '<div class="pm-thumb"><img src="'+src+'" alt=""><button type="button" class="pm-thumb-del" data-pid="'+p.id+'" data-idx="'+i+'">&times;</button></div>';
+    var variantLabels = (p.variants || []).map(function(v){ return v.l; }).filter(Boolean);
+    var variantOptions = [{ v:'', l:'All sizes (general)' }].concat(variantLabels.map(function(l){ return { v:l, l:l }; }));
+
+    var thumbs = images.map(function(img, i){
+      // An image tagged to a variant label that no longer exists on this
+      // product (renamed/removed) won't match any dropdown option —
+      // still show it, flagged, so the admin notices and can re-tag it.
+      var isOrphaned = img.variant && variantLabels.indexOf(img.variant) === -1;
+      var thumbOptions = isOrphaned ? variantOptions.concat([{ v: img.variant, l: img.variant + ' (removed size — re-tag this)' }]) : variantOptions;
+      return '' +
+        '<div class="pm-thumb-wrap">' +
+          '<div class="pm-thumb">' +
+            '<img src="'+img.src+'" alt="">' +
+            '<button type="button" class="pm-thumb-del" data-pid="'+p.id+'" data-idx="'+i+'">&times;</button>' +
+          '</div>' +
+          '<select class="pm-thumb-variant" data-pid="'+p.id+'" data-idx="'+i+'" title="Which size this photo is for">'+buildSelectOptions(thumbOptions, img.variant || '')+'</select>' +
+        '</div>';
     }).join('');
     var full = images.length >= MAX_IMAGES_PER_PRODUCT;
 
@@ -919,9 +939,11 @@
         '<div class="pm-thumbs">'+thumbs+'</div>' +
         '<div class="pm-upload-row">' +
           '<input type="file" accept="image/*" multiple data-pid="'+p.id+'" class="pm-file-input" '+(full ? 'disabled' : '')+'>' +
+          (variantLabels.length ? '<select class="pm-upload-variant" data-pid="'+p.id+'" title="Which size this photo is for">'+buildSelectOptions(variantOptions, '')+'</select>' : '') +
           '<span class="pm-upload-msg" id="pm-msg-'+p.id+'">'+(full ? 'Maximum reached — delete a photo to add another.' : '')+'</span>' +
           '<span class="pm-dim-hint">Best results: square or 4:3, at least 1000px on the shortest side.</span>' +
-        '</div>';
+        '</div>' +
+        (variantLabels.length ? '<p class="pm-gst-hint" style="font-size:0.72rem; color:rgba(36,54,35,0.55); margin:6px 0 0;">Photos tagged to a specific size only show for that size. Untagged ("All sizes") photos are the fallback shown for any size that doesn\u2019t have its own.</p>' : '');
 
     var variantRows = (p.variants && p.variants.length ? p.variants : [{ l:'', p:'', m:'' }])
       .map(buildVariantRowHtml).join('');
@@ -1118,8 +1140,15 @@
   pmGridEl.addEventListener('change', function(e){
     var fileInput = e.target.closest('.pm-file-input');
     if(fileInput){
-      handleFileUpload(fileInput.dataset.pid, fileInput.files);
+      var card = fileInput.closest('.pm-card');
+      var variantSelect = card ? card.querySelector('.pm-upload-variant') : null;
+      handleFileUpload(fileInput.dataset.pid, fileInput.files, variantSelect ? variantSelect.value : '');
       fileInput.value = '';
+      return;
+    }
+    var thumbVariant = e.target.closest('.pm-thumb-variant');
+    if(thumbVariant){
+      retagProductImage(thumbVariant.dataset.pid, parseInt(thumbVariant.dataset.idx, 10), thumbVariant.value);
     }
   });
 
@@ -1409,7 +1438,7 @@
     });
   }
 
-  function handleFileUpload(productId, files){
+  function handleFileUpload(productId, files, variant){
     var msgEl = document.getElementById('pm-msg-' + productId);
     var existingCount = (PRODUCT_IMAGES[productId] || []).length;
     var fileList = Array.prototype.slice.call(files);
@@ -1440,7 +1469,7 @@
         return fetch('/.netlify/functions/product-images', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ secret: currentSecret(), productId: productId, image: dataUrl })
+          body: JSON.stringify({ secret: currentSecret(), productId: productId, image: dataUrl, variant: variant || '' })
         }).then(function(res){ return res.json(); });
       }).then(function(result){
         if(result && result.images){ PRODUCT_IMAGES[productId] = result.images; uploadedCount++; }
@@ -1474,6 +1503,20 @@
         renderProductManager();
       })
       .catch(function(){ alert('Could not delete that photo — please try again.'); });
+  }
+
+  function retagProductImage(productId, index, variant){
+    fetch('/.netlify/functions/product-images', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ secret: currentSecret(), productId: productId, action: 'retag', index: index, variant: variant || '' })
+    })
+      .then(function(res){ return res.json(); })
+      .then(function(result){
+        if(result && result.images) PRODUCT_IMAGES[productId] = result.images;
+        renderProductManager();
+      })
+      .catch(function(){ alert('Could not update that photo\'s size tag — please try again.'); });
   }
 
   // =====================================================================

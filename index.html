@@ -1551,6 +1551,7 @@
           card.querySelector('.price-now').textContent = '₹'+p;
           card.querySelector('.price-mrp').textContent = '₹'+m;
           card.querySelector('.price-off').textContent = off+'% off';
+          applyCardPhotos(idx);
         });
       });
 
@@ -1595,47 +1596,71 @@
   }
 
   // ---------- Real product photos (uploaded from the admin dashboard) ----------
+  // A size's own tagged photos take priority; if it has none, fall back to
+  // the general (untagged) photos — see product-images.js for the same
+  // logic on the server side of tagging.
+  function photosForVariant(images, variantLabel){
+    images = images || [];
+    var specific = images.filter(function(im){ return im.variant && im.variant === variantLabel; }).map(function(im){ return im.src; });
+    if(specific.length) return specific;
+    return images.filter(function(im){ return !im.variant; }).map(function(im){ return im.src; });
+  }
+
+  // (Re)paints one product card's photo stage for whichever variant is
+  // currently selected on that card. Called once per card after photos
+  // load, and again whenever the shopper taps a different size pill.
+  function applyCardPhotos(idx){
+    var prod = PRODUCTS[idx];
+    var stage = document.getElementById('icon-stage-' + idx);
+    if(!prod || !stage) return;
+    var card = stage.closest('.product-card');
+    var vidx = card ? (parseInt(card.dataset.vidx, 10) || 0) : 0;
+    var variantLabel = prod.variants[vidx] ? prod.variants[vidx].l : '';
+    var photos = photosForVariant(PRODUCT_PHOTOS[prod.id], variantLabel);
+
+    if(!photos.length){
+      stage.classList.remove('has-photo');
+      stage.innerHTML = ICONS[prod.icon];
+      return;
+    }
+
+    stage.classList.add('has-photo');
+    stage.dataset.photoIndex = 0;
+
+    function renderPhoto(){
+      var i = parseInt(stage.dataset.photoIndex, 10) || 0;
+      var dots = photos.map(function(_, di){
+        return '<span class="' + (di === i ? 'active' : '') + '"></span>';
+      }).join('');
+      stage.innerHTML =
+        '<img class="photo-img" src="' + photos[i] + '" alt="' + prod.name + '" loading="lazy">' +
+        (photos.length > 1 ?
+          '<button type="button" class="photo-nav prev" aria-label="Previous photo">‹</button>' +
+          '<button type="button" class="photo-nav next" aria-label="Next photo">›</button>' +
+          '<div class="photo-dots">' + dots + '</div>'
+          : '');
+      if(photos.length > 1){
+        stage.querySelector('.photo-nav.prev').addEventListener('click', function(e){
+          e.stopPropagation();
+          stage.dataset.photoIndex = (i - 1 + photos.length) % photos.length;
+          renderPhoto();
+        });
+        stage.querySelector('.photo-nav.next').addEventListener('click', function(e){
+          e.stopPropagation();
+          stage.dataset.photoIndex = (i + 1) % photos.length;
+          renderPhoto();
+        });
+      }
+    }
+    renderPhoto();
+  }
+
   function loadProductPhotos(){
     return fetch('/.netlify/functions/product-images')
       .then(function(res){ return res.ok ? res.json() : {}; })
       .then(function(imagesByProduct){
         PRODUCT_PHOTOS = imagesByProduct || {};
-        PRODUCTS.forEach(function(prod, idx){
-          var photos = imagesByProduct[prod.id];
-          if(!photos || photos.length === 0) return;
-
-          var stage = document.getElementById('icon-stage-' + idx);
-          if(!stage) return;
-          stage.classList.add('has-photo');
-          stage.dataset.photoIndex = 0;
-
-          function renderPhoto(){
-            var i = parseInt(stage.dataset.photoIndex, 10) || 0;
-            var dots = photos.map(function(_, di){
-              return '<span class="' + (di === i ? 'active' : '') + '"></span>';
-            }).join('');
-            stage.innerHTML =
-              '<img class="photo-img" src="' + photos[i] + '" alt="' + prod.name + '" loading="lazy">' +
-              (photos.length > 1 ?
-                '<button type="button" class="photo-nav prev" aria-label="Previous photo">‹</button>' +
-                '<button type="button" class="photo-nav next" aria-label="Next photo">›</button>' +
-                '<div class="photo-dots">' + dots + '</div>'
-                : '');
-            if(photos.length > 1){
-              stage.querySelector('.photo-nav.prev').addEventListener('click', function(e){
-                e.stopPropagation();
-                stage.dataset.photoIndex = (i - 1 + photos.length) % photos.length;
-                renderPhoto();
-              });
-              stage.querySelector('.photo-nav.next').addEventListener('click', function(e){
-                e.stopPropagation();
-                stage.dataset.photoIndex = (i + 1) % photos.length;
-                renderPhoto();
-              });
-            }
-          }
-          renderPhoto();
-        });
+        PRODUCTS.forEach(function(prod, idx){ applyCardPhotos(idx); });
       })
       .catch(function(){ /* keep the placeholder icons if this fails */ })
       .then(function(){
@@ -1839,8 +1864,8 @@
         var prod = PRODUCTS[item.pidx];
         var variant = prod.variants[item.vidx];
         var lineTotal = variant.p * item.qty;
-        var photos = PRODUCT_PHOTOS[prod.id];
-        var thumbHtml = (photos && photos.length) ?
+        var photos = photosForVariant(PRODUCT_PHOTOS[prod.id], variant.l);
+        var thumbHtml = photos.length ?
           '<img class="ci-photo" src="'+photos[0]+'" alt="'+prod.name+'">' :
           ICONS[prod.icon];
         return '<div class="cart-item" data-ci="'+ci+'">' +
