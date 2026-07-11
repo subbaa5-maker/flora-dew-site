@@ -27,6 +27,12 @@
 //   we look up the matching tax_id by percentage rather than hardcoding
 //   one, so nothing breaks if a rate is edited in Zoho later.
 //
+//   Each line item also carries hsn_or_sac (Zoho's field name) from the
+//   product's HSN/SAC code set in Admin. This is sent whenever a product
+//   has one set; if left blank on a product, that line item is simply
+//   sent without a code (Zoho only hard-requires one for GST e-invoicing
+//   above the government's turnover threshold — see SETUP.md).
+//
 // Account is on the India data center, so we use the .in domains:
 //   https://accounts.zoho.in  (OAuth token refresh)
 //   https://www.zohoapis.in   (Invoice API)
@@ -161,8 +167,9 @@ async function findOrCreateContact(customer) {
 // Creates the invoice itself from the order's line items. Each line item
 // carries its own GST tax_id: the rate set on the product at checkout
 // time (order.items[i].gst), falling back to ZOHO_GST_PERCENTAGE for
-// items that don't have a per-product rate. This Zoho org is GST-enabled
-// and requires a tax or exemption per item.
+// items that don't have a per-product rate. It also carries hsn_or_sac
+// when the product has an HSN/SAC code set in Admin. This Zoho org is
+// GST-enabled and requires a tax or exemption per item.
 async function createInvoice(customerId, order) {
   const fallbackPercentage = parseFloat(process.env.ZOHO_GST_PERCENTAGE);
 
@@ -188,12 +195,14 @@ async function createInvoice(customerId, order) {
 
   const line_items = order.items.map((it) => {
     const p = typeof it.gst === 'number' && !isNaN(it.gst) ? it.gst : fallbackPercentage;
-    return {
+    const item = {
       name: `${it.name} (${it.variant})`,
       rate: it.price,
       quantity: it.qty,
       tax_id: taxIdByPercentage[p],
     };
+    if (it.hsn) item.hsn_or_sac = it.hsn;
+    return item;
   });
 
   const created = await zohoFetch('/invoices', {
