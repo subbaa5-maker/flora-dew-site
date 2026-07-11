@@ -49,7 +49,7 @@
 
 const { productImagesStore } = require('./lib/blobs');
 
-const MAX_IMAGES_PER_PRODUCT = 8;
+const MAX_IMAGES_PER_PRODUCT = 35;
 // Generous but bounded — a resized/compressed JPEG data-URL should be well
 // under this. Guards against someone uploading a huge original by mistake.
 const MAX_IMAGE_BYTES = 1.5 * 1024 * 1024;
