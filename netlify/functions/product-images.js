@@ -81,35 +81,66 @@ function normalizeImages(arr) {
 // after upload but vanished on refresh.
 //
 // Fix: use Netlify Blobs' conditional write (onlyIfMatch/onlyIfNew) as
-// a compare-and-swap. `mutate(existingArray)` must be pure and may be
-// called more than once if another request wins the race; it should
-// return either { ok:true, images } to attempt the write, or
+// a compare-and-swap where available. This is defensive on purpose —
+// if conditional writes aren't supported/behaving as expected in a given
+// environment, or repeatedly conflict, we fall back to a plain write
+// rather than failing the request outright. A missed rare race is far
+// better than every save silently failing.
+//
+// `mutate(existingArray)` must be pure and may be called more than once;
+// it should return either { ok:true, images } to attempt the write, or
 // { ok:false, statusCode, body } to fail immediately without retrying
 // (e.g. validation errors like "too many images", which stay true no
 // matter how many times we retry).
 async function readModifyWrite(store, key, mutate) {
-  const MAX_ATTEMPTS = 10;
+  const MAX_ATTEMPTS = 6;
   for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
-    const entry = await store.getWithMetadata(key, { type: 'json' });
-    const existing = normalizeImages(entry && entry.data);
-    const etag = entry && entry.etag;
+    let existing = [];
+    let etag = null;
+    let haveMeta = false;
+    try {
+      const entry = await store.getWithMetadata(key, { type: 'json', consistency: 'strong' });
+      existing = normalizeImages(entry && entry.data);
+      etag = entry && entry.etag;
+      haveMeta = true;
+    } catch (e) {
+      // getWithMetadata not available/behaving as expected — fall back to
+      // a plain read below. We lose conflict *detection* this round but
+      // saving still works, which matters more than perfect protection.
+      existing = normalizeImages(await store.get(key, { type: 'json' }));
+    }
 
     const outcome = mutate(existing);
     if (!outcome.ok) return outcome; // validation failure — don't retry
 
-    const writeOpts = etag ? { onlyIfMatch: etag } : { onlyIfNew: true };
-    const result = await store.setJSON(key, outcome.images, writeOpts);
-
-    // `set`/`setJSON` return { modified: false } when the conditional
-    // check failed, i.e. someone else wrote to this key in between our
-    // read and our write. Re-read the latest data and try again.
-    if (!result || result.modified !== false) {
-      return { ok: true, images: outcome.images };
+    if (haveMeta) {
+      try {
+        const writeOpts = etag ? { onlyIfMatch: etag } : { onlyIfNew: true };
+        const result = await store.setJSON(key, outcome.images, writeOpts);
+        // `set`/`setJSON` return { modified: false } when the conditional
+        // check failed, i.e. someone else wrote to this key in between our
+        // read and our write. Re-read the latest data and try again.
+        if (!result || result.modified !== false) {
+          return { ok: true, images: outcome.images };
+        }
+        await new Promise((resolve) => setTimeout(resolve, 30 + Math.random() * 70));
+        continue;
+      } catch (e) {
+        // Conditional-write options rejected/unsupported here — fall
+        // through to a plain write below instead of failing the request.
+      }
     }
-    // Small jittered delay so competing retries don't lockstep.
-    await new Promise((resolve) => setTimeout(resolve, 30 + Math.random() * 70));
+
+    await store.setJSON(key, outcome.images);
+    return { ok: true, images: outcome.images };
   }
-  return { ok: false, statusCode: 409, body: JSON.stringify({ error: 'Could not save — too many conflicting updates at once. Please try again.' }) };
+  // Exhausted CAS retries (persistent conflicts) — still better to save
+  // without the guard than to silently fail the admin's upload.
+  const fallbackExisting = normalizeImages(await store.get(key, { type: 'json' }));
+  const finalOutcome = mutate(fallbackExisting);
+  if (!finalOutcome.ok) return finalOutcome;
+  await store.setJSON(key, finalOutcome.images);
+  return { ok: true, images: finalOutcome.images };
 }
 
 exports.handler = async function (event) {
