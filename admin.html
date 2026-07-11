@@ -1445,8 +1445,8 @@
   // Falls back to skipping the crop UI if Cropper.js failed to load.
   function cropAndResizeFile(file, opts){
     opts = opts || {};
-    var maxDim = opts.maxDim || 1000;
-    var quality = opts.quality || 0.8;
+    var maxDim = opts.maxDim || 2400;
+    var quality = opts.quality || 0.92;
 
     return readFileAsDataUrl(file).then(function(rawDataUrl){
       if(typeof Cropper === 'undefined'){
