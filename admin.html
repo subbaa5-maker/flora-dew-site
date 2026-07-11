@@ -1476,6 +1476,7 @@
 
     // Crop, then upload, one photo at a time — this keeps request sizes
     // small/predictable and lets the admin adjust each crop in turn.
+    var lastError = '';
     var chain = Promise.resolve();
     var uploadedCount = 0;
     fileList.forEach(function(file, i){
@@ -1494,13 +1495,14 @@
         }).then(function(res){ return res.json(); });
       }).then(function(result){
         if(result && result.images){ PRODUCT_IMAGES[productId] = normalizeProductImages(result.images); uploadedCount++; }
+        else if(result && result.error){ lastError = result.error; }
       });
     });
 
     chain.then(function(){
       if(uploadedCount === 0){
-        msgEl.className = 'pm-upload-msg';
-        msgEl.textContent = '';
+        msgEl.className = 'pm-upload-msg err';
+        msgEl.textContent = lastError || 'Nothing was uploaded — please try again.';
       } else {
         msgEl.className = 'pm-upload-msg ok';
         msgEl.textContent = 'Saved.';
@@ -1521,6 +1523,7 @@
       .then(function(res){ return res.json(); })
       .then(function(result){
         if(result && result.images) PRODUCT_IMAGES[productId] = normalizeProductImages(result.images);
+        else if(result && result.error) alert(result.error);
         renderProductManager();
       })
       .catch(function(){ alert('Could not delete that photo — please try again.'); });
@@ -1535,6 +1538,7 @@
       .then(function(res){ return res.json(); })
       .then(function(result){
         if(result && result.images) PRODUCT_IMAGES[productId] = normalizeProductImages(result.images);
+        else if(result && result.error) alert(result.error);
         renderProductManager();
       })
       .catch(function(){ alert('Could not update that photo\'s size tag — please try again.'); });
