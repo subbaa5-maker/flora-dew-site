@@ -52,10 +52,7 @@ const { productImagesStore } = require('./lib/blobs');
 const MAX_IMAGES_PER_PRODUCT = 35;
 // Generous but bounded — a resized/compressed JPEG data-URL should be well
 // under this. Guards against someone uploading a huge original by mistake.
-const MAX_IMAGE_BYTES = 4 * 1024 * 1024;
-// Netlify Functions hard-cap request bodies at 6MB — base64 adds ~1.37x
-// overhead, so 4MB raw (~5.5MB encoded) leaves headroom for JSON overhead
-// while staying comfortably under that ceiling.
+const MAX_IMAGE_BYTES = 1.5 * 1024 * 1024;
 const MAX_VARIANT_LABEL_LEN = 60;
 
 // Accepts either the old plain-string shape or the new { src, variant }
@@ -70,77 +67,6 @@ function normalizeImage(entry) {
 
 function normalizeImages(arr) {
   return (Array.isArray(arr) ? arr : []).map(normalizeImage).filter(Boolean);
-}
-
-// Safely read-modify-write a product's image list under concurrent
-// requests. Two uploads (or an upload + a delete/retag) for the SAME
-// product can otherwise both read the list before either has saved,
-// then each write their own version back — the second write silently
-// wipes out the first one's change, even though both requests reported
-// success. This showed up in practice as photos that appeared right
-// after upload but vanished on refresh.
-//
-// Fix: use Netlify Blobs' conditional write (onlyIfMatch/onlyIfNew) as
-// a compare-and-swap where available. This is defensive on purpose —
-// if conditional writes aren't supported/behaving as expected in a given
-// environment, or repeatedly conflict, we fall back to a plain write
-// rather than failing the request outright. A missed rare race is far
-// better than every save silently failing.
-//
-// `mutate(existingArray)` must be pure and may be called more than once;
-// it should return either { ok:true, images } to attempt the write, or
-// { ok:false, statusCode, body } to fail immediately without retrying
-// (e.g. validation errors like "too many images", which stay true no
-// matter how many times we retry).
-async function readModifyWrite(store, key, mutate) {
-  const MAX_ATTEMPTS = 6;
-  for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
-    let existing = [];
-    let etag = null;
-    let haveMeta = false;
-    try {
-      const entry = await store.getWithMetadata(key, { type: 'json', consistency: 'strong' });
-      existing = normalizeImages(entry && entry.data);
-      etag = entry && entry.etag;
-      haveMeta = true;
-    } catch (e) {
-      // getWithMetadata not available/behaving as expected — fall back to
-      // a plain read below. We lose conflict *detection* this round but
-      // saving still works, which matters more than perfect protection.
-      existing = normalizeImages(await store.get(key, { type: 'json' }));
-    }
-
-    const outcome = mutate(existing);
-    if (!outcome.ok) return outcome; // validation failure — don't retry
-
-    if (haveMeta) {
-      try {
-        const writeOpts = etag ? { onlyIfMatch: etag } : { onlyIfNew: true };
-        const result = await store.setJSON(key, outcome.images, writeOpts);
-        // `set`/`setJSON` return { modified: false } when the conditional
-        // check failed, i.e. someone else wrote to this key in between our
-        // read and our write. Re-read the latest data and try again.
-        if (!result || result.modified !== false) {
-          return { ok: true, images: outcome.images };
-        }
-        await new Promise((resolve) => setTimeout(resolve, 30 + Math.random() * 70));
-        continue;
-      } catch (e) {
-        // Conditional-write options rejected/unsupported here — fall
-        // through to a plain write below instead of failing the request.
-      }
-    }
-
-    await store.setJSON(key, outcome.images);
-    return { ok: true, images: outcome.images };
-  }
-  // Exhausted CAS retries (persistent conflicts) — still better to save
-  // without the guard than to silently fail the admin's upload.
-  const fallbackExisting = normalizeImages(await store.get(key, { type: 'json' }));
-  const finalOutcome = mutate(fallbackExisting);
-  if (!finalOutcome.ok) return finalOutcome;
-  await store.setJSON(key, finalOutcome.images);
-  return { ok: true, images: finalOutcome.images };
 }
 
 exports.handler = async function (event) {
@@ -181,30 +107,24 @@ exports.handler = async function (event) {
         return { statusCode: 400, body: JSON.stringify({ error: 'Missing productId' }) };
       }
 
+      const existing = normalizeImages(await store.get(productId, { type: 'json' }));
+
       if (action === 'delete') {
-        const outcome = await readModifyWrite(store, productId, (existing) => {
-          if (typeof index !== 'number' || index < 0 || index >= existing.length) {
-            return { ok: false, statusCode: 400, body: JSON.stringify({ error: 'Invalid image index' }) };
-          }
-          const next = existing.slice();
-          next.splice(index, 1);
-          return { ok: true, images: next };
-        });
-        if (!outcome.ok) return { statusCode: outcome.statusCode, body: outcome.body };
-        return { statusCode: 200, body: JSON.stringify({ success: true, images: outcome.images }) };
+        if (typeof index !== 'number' || index < 0 || index >= existing.length) {
+          return { statusCode: 400, body: JSON.stringify({ error: 'Invalid image index' }) };
+        }
+        existing.splice(index, 1);
+        await store.setJSON(productId, existing);
+        return { statusCode: 200, body: JSON.stringify({ success: true, images: existing }) };
       }
 
       if (action === 'retag') {
-        const outcome = await readModifyWrite(store, productId, (existing) => {
-          if (typeof index !== 'number' || index < 0 || index >= existing.length) {
-            return { ok: false, statusCode: 400, body: JSON.stringify({ error: 'Invalid image index' }) };
-          }
-          const next = existing.slice();
-          next[index] = { ...next[index], variant: String(variant || '').trim().slice(0, MAX_VARIANT_LABEL_LEN) };
-          return { ok: true, images: next };
-        });
-        if (!outcome.ok) return { statusCode: outcome.statusCode, body: outcome.body };
-        return { statusCode: 200, body: JSON.stringify({ success: true, images: outcome.images }) };
+        if (typeof index !== 'number' || index < 0 || index >= existing.length) {
+          return { statusCode: 400, body: JSON.stringify({ error: 'Invalid image index' }) };
+        }
+        existing[index].variant = String(variant || '').trim().slice(0, MAX_VARIANT_LABEL_LEN);
+        await store.setJSON(productId, existing);
+        return { statusCode: 200, body: JSON.stringify({ success: true, images: existing }) };
       }
 
       // Default action: add an image
@@ -215,18 +135,14 @@ exports.handler = async function (event) {
         // base64 is ~1.37x the raw byte size — rough guard before decoding
         return { statusCode: 400, body: JSON.stringify({ error: 'Image is too large. Please use a smaller photo.' }) };
       }
+      if (existing.length >= MAX_IMAGES_PER_PRODUCT) {
+        return { statusCode: 400, body: JSON.stringify({ error: 'This product already has the maximum of ' + MAX_IMAGES_PER_PRODUCT + ' images. Delete one first.' }) };
+      }
 
-      const outcome = await readModifyWrite(store, productId, (existing) => {
-        if (existing.length >= MAX_IMAGES_PER_PRODUCT) {
-          return { ok: false, statusCode: 400, body: JSON.stringify({ error: 'This product already has the maximum of ' + MAX_IMAGES_PER_PRODUCT + ' images. Delete one first.' }) };
-        }
-        const next = existing.slice();
-        next.push({ src: image, variant: String(variant || '').trim().slice(0, MAX_VARIANT_LABEL_LEN) });
-        return { ok: true, images: next };
-      });
-      if (!outcome.ok) return { statusCode: outcome.statusCode, body: outcome.body };
+      existing.push({ src: image, variant: String(variant || '').trim().slice(0, MAX_VARIANT_LABEL_LEN) });
+      await store.setJSON(productId, existing);
 
-      return { statusCode: 200, body: JSON.stringify({ success: true, images: outcome.images }) };
+      return { statusCode: 200, body: JSON.stringify({ success: true, images: existing }) };
     } catch (err) {
       console.error('product-images POST error:', err);
       return { statusCode: 500, body: JSON.stringify({ error: 'Could not save image' }) };
