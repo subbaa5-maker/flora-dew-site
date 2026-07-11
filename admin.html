@@ -895,13 +895,23 @@
   function loadProductManager(){
     return Promise.all([
       loadCategories(),
-      fetch('/.netlify/functions/products').then(function(res){ return res.json(); }),
-      fetch('/.netlify/functions/product-images').then(function(res){ return res.json(); })
+      fetch('/.netlify/functions/products').then(function(res){ return res.json(); })
     ]).then(function(results){
       PRODUCTS = results[1] || [];
-      var rawImages = results[2] || {};
+      // Fetch each product's photos individually (bounded per product)
+      // rather than one combined request for the whole catalog — a
+      // single bulk response can exceed the platform's payload limit
+      // once products accumulate many full-size photos, which fails
+      // the entire load instead of just one product's.
+      return Promise.all(PRODUCTS.map(function(p){
+        return fetch('/.netlify/functions/product-images?productId=' + encodeURIComponent(p.id))
+          .then(function(res){ return res.json(); })
+          .then(function(data){ return { id: p.id, images: normalizeProductImages(data && data[p.id]) }; })
+          .catch(function(){ return { id: p.id, images: [] }; });
+      }));
+    }).then(function(perProduct){
       PRODUCT_IMAGES = {};
-      Object.keys(rawImages).forEach(function(pid){ PRODUCT_IMAGES[pid] = normalizeProductImages(rawImages[pid]); });
+      perProduct.forEach(function(entry){ PRODUCT_IMAGES[entry.id] = entry.images; });
       renderProductManager();
       renderCataloguesManager();
     }).catch(function(){

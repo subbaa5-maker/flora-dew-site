@@ -236,7 +236,7 @@
     Promise.all([
       fetch('/.netlify/functions/products').then(function(r){ return r.ok ? r.json() : []; }).catch(function(){ return []; }),
       fetch('/.netlify/functions/categories').then(function(r){ return r.ok ? r.json() : []; }).catch(function(){ return []; }),
-      fetch('/.netlify/functions/product-images').then(function(r){ return r.ok ? r.json() : {}; }).catch(function(){ return {}; })
+      fetch('/.netlify/functions/product-images?productId=' + encodeURIComponent(productId)).then(function(r){ return r.ok ? r.json() : {}; }).catch(function(){ return {}; })
     ]).then(function(results){
       var products = results[0] || [];
       var categories = results[1] || [];
