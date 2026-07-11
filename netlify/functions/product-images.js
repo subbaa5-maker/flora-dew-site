@@ -29,6 +29,21 @@
 //      { src: <string>, variant: "" } on the way out, so older data
 //      keeps working with no migration needed.
 //
+//      Netlify Functions cap response bodies at 6MB. Returning every
+//      photo for every product in one response doesn't scale — a single
+//      product with many full-size photos can approach that limit by
+//      itself, and once the combined response crosses it the WHOLE
+//      request fails (every product loses its photos, not just one).
+//      So this endpoint has two modes:
+//        - GET ?productId=<id>  -> full, uncapped photo list for just
+//          that one product. Used by product.html (the detail page only
+//          ever needs one product's photos) and by admin.html (which
+//          fetches each product individually rather than in bulk, for
+//          the same reason).
+//        - GET (no productId)  -> every product, but capped to the
+//          first GRID_PHOTO_CAP photos each. Used by index.html's
+//          product grid, which only shows a few photos per card anyway.
+
 // POST /.netlify/functions/product-images
 //      body: { secret, productId, image: "data:image/...;base64,...", variant: "" }
 //      -> admin-only, appends one image to a product (rejects past the
@@ -54,6 +69,10 @@ const MAX_IMAGES_PER_PRODUCT = 35;
 // under this. Guards against someone uploading a huge original by mistake.
 const MAX_IMAGE_BYTES = 1.5 * 1024 * 1024;
 const MAX_VARIANT_LABEL_LEN = 60;
+// How many photos per product the bulk (all-products) response includes.
+// Only used for the homepage grid, which shows a handful of photos per
+// card — the detail page fetches a product's full list separately.
+const GRID_PHOTO_CAP = 6;
 
 // Accepts either the old plain-string shape or the new { src, variant }
 // shape and always returns the latter.
@@ -73,13 +92,32 @@ exports.handler = async function (event) {
   const store = productImagesStore();
 
   if (event.httpMethod === 'GET') {
+    const params = event.queryStringParameters || {};
+    const productId = params.productId;
+
+    if (productId) {
+      // Single-product mode — bounded response size no matter how large
+      // the overall catalog gets, since it's just this one product's data.
+      try {
+        const val = normalizeImages(await store.get(productId, { type: 'json' }));
+        return {
+          statusCode: 200,
+          headers: { 'Cache-Control': 'public, max-age=60, stale-while-revalidate=600' },
+          body: JSON.stringify({ [productId]: val }),
+        };
+      } catch (err) {
+        console.error('product-images GET (single) error:', err);
+        return { statusCode: 500, body: JSON.stringify({ error: 'Could not load product images' }) };
+      }
+    }
+
     try {
       const { blobs } = await store.list();
       const result = {};
       await Promise.all(
         blobs.map(async (b) => {
           const val = await store.get(b.key, { type: 'json' });
-          if (Array.isArray(val)) result[b.key] = normalizeImages(val);
+          if (Array.isArray(val)) result[b.key] = normalizeImages(val).slice(0, GRID_PHOTO_CAP);
         })
       );
       // Public GET, same response for every visitor — cache at the edge
