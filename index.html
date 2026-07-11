@@ -392,6 +392,12 @@
     font-size:0.92rem;
   }
   .add-cart-btn:disabled{opacity:0.55; cursor:not-allowed;}
+  .product-card.out-of-stock{opacity:0.7;}
+  .product-card.out-of-stock .icon-stage, .product-card.out-of-stock .photo-img{filter:grayscale(0.5);}
+  .oos-badge{
+    display:inline-block; font-size:0.68rem; font-weight:700; text-transform:uppercase; letter-spacing:0.03em;
+    background:rgba(165,82,94,0.14); color:var(--rosewater-deep); border-radius:100px; padding:3px 10px; margin-bottom:8px;
+  }
   .card-photo-link{display:block; cursor:pointer;}
   .card-title-link{display:block; text-decoration:none; color:inherit; cursor:pointer;}
   .card-title-link:hover h3{color:var(--fern);}
@@ -1507,7 +1513,8 @@
 
     PRODUCTS.forEach(function(prod, idx){
       var card = document.createElement('div');
-      card.className = 'product-card';
+      var outOfStock = prod.inStock === false;
+      card.className = 'product-card' + (outOfStock ? ' out-of-stock' : '');
       card.dataset.cat = prod.cat;
       card.dataset.pidx = idx;
       card.dataset.vidx = 0;
@@ -1520,6 +1527,7 @@
 
       card.innerHTML =
         '<span class="card-tag">'+prod.tag+'</span>' +
+        (outOfStock ? '<span class="oos-badge">Out of stock</span>' : '') +
         '<a class="card-photo-link" href="product.html?id='+encodeURIComponent(prod.id)+'" aria-label="View '+prod.name+'"><div class="icon-stage" id="icon-stage-'+idx+'">'+ICONS[prod.icon]+'</div></a>' +
         '<a class="card-title-link" href="product.html?id='+encodeURIComponent(prod.id)+'"><h3>'+prod.name+'</h3></a>' +
         '<p class="desc">'+prod.desc+'</p>' +
@@ -1530,7 +1538,7 @@
           '<span class="price-mrp">₹'+prod.variants[0].m+'</span>' +
           '<span class="price-off">'+off0+'% off</span>' +
         '</div>' +
-        '<button class="add-cart-btn">Add to cart</button>';
+        '<button class="add-cart-btn"'+(outOfStock ? ' disabled' : '')+'>'+(outOfStock ? 'Out of stock' : 'Add to cart')+'</button>';
 
       card.querySelectorAll('.variant-pill').forEach(function(pill){
         pill.addEventListener('click', function(){
@@ -1791,6 +1799,8 @@
   var PRODUCT_PHOTOS = {}; // productId -> [photoUrl, ...], populated by loadProductPhotos()
 
   function addToCart(pidx, vidx){
+    var prod = PRODUCTS[pidx];
+    if(!prod || prod.inStock === false) return; // out of stock — ignore (button is disabled, but this also covers the product.html redirect flow)
     var existing = CART.find(function(c){ return c.pidx === pidx && c.vidx === vidx; });
     if(existing){ existing.qty += 1; }
     else{ CART.push({ pidx: pidx, vidx: vidx, qty: 1 }); }
@@ -2038,7 +2048,7 @@
     var items = CART.map(function(item){
       var prod = PRODUCTS[item.pidx];
       var variant = prod.variants[item.vidx];
-      return { name: prod.name, variant: variant.l, price: variant.p, qty: item.qty, gst: (prod.gst === null || prod.gst === undefined) ? null : prod.gst, hsn: prod.hsn || '' };
+      return { id: prod.id, name: prod.name, variant: variant.l, price: variant.p, qty: item.qty, gst: (prod.gst === null || prod.gst === undefined) ? null : prod.gst, hsn: prod.hsn || '' };
     });
 
     var amountPaise = cartSubtotal() * 100;
@@ -2057,7 +2067,7 @@
         submitBtn.textContent = 'Continue to payment →';
 
         if(order.error){
-          alert(order.storeClosed ? order.error : 'Could not start checkout. Please try again in a moment.');
+          alert((order.storeClosed || order.outOfStock) ? order.error : 'Could not start checkout. Please try again in a moment.');
           return;
         }
 

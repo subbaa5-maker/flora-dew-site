@@ -131,6 +131,8 @@
   }
   .pd-add-btn:hover{background:var(--fern); border-color:var(--fern);}
   .pd-add-btn.added{background:var(--fern); border-color:var(--fern);}
+  .pd-add-btn:disabled{opacity:0.55; cursor:not-allowed; background:var(--moss-ink); border-color:var(--moss-ink);}
+  .pd-qty-stepper button:disabled{opacity:0.4; cursor:not-allowed;}
   .pd-trust{font-size:0.78rem; color:rgba(36,54,35,0.55);}
 </style>
 </head>
@@ -255,7 +257,7 @@
         "@type":"AggregateOffer", "priceCurrency":"INR",
         "lowPrice": Math.min.apply(null, prod.variants.map(function(v){return v.p;})),
         "highPrice": Math.max.apply(null, prod.variants.map(function(v){return v.p;})),
-        "availability":"https://schema.org/InStock"
+        "availability": prod.inStock === false ? "https://schema.org/OutOfStock" : "https://schema.org/InStock"
       }
     });
 
@@ -354,7 +356,13 @@
   }
 
   function updateAddBtnState(){
-    // Placeholder for future stock-aware logic; currently always enabled.
+    var addBtn = document.getElementById('pd-add-btn');
+    if(prod.inStock === false){
+      addBtn.disabled = true;
+      addBtn.textContent = 'Out of stock';
+      document.getElementById('pd-qty-minus').disabled = true;
+      document.getElementById('pd-qty-plus').disabled = true;
+    }
   }
 </script>
 
