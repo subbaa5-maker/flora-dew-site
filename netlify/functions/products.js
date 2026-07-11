@@ -1,9 +1,10 @@
 // netlify/functions/products.js
 //
 // Manages the product catalog (name, category, tag, description, key
-// ingredients, icon, GST rate, and size/weight + price variants) so the
-// shop owner can add, edit, or remove products from the admin dashboard
-// without a code deploy. Product photos are stored separately (see
+// ingredients, icon, GST rate, HSN/SAC code, and size/weight + price
+// variants) so the shop owner can add, edit, or remove products from the
+// admin dashboard without a code deploy. Product photos are stored
+// separately (see
 // product-images.js) — this function only stores each product's text
 // and pricing data, kept together as one JSON array under the key "all".
 //
@@ -138,6 +139,7 @@ function validateProduct(p, validCategoryIds) {
     const gstNum = Number(p.gst);
     if (isNaN(gstNum) || gstNum < 0 || gstNum > 100) return 'GST rate must be a percentage between 0 and 100';
   }
+  if (p.hsn !== null && p.hsn !== undefined && String(p.hsn).length > 20) return 'HSN/SAC code looks too long — double check it';
   return null;
 }
 
@@ -212,6 +214,9 @@ exports.handler = async function (event) {
         icon: VALID_ICONS.includes(product.icon) ? product.icon : 'soap',
         ing: Array.isArray(product.ing) ? product.ing.map(String).map((s) => s.trim()).filter(Boolean) : [],
         gst: (product.gst === null || product.gst === undefined || product.gst === '') ? null : Number(product.gst),
+        // HSN (goods) / SAC (services) code, sent to Zoho on each invoice
+        // line item so invoices are GST/e-invoicing compliant.
+        hsn: String(product.hsn || '').trim().slice(0, 20),
         variants: product.variants.map((v) => ({
           l: String(v.l).trim(),
           p: Math.round(Number(v.p)),
