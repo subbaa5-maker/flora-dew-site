@@ -217,6 +217,12 @@ exports.handler = async function (event) {
         // HSN (goods) / SAC (services) code, sent to Zoho on each invoice
         // line item so invoices are GST/e-invoicing compliant.
         hsn: String(product.hsn || '').trim().slice(0, 20),
+        // Out-of-stock flag, settable from Admin. Defaults to true (in
+        // stock) for anything that doesn't explicitly set it to false —
+        // this keeps older products (including the DEFAULT_PRODUCTS seed
+        // data, which predates this field) working as "in stock" without
+        // needing a migration.
+        inStock: product.inStock === false ? false : true,
         variants: product.variants.map((v) => ({
           l: String(v.l).trim(),
           p: Math.round(Number(v.p)),
