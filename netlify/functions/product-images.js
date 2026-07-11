@@ -69,10 +69,9 @@ const MAX_IMAGES_PER_PRODUCT = 35;
 // under this. Guards against someone uploading a huge original by mistake.
 const MAX_IMAGE_BYTES = 1.5 * 1024 * 1024;
 const MAX_VARIANT_LABEL_LEN = 60;
-// How many photos per product the bulk (all-products) response includes.
-// Only used for the homepage grid, which shows a handful of photos per
-// card — the detail page fetches a product's full list separately.
-const GRID_PHOTO_CAP = 6;
+// Safety ceiling on the bulk (all-products) response, applied after
+// reduceForGrid() picks the meaningful subset — see that function.
+const GRID_PHOTO_CAP = 10;
 
 // Accepts either the old plain-string shape or the new { src, variant }
 // shape and always returns the latter.
@@ -86,6 +85,26 @@ function normalizeImage(entry) {
 
 function normalizeImages(arr) {
   return (Array.isArray(arr) ? arr : []).map(normalizeImage).filter(Boolean);
+}
+
+// Picks a small, representative subset of a product's photos for the
+// homepage grid: every general (untagged) photo, plus one photo for
+// each distinct variant — so a card always has *something* to show for
+// its currently-selected variant, no matter what order photos were
+// uploaded in. A naive "first N photos" cap can easily miss the one
+// photo that actually matches what's selected, leaving the card stuck
+// on the placeholder icon even though the product has plenty of photos.
+function reduceForGrid(images, cap) {
+  const picked = [];
+  images.forEach((im) => { if (!im.variant) picked.push(im); });
+  const seenVariants = new Set();
+  images.forEach((im) => {
+    if (im.variant && !seenVariants.has(im.variant)) {
+      seenVariants.add(im.variant);
+      picked.push(im);
+    }
+  });
+  return picked.slice(0, cap);
 }
 
 exports.handler = async function (event) {
@@ -117,7 +136,7 @@ exports.handler = async function (event) {
       await Promise.all(
         blobs.map(async (b) => {
           const val = await store.get(b.key, { type: 'json' });
-          if (Array.isArray(val)) result[b.key] = normalizeImages(val).slice(0, GRID_PHOTO_CAP);
+          if (Array.isArray(val)) result[b.key] = reduceForGrid(normalizeImages(val), GRID_PHOTO_CAP);
         })
       );
       // Public GET, same response for every visitor — cache at the edge
