@@ -1,9 +1,9 @@
 // netlify/functions/product-images.js
 //
-// Manages product photos, stored in Netlify Blobs (no separate file/CDN
-// service needed). Up to MAX_IMAGES_PER_PRODUCT images per product, saved
-// as compressed base64 data-URLs (resizing/compression happens client-side
-// in admin.html before upload, so blobs stay small).
+// Manages product photo METADATA, stored in Netlify Blobs. Up to
+// MAX_IMAGES_PER_PRODUCT images per product, saved as compressed base64
+// data-URLs (resizing/compression happens client-side in admin.html
+// before upload, so blobs stay small).
 //
 // Each image is stored as { src, variant }. `variant` is either "" (a
 // general photo, shown for any size/weight that doesn't have its own
@@ -21,34 +21,37 @@
 // photos either. Deleting/renaming a variant is rare enough that this is
 // an acceptable tradeoff for not needing a bigger data-model change.
 //
-// GET  /.netlify/functions/product-images
-//      -> public, returns { "<productId>": [{ src, variant }, ...], ... }
-//      Used by index.html / product.html to show real photos instead of
-//      the placeholder icon. Legacy entries stored as plain strings
-//      (from before per-variant tagging existed) are normalized to
-//      { src: <string>, variant: "" } on the way out, so older data
-//      keeps working with no migration needed.
+// IMPORTANT: this endpoint never returns actual image bytes (`src`) —
+// only { variant } metadata, keyed by the image's position in the
+// array. The actual photo bytes are served one at a time, as real
+// cacheable image responses, by product-image.js (singular):
+//   /.netlify/functions/product-image?productId=<id>&index=<n>
+// This split exists for two reasons:
+//   1. Speed — a normal <img src="..."> lets the browser fetch, cache,
+//      and lazy-load each photo independently and in parallel, instead
+//      of the whole page blocking on one big JSON blob of base64 text.
+//   2. Netlify Functions cap response bodies at 6MB. Embedding every
+//      photo for every product in one JSON response doesn't scale — it
+//      hit that limit in practice once a catalog had enough photos, and
+//      once a response crosses the limit the WHOLE request fails (every
+//      product loses its photos at once, not just one). Metadata-only
+//      responses are just short strings, so this can't happen again
+//      regardless of how many photos the catalog grows to.
 //
-//      Netlify Functions cap response bodies at 6MB. Returning every
-//      photo for every product in one response doesn't scale — a single
-//      product with many full-size photos can approach that limit by
-//      itself, and once the combined response crosses it the WHOLE
-//      request fails (every product loses its photos, not just one).
-//      So this endpoint has two modes:
-//        - GET ?productId=<id>  -> full, uncapped photo list for just
-//          that one product. Used by product.html (the detail page only
-//          ever needs one product's photos) and by admin.html (which
-//          fetches each product individually rather than in bulk, for
-//          the same reason).
-//        - GET (no productId)  -> every product, but capped to the
-//          first GRID_PHOTO_CAP photos each. Used by index.html's
-//          product grid, which only shows a few photos per card anyway.
+// GET  /.netlify/functions/product-images
+//      -> public, returns { "<productId>": [{ variant }, ...], ... } for
+//         every product. Used by index.html's product grid.
+// GET  /.netlify/functions/product-images?productId=<id>
+//      -> public, same shape but for just one product. Used by
+//         product.html (the detail page only needs one product) and by
+//         admin.html (which fetches each product individually).
+
 
 // POST /.netlify/functions/product-images
 //      body: { secret, productId, image: "data:image/...;base64,...", variant: "" }
 //      -> admin-only, appends one image to a product (rejects past the
 //         limit). `variant` is optional — omit or send "" for a general
-//         photo.
+//         photo. Response is metadata-only (see above), same as GET.
 //
 // POST /.netlify/functions/product-images  (with action:"delete")
 //      body: { secret, productId, action:"delete", index: 0 }
@@ -69,9 +72,6 @@ const MAX_IMAGES_PER_PRODUCT = 35;
 // under this. Guards against someone uploading a huge original by mistake.
 const MAX_IMAGE_BYTES = 1.5 * 1024 * 1024;
 const MAX_VARIANT_LABEL_LEN = 60;
-// Safety ceiling on the bulk (all-products) response, applied after
-// reduceForGrid() picks the meaningful subset — see that function.
-const GRID_PHOTO_CAP = 10;
 
 // Accepts either the old plain-string shape or the new { src, variant }
 // shape and always returns the latter.
@@ -87,24 +87,11 @@ function normalizeImages(arr) {
   return (Array.isArray(arr) ? arr : []).map(normalizeImage).filter(Boolean);
 }
 
-// Picks a small, representative subset of a product's photos for the
-// homepage grid: every general (untagged) photo, plus one photo for
-// each distinct variant — so a card always has *something* to show for
-// its currently-selected variant, no matter what order photos were
-// uploaded in. A naive "first N photos" cap can easily miss the one
-// photo that actually matches what's selected, leaving the card stuck
-// on the placeholder icon even though the product has plenty of photos.
-function reduceForGrid(images, cap) {
-  const picked = [];
-  images.forEach((im) => { if (!im.variant) picked.push(im); });
-  const seenVariants = new Set();
-  images.forEach((im) => {
-    if (im.variant && !seenVariants.has(im.variant)) {
-      seenVariants.add(im.variant);
-      picked.push(im);
-    }
-  });
-  return picked.slice(0, cap);
+// Strips image bytes before sending a response — callers only ever get
+// { variant } per photo, keyed by array position, and fetch the actual
+// bytes on demand from product-image.js. See file header for why.
+function stripSrc(images) {
+  return images.map((im) => ({ variant: im.variant }));
 }
 
 exports.handler = async function (event) {
@@ -115,14 +102,12 @@ exports.handler = async function (event) {
     const productId = params.productId;
 
     if (productId) {
-      // Single-product mode — bounded response size no matter how large
-      // the overall catalog gets, since it's just this one product's data.
       try {
         const val = normalizeImages(await store.get(productId, { type: 'json' }));
         return {
           statusCode: 200,
           headers: { 'Cache-Control': 'public, max-age=60, stale-while-revalidate=600' },
-          body: JSON.stringify({ [productId]: val }),
+          body: JSON.stringify({ [productId]: stripSrc(val) }),
         };
       } catch (err) {
         console.error('product-images GET (single) error:', err);
@@ -136,12 +121,13 @@ exports.handler = async function (event) {
       await Promise.all(
         blobs.map(async (b) => {
           const val = await store.get(b.key, { type: 'json' });
-          if (Array.isArray(val)) result[b.key] = reduceForGrid(normalizeImages(val), GRID_PHOTO_CAP);
+          if (Array.isArray(val)) result[b.key] = stripSrc(normalizeImages(val));
         })
       );
       // Public GET, same response for every visitor — cache at the edge
-      // so most page loads never re-hit Blobs. See site-images.js for
-      // the same pattern and reasoning.
+      // so most page loads never re-hit Blobs. Metadata-only, so this
+      // stays small (a few KB even for a large catalog) no matter how
+      // many photos each product has.
       return {
         statusCode: 200,
         headers: { 'Cache-Control': 'public, max-age=60, stale-while-revalidate=600' },
@@ -172,7 +158,7 @@ exports.handler = async function (event) {
         }
         existing.splice(index, 1);
         await store.setJSON(productId, existing);
-        return { statusCode: 200, body: JSON.stringify({ success: true, images: existing }) };
+        return { statusCode: 200, body: JSON.stringify({ success: true, images: stripSrc(existing) }) };
       }
 
       if (action === 'retag') {
@@ -181,7 +167,7 @@ exports.handler = async function (event) {
         }
         existing[index].variant = String(variant || '').trim().slice(0, MAX_VARIANT_LABEL_LEN);
         await store.setJSON(productId, existing);
-        return { statusCode: 200, body: JSON.stringify({ success: true, images: existing }) };
+        return { statusCode: 200, body: JSON.stringify({ success: true, images: stripSrc(existing) }) };
       }
 
       // Default action: add an image
@@ -199,7 +185,7 @@ exports.handler = async function (event) {
       existing.push({ src: image, variant: String(variant || '').trim().slice(0, MAX_VARIANT_LABEL_LEN) });
       await store.setJSON(productId, existing);
 
-      return { statusCode: 200, body: JSON.stringify({ success: true, images: existing }) };
+      return { statusCode: 200, body: JSON.stringify({ success: true, images: stripSrc(existing) }) };
     } catch (err) {
       console.error('product-images POST error:', err);
       return { statusCode: 500, body: JSON.stringify({ error: 'Could not save image' }) };
