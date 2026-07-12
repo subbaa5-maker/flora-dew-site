@@ -220,8 +220,15 @@
   .pm-grid{display:flex; flex-direction:column; gap:14px;}
   .pm-card{background:var(--paper); border-radius:16px; padding:18px 20px; box-shadow:var(--shadow-soft);}
   .pm-card-head{display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; flex-wrap:wrap; gap:8px;}
-  .pm-card-head .pm-name{font-weight:600; font-size:1rem;}
+  .pm-card-head .pm-name{font-weight:600; font-size:1rem; margin-right:auto;}
   .pm-card-head .pm-count{font-size:0.78rem; color:rgba(36,54,35,0.55);}
+  .pm-reorder-btns{display:flex; gap:2px;}
+  .pm-reorder-btns button{
+    border:1px solid var(--line); background:#fff; color:var(--moss-ink);
+    border-radius:6px; width:22px; height:20px; line-height:18px; font-size:0.7rem; cursor:pointer; padding:0;
+  }
+  .pm-reorder-btns button:hover:not(:disabled){background:var(--milk-sage-2);}
+  .pm-reorder-btns button:disabled{opacity:0.3; cursor:default;}
   .pm-oos-badge{
     display:inline-block; font-size:0.68rem; font-weight:700; text-transform:uppercase; letter-spacing:0.03em;
     background:rgba(165,82,94,0.14); color:var(--rosewater-deep); border-radius:100px; padding:2px 10px; margin-left:6px; vertical-align:middle;
@@ -879,17 +886,20 @@
     });
   }
 
-  // Accepts either the current { src, variant } shape or the older
-  // plain-string shape (in case a cached/stale API response briefly
-  // serves pre-upgrade data right after a deploy) and always returns the
-  // current shape, so the UI never breaks either way.
+  // product-images.js returns METADATA only ({ variant } per photo, keyed
+  // by position) — not the actual image bytes. Thumbnails are rendered as
+  // real <img src="..."> pointing at product-image.js, so the browser
+  // fetches/caches each one independently instead of admin having to hold
+  // every product's full-size photos in memory as base64 text at once.
   function normalizeProductImage(entry){
-    if(typeof entry === 'string') return { src: entry, variant: '' };
-    if(entry && typeof entry.src === 'string') return { src: entry.src, variant: typeof entry.variant === 'string' ? entry.variant : '' };
+    if(entry && typeof entry === 'object') return { variant: typeof entry.variant === 'string' ? entry.variant : '' };
     return null;
   }
   function normalizeProductImages(arr){
     return (Array.isArray(arr) ? arr : []).map(normalizeProductImage).filter(Boolean);
+  }
+  function photoUrl(productId, index){
+    return '/.netlify/functions/product-image?productId=' + encodeURIComponent(productId) + '&index=' + index;
   }
 
   function loadProductManager(){
@@ -936,7 +946,8 @@
       '</div>';
   }
 
-  function buildProductCardHtml(p, isDraft){
+  function buildProductCardHtml(p, isDraft, posInfo){
+    posInfo = posInfo || {};
     var key = isDraft ? 'draft' : p.id;
     var images = isDraft ? [] : (PRODUCT_IMAGES[p.id] || []);
     var variantLabels = (p.variants || []).map(function(v){ return v.l; }).filter(Boolean);
@@ -956,7 +967,7 @@
       return '' +
         '<div class="pm-thumb-wrap">' +
           '<div class="pm-thumb">' +
-            '<img src="'+img.src+'" alt="">' +
+            '<img src="'+photoUrl(p.id, i)+'" alt="" loading="lazy">' +
             '<button type="button" class="pm-thumb-del" data-pid="'+p.id+'" data-idx="'+i+'">&times;</button>' +
           '</div>' +
           '<select class="pm-thumb-variant" data-pid="'+p.id+'" data-idx="'+i+'" title="Which size this photo is for'+(isOrphaned ? ' — currently tagged to a removed size: '+img.variant : '')+'">'+buildSelectOptions(thumbOptions, img.variant || '')+'</select>' +
@@ -982,6 +993,12 @@
     return '' +
       '<div class="pm-card'+(isDraft ? ' pm-card-draft' : '')+'" data-pid="'+(isDraft ? '' : p.id)+'" data-draft="'+(isDraft ? '1' : '0')+'">' +
         '<div class="pm-card-head">' +
+          (isDraft ? '' :
+            '<span class="pm-reorder-btns">' +
+              '<button type="button" class="pm-move-up-btn" data-pid="'+p.id+'" title="Move up in shop order"'+(posInfo.isFirst ? ' disabled' : '')+'>&uarr;</button>' +
+              '<button type="button" class="pm-move-down-btn" data-pid="'+p.id+'" title="Move down in shop order"'+(posInfo.isLast ? ' disabled' : '')+'>&darr;</button>' +
+            '</span>'
+          ) +
           '<span class="pm-name">'+(isDraft ? 'New product' : escapeHtml(p.name))+(p.inStock === false ? ' <span class="pm-oos-badge">Out of stock</span>' : '')+'</span>' +
           (isDraft ? '' : '<span class="pm-count">'+images.length+' / '+MAX_IMAGES_PER_PRODUCT+' images</span>') +
         '</div>' +
@@ -1032,7 +1049,7 @@
 
     var html = '';
     if(NEW_PRODUCT_DRAFT){ html += buildProductCardHtml(NEW_PRODUCT_DRAFT, true); }
-    html += list.map(function(p){ return buildProductCardHtml(p, false); }).join('');
+    html += list.map(function(p, i){ return buildProductCardHtml(p, false, { isFirst: i === 0, isLast: i === list.length - 1 }); }).join('');
 
     gridEl.innerHTML = html || '<div class="empty-state">No products in this category yet.</div>';
   }
@@ -1167,6 +1184,38 @@
 
     var thumbDel = e.target.closest('.pm-thumb-del');
     if(thumbDel){ deleteProductImage(thumbDel.dataset.pid, parseInt(thumbDel.dataset.idx, 10)); return; }
+
+    var moveBtn = e.target.closest('.pm-move-up-btn') || e.target.closest('.pm-move-down-btn');
+    if(moveBtn){
+      var pid = moveBtn.dataset.pid;
+      var dir = moveBtn.classList.contains('pm-move-up-btn') ? -1 : 1;
+      // Move relative to the currently-visible (possibly category-filtered)
+      // order, not raw array position — so the buttons always match what
+      // the admin sees, regardless of which catalogue tab is selected.
+      var catFilter = document.getElementById('pm-category-filter').value;
+      var visibleIdx = PRODUCTS.map(function(p, i){ return i; })
+        .filter(function(i){ return catFilter === 'all' || PRODUCTS[i].cat === catFilter; });
+      var posInVisible = visibleIdx.indexOf(PRODUCTS.findIndex(function(p){ return p.id === pid; }));
+      var swapPos = posInVisible + dir;
+      if(posInVisible < 0 || swapPos < 0 || swapPos >= visibleIdx.length) return;
+      var idxA = visibleIdx[posInVisible], idxB = visibleIdx[swapPos];
+      var reordered = PRODUCTS.slice();
+      var tmp = reordered[idxA]; reordered[idxA] = reordered[idxB]; reordered[idxB] = tmp;
+      var order = reordered.map(function(p){ return p.id; });
+      fetch('/.netlify/functions/products', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ secret: currentSecret(), action: 'reorder', order: order })
+      })
+        .then(function(res){ return res.json(); })
+        .then(function(result){
+          if(!result || !result.success) throw new Error((result && result.error) || 'Could not reorder.');
+          PRODUCTS = result.products || reordered;
+          renderProductManager();
+        })
+        .catch(function(){ alert('Could not reorder — please try again.'); });
+      return;
+    }
   });
   pmGridEl.addEventListener('change', function(e){
     var fileInput = e.target.closest('.pm-file-input');

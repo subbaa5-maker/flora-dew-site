@@ -202,32 +202,44 @@
 
   var productId = qs('id');
   var prod = null;
-  var allImages = []; // [{ src, variant }, ...] for this product, as returned by product-images
-  var photos = []; // computed for the currently selected variant — see photosForVariant()
-  var photoIndex = 0;
+  var allImages = []; // [{ variant }, ...] metadata for this product, as returned by product-images
+  var photoIndices = []; // positions in allImages matching the selected variant — see photosForVariant()
+  var photoIndex = 0; // which of photoIndices is currently shown (0 = first)
   var variantIndex = 0;
   var qty = 1;
 
-  // Accepts either the current { src, variant } shape or the older
-  // plain-string shape (in case a cached/stale API response briefly
-  // serves pre-upgrade data right after a deploy) and always returns the
-  // current shape, so the UI never breaks either way.
+  // product-images.js returns METADATA only ({ variant } per photo) — not
+  // the actual image bytes. Each photo is fetched as a real, independently
+  // cacheable image from product-image.js, which is what makes photos load
+  // fast: the browser fetches/caches/decodes each one the normal way
+  // instead of the whole page waiting on one big JSON blob of base64 text.
   function normalizeProductImage(entry){
-    if(typeof entry === 'string') return { src: entry, variant: '' };
-    if(entry && typeof entry.src === 'string') return { src: entry.src, variant: typeof entry.variant === 'string' ? entry.variant : '' };
+    if(entry && typeof entry === 'object') return { variant: typeof entry.variant === 'string' ? entry.variant : '' };
     return null;
   }
   function normalizeProductImages(arr){
     return (Array.isArray(arr) ? arr : []).map(normalizeProductImage).filter(Boolean);
   }
+  function photoUrl(index){
+    return '/.netlify/functions/product-image?productId=' + encodeURIComponent(productId) + '&index=' + index;
+  }
+  // og:image and JSON-LD are read by crawlers with no page context, so
+  // they need a fully-qualified URL rather than a relative one.
+  function absolutePhotoUrl(index){
+    return 'https://www.floradew.in/.netlify/functions/product-image?productId=' + encodeURIComponent(productId) + '&index=' + index;
+  }
 
   // A size's own tagged photos take priority; if it has none, fall back
   // to the general (untagged) photos so most products don't need
   // per-size photos at all — only sizes that genuinely look different.
+  // Returns matching photos' INDICES (positions in `images`), not photo data.
   function photosForVariant(images, variantLabel){
-    var specific = images.filter(function(im){ return im.variant && im.variant === variantLabel; }).map(function(im){ return im.src; });
+    var specific = [];
+    images.forEach(function(im, i){ if(im.variant && im.variant === variantLabel) specific.push(i); });
     if(specific.length) return specific;
-    return images.filter(function(im){ return !im.variant; }).map(function(im){ return im.src; });
+    var general = [];
+    images.forEach(function(im, i){ if(!im.variant) general.push(i); });
+    return general;
   }
 
   if(!productId){
@@ -246,7 +258,7 @@
       if(!prod){ showError(); return; }
 
       allImages = normalizeProductImages(imagesByProduct[prod.id]);
-      photos = photosForVariant(allImages, prod.variants[variantIndex].l);
+      photoIndices = photosForVariant(allImages, prod.variants[variantIndex].l);
       var catObj = categories.find(function(c){ return c.id === prod.cat; });
       renderProduct(catObj ? catObj.label : prod.cat);
     }).catch(function(){ showError(); });
@@ -271,12 +283,12 @@
     var canonicalUrl = 'https://www.floradew.in/product/' + encodeURIComponent(prod.id);
     document.getElementById('page-canonical').setAttribute('href', canonicalUrl);
     document.getElementById('og-url').setAttribute('content', canonicalUrl);
-    if(photos.length) document.getElementById('og-image').setAttribute('content', photos[0]);
+    if(photoIndices.length) document.getElementById('og-image').setAttribute('content', absolutePhotoUrl(photoIndices[0]));
 
     document.getElementById('product-schema').textContent = JSON.stringify({
       "@context":"https://schema.org", "@type":"Product",
       "name":prod.name, "description":prod.desc,
-      "image": photos.length ? photos : undefined,
+      "image": photoIndices.length ? photoIndices.map(absolutePhotoUrl) : undefined,
       "offers":{
         "@type":"AggregateOffer", "priceCurrency":"INR",
         "lowPrice": Math.min.apply(null, prod.variants.map(function(v){return v.p;})),
@@ -312,7 +324,7 @@
     var stage = document.getElementById('pd-main-stage');
     var thumbsEl = document.getElementById('pd-thumbs');
 
-    if(!photos.length){
+    if(!photoIndices.length){
       stage.innerHTML = ICONS[prod.icon] || ICONS.soap;
       thumbsEl.innerHTML = '';
       return;
@@ -320,16 +332,16 @@
 
     function paint(){
       stage.innerHTML =
-        '<img src="'+photos[photoIndex]+'" alt="'+prod.name+'">' +
-        (photos.length > 1 ?
+        '<img src="'+photoUrl(photoIndices[photoIndex])+'" alt="'+prod.name+'">' +
+        (photoIndices.length > 1 ?
           '<button type="button" class="pd-nav prev" aria-label="Previous photo">‹</button>' +
           '<button type="button" class="pd-nav next" aria-label="Next photo">›</button>' : '');
-      if(photos.length > 1){
+      if(photoIndices.length > 1){
         stage.querySelector('.pd-nav.prev').addEventListener('click', function(){
-          photoIndex = (photoIndex - 1 + photos.length) % photos.length; paint();
+          photoIndex = (photoIndex - 1 + photoIndices.length) % photoIndices.length; paint();
         });
         stage.querySelector('.pd-nav.next').addEventListener('click', function(){
-          photoIndex = (photoIndex + 1) % photos.length; paint();
+          photoIndex = (photoIndex + 1) % photoIndices.length; paint();
         });
       }
       thumbsEl.querySelectorAll('.pd-thumb').forEach(function(t, i){
@@ -337,8 +349,8 @@
       });
     }
 
-    thumbsEl.innerHTML = photos.map(function(src, i){
-      return '<div class="pd-thumb'+(i===0?' active':'')+'" data-i="'+i+'"><img src="'+src+'" alt="'+prod.name+' photo '+(i+1)+'"></div>';
+    thumbsEl.innerHTML = photoIndices.map(function(imgIndex, i){
+      return '<div class="pd-thumb'+(i===0?' active':'')+'" data-i="'+i+'"><img src="'+photoUrl(imgIndex)+'" alt="'+prod.name+' photo '+(i+1)+'" loading="lazy"></div>';
     }).join('');
     thumbsEl.querySelectorAll('.pd-thumb').forEach(function(t){
       t.addEventListener('click', function(){
@@ -365,7 +377,7 @@
         pill.classList.add('active');
         variantIndex = parseInt(pill.dataset.vi, 10);
         updatePriceRow();
-        photos = photosForVariant(allImages, prod.variants[variantIndex].l);
+        photoIndices = photosForVariant(allImages, prod.variants[variantIndex].l);
         photoIndex = 0;
         renderGallery();
       });

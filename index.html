@@ -1025,8 +1025,8 @@
           <h2>Gentle on skin. Gentle on the earth.</h2>
         </div>
         <div>
-          <blockquote>The same care we give the people we love, we put into everything we make.</blockquote>
-<p class="mission-foot">We handcraft our soaps, hair oil, lip balms and every product from natural ingredients — gentle on skin, gentle on the earth, and free from harsh chemicals. Made in small batches, tested on real routines, never on animals.</p>
+          <blockquote>We are dedicated to creating <em>handcrafted</em> soaps, hair oil and lip balms using natural ingredients that are gentle on the skin and the environment.</blockquote>
+          <p class="mission-foot">Our mission is to provide chemical-free formulations that promote healthy, nourished skin — made in small batches, tested on real routines, never on animals.</p>
         </div>
       </div>
       <div class="mission-photo" id="mission-photo-wrap">
@@ -1596,27 +1596,35 @@
   }
 
   // ---------- Real product photos (uploaded from the admin dashboard) ----------
-  // Accepts either the current { src, variant } shape or the older
-  // plain-string shape (in case a cached/stale API response briefly
-  // serves pre-upgrade data right after a deploy) and always returns the
-  // current shape, so the UI never breaks either way.
+  // product-images.js returns METADATA only ({ variant } per photo, keyed
+  // by position) — not the actual image bytes. Each photo is fetched as a
+  // real, independently-cacheable <img src="..."> from product-image.js,
+  // which is what makes photos load fast: the browser handles fetching,
+  // caching, and lazy-loading them the normal way instead of the whole
+  // page waiting on one big JSON payload full of base64 text.
   function normalizeProductImage(entry){
-    if(typeof entry === 'string') return { src: entry, variant: '' };
-    if(entry && typeof entry.src === 'string') return { src: entry.src, variant: typeof entry.variant === 'string' ? entry.variant : '' };
+    if(entry && typeof entry === 'object') return { variant: typeof entry.variant === 'string' ? entry.variant : '' };
     return null;
   }
   function normalizeProductImages(arr){
     return (Array.isArray(arr) ? arr : []).map(normalizeProductImage).filter(Boolean);
   }
+  function photoUrl(productId, index){
+    return '/.netlify/functions/product-image?productId=' + encodeURIComponent(productId) + '&index=' + index;
+  }
 
   // A size's own tagged photos take priority; if it has none, fall back to
   // the general (untagged) photos — see product-images.js for the same
-  // logic on the server side of tagging.
+  // logic on the server side of tagging. Returns the matching photos'
+  // INDICES (positions in the product's full array), not photo data.
   function photosForVariant(images, variantLabel){
     images = images || [];
-    var specific = images.filter(function(im){ return im.variant && im.variant === variantLabel; }).map(function(im){ return im.src; });
+    var specific = [];
+    images.forEach(function(im, i){ if(im.variant && im.variant === variantLabel) specific.push(i); });
     if(specific.length) return specific;
-    return images.filter(function(im){ return !im.variant; }).map(function(im){ return im.src; });
+    var general = [];
+    images.forEach(function(im, i){ if(!im.variant) general.push(i); });
+    return general;
   }
 
   // (Re)paints one product card's photo stage for whichever variant is
@@ -1629,9 +1637,9 @@
     var card = stage.closest('.product-card');
     var vidx = card ? (parseInt(card.dataset.vidx, 10) || 0) : 0;
     var variantLabel = prod.variants[vidx] ? prod.variants[vidx].l : '';
-    var photos = photosForVariant(PRODUCT_PHOTOS[prod.id], variantLabel);
+    var photoIndices = photosForVariant(PRODUCT_PHOTOS[prod.id], variantLabel);
 
-    if(!photos.length){
+    if(!photoIndices.length){
       stage.classList.remove('has-photo');
       stage.innerHTML = ICONS[prod.icon];
       return;
@@ -1642,25 +1650,25 @@
 
     function renderPhoto(){
       var i = parseInt(stage.dataset.photoIndex, 10) || 0;
-      var dots = photos.map(function(_, di){
+      var dots = photoIndices.map(function(_, di){
         return '<span class="' + (di === i ? 'active' : '') + '"></span>';
       }).join('');
       stage.innerHTML =
-        '<img class="photo-img" src="' + photos[i] + '" alt="' + prod.name + '" loading="lazy">' +
-        (photos.length > 1 ?
+        '<img class="photo-img" src="' + photoUrl(prod.id, photoIndices[i]) + '" alt="' + prod.name + '" loading="lazy">' +
+        (photoIndices.length > 1 ?
           '<button type="button" class="photo-nav prev" aria-label="Previous photo">‹</button>' +
           '<button type="button" class="photo-nav next" aria-label="Next photo">›</button>' +
           '<div class="photo-dots">' + dots + '</div>'
           : '');
-      if(photos.length > 1){
+      if(photoIndices.length > 1){
         stage.querySelector('.photo-nav.prev').addEventListener('click', function(e){
           e.stopPropagation();
-          stage.dataset.photoIndex = (i - 1 + photos.length) % photos.length;
+          stage.dataset.photoIndex = (i - 1 + photoIndices.length) % photoIndices.length;
           renderPhoto();
         });
         stage.querySelector('.photo-nav.next').addEventListener('click', function(e){
           e.stopPropagation();
-          stage.dataset.photoIndex = (i + 1) % photos.length;
+          stage.dataset.photoIndex = (i + 1) % photoIndices.length;
           renderPhoto();
         });
       }
@@ -1878,9 +1886,9 @@
         var prod = PRODUCTS[item.pidx];
         var variant = prod.variants[item.vidx];
         var lineTotal = variant.p * item.qty;
-        var photos = photosForVariant(PRODUCT_PHOTOS[prod.id], variant.l);
-        var thumbHtml = photos.length ?
-          '<img class="ci-photo" src="'+photos[0]+'" alt="'+prod.name+'">' :
+        var photoIndices = photosForVariant(PRODUCT_PHOTOS[prod.id], variant.l);
+        var thumbHtml = photoIndices.length ?
+          '<img class="ci-photo" src="'+photoUrl(prod.id, photoIndices[0])+'" alt="'+prod.name+'">' :
           ICONS[prod.icon];
         return '<div class="cart-item" data-ci="'+ci+'">' +
           '<div class="ci-icon">'+thumbHtml+'</div>' +
