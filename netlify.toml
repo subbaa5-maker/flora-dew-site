@@ -9,3 +9,8 @@
   from = "/product/:id"
   to = "/product.html?id=:id"
   status = 200
+
+[[redirects]]
+  from = "/sitemap.xml"
+  to = "/.netlify/functions/sitemap"
+  status = 200
