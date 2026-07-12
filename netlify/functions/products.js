@@ -27,6 +27,14 @@
 //         product-images are left as-is (harmless if unused, and reused
 //         automatically if a new product is later given the same id).
 //
+// POST /.netlify/functions/products  (with action:"reorder")
+//      body: { secret, action:"reorder", order:[id, id, ...] }
+//      -> admin-only, reorders the product list to match the given id
+//         order (unlisted ids, if any, keep their relative order and are
+//         appended at the end — same tolerant pattern as categories.js).
+//         index.html and product.html show products in this exact
+//         array order, so reordering here reorders the storefront too.
+//
 // Required Netlify environment variable:
 //   ADMIN_SECRET
 
@@ -168,7 +176,7 @@ exports.handler = async function (event) {
 
   if (event.httpMethod === 'POST') {
     try {
-      const { secret, action, product, id } = JSON.parse(event.body || '{}');
+      const { secret, action, product, id, order } = JSON.parse(event.body || '{}');
 
       if (!process.env.ADMIN_SECRET || secret !== process.env.ADMIN_SECRET) {
         return { statusCode: 401, body: JSON.stringify({ error: 'Unauthorized' }) };
@@ -182,6 +190,16 @@ exports.handler = async function (event) {
         const next = products.filter((p) => p.id !== id);
         await store.setJSON('all', next);
         return { statusCode: 200, body: JSON.stringify({ success: true, products: next }) };
+      }
+
+      if (action === 'reorder') {
+        if (!Array.isArray(order)) return { statusCode: 400, body: JSON.stringify({ error: 'Missing order' }) };
+        const byId = {};
+        products.forEach((p) => { byId[p.id] = p; });
+        const ordered = order.filter((pid) => byId[pid]).map((pid) => byId[pid]);
+        products.forEach((p) => { if (!order.includes(p.id)) ordered.push(p); });
+        await store.setJSON('all', ordered);
+        return { statusCode: 200, body: JSON.stringify({ success: true, products: ordered }) };
       }
 
       // Default action: create or update ("upsert")
