@@ -212,6 +212,13 @@ async function createInvoice(customerId, order) {
       line_items,
       reference_number: order.orderId,
       notes: `Payment ID: ${order.paymentId || ''}`,
+      // Website prices already include GST (e.g. ₹159 is the final price
+      // the customer paid). Without this flag, Zoho treats `rate` as
+      // pre-tax and adds GST on top, inflating the total (e.g. ₹166.96
+      // instead of ₹159). This tells Zoho to back-calculate the GST
+      // breakdown out of the inclusive rate instead, so the invoice total
+      // matches what was actually charged.
+      is_inclusive_tax: true,
     }),
   });
 
