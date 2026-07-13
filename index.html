@@ -33,6 +33,17 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,450;0,9..144,600;1,9..144,450;1,9..144,600&family=Work+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<script>
+  // Fired as early as possible — before the rest of the page even parses —
+  // so the network round trip for hero/about/why/reviews photos overlaps
+  // with page load instead of starting only after the whole document is
+  // ready. This is what actually shrinks the placeholder-illustration
+  // flash on first visit; loadSiteImages() below reuses this same
+  // in-flight request rather than starting a second one.
+  window.__siteImagesPromise = fetch('/.netlify/functions/site-images')
+    .then(function(res){ return res.ok ? res.json() : {}; })
+    .catch(function(){ return {}; });
+</script>
 <style>
   :root{
     --moss-ink:#243623;
@@ -256,7 +267,7 @@
   /* Admin-uploaded hero photo — hidden until one is set, then replaces
      the default illustration */
   .soap-stage img.hero-photo-img{display:none; opacity:0; transition:opacity 0.35s ease;}
-  .soap-stage.has-hero-photo svg{display:none;}
+  .soap-stage.has-hero-photo img.hero-photo-img.loaded ~ svg{display:none;}
   .soap-stage.has-hero-photo img.hero-photo-img{
     display:block; width:100%; max-width:420px; height:380px;
     border-radius:24px; object-fit:cover; box-shadow:var(--shadow-soft);
@@ -1774,8 +1785,7 @@
       if(cached) applyImages(JSON.parse(cached));
     }catch(e){ /* private browsing etc — just skip the cache */ }
 
-    fetch('/.netlify/functions/site-images')
-      .then(function(res){ return res.ok ? res.json() : {}; })
+    (window.__siteImagesPromise || fetch('/.netlify/functions/site-images').then(function(res){ return res.ok ? res.json() : {}; }))
       .then(function(images){
         applyImages(images);
         try{ sessionStorage.setItem(CACHE_KEY, JSON.stringify(images || {})); }catch(e){ /* ignore */ }
