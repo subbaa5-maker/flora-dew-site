@@ -435,6 +435,7 @@
     <button class="tab-btn" data-tab="products">Products</button>
     <button class="tab-btn" data-tab="catalogues">Catalogues</button>
     <button class="tab-btn" data-tab="images">Site Images</button>
+    <button class="tab-btn" data-tab="blog">Blog</button>
     <button class="tab-btn" data-tab="settings">Store Status</button>
   </div>
 
@@ -491,6 +492,44 @@
   <div class="tab-panel" id="tab-images">
     <div id="im-grid" class="pm-grid">
       <div class="loading">Loading site images…</div>
+    </div>
+  </div>
+
+  <div class="tab-panel" id="tab-blog">
+    <div class="pm-section-note">Write guides and stories for SEO (e.g. "How to pick a natural soap for your skin type"). Save as Draft to keep working on it, or Published to make it live on <a href="/blog.html" target="_blank">/blog.html</a> and included in the sitemap automatically.</div>
+
+    <div id="blog-editor" style="display:none; background:var(--paper); border-radius:16px; padding:20px 22px; margin-bottom:20px; box-shadow:var(--shadow-soft);">
+      <div class="pm-field-full">
+        <label>Title</label>
+        <input type="text" id="blog-title" placeholder="How to pick a natural soap for your skin type">
+      </div>
+      <div class="pm-field-full">
+        <label>Excerpt (shown on the blog listing page, ~1-2 sentences)</label>
+        <textarea id="blog-excerpt" style="min-height:44px;" placeholder="A quick, honest guide to matching soap ingredients to your skin."></textarea>
+      </div>
+      <div class="pm-field-full">
+        <label>Cover image URL (optional)</label>
+        <input type="text" id="blog-cover" placeholder="https://... (paste any image URL, or leave blank)">
+      </div>
+      <div class="pm-field-full">
+        <label>Post content</label>
+        <textarea id="blog-body" style="min-height:260px;" placeholder="Write normally — leave a blank line between paragraphs. No HTML needed."></textarea>
+      </div>
+      <div class="pm-form-actions">
+        <select id="blog-status">
+          <option value="draft">Save as Draft</option>
+          <option value="published">Published (live on the site)</option>
+        </select>
+        <button type="button" class="btn btn-primary" id="blog-save-btn">Save post</button>
+        <button type="button" class="btn" id="blog-cancel-btn">Cancel</button>
+        <span class="pm-upload-msg pm-save-msg" id="blog-save-msg"></span>
+      </div>
+    </div>
+
+    <button type="button" class="btn btn-primary" id="blog-add-btn" style="margin-bottom:16px;">+ Write new post</button>
+
+    <div id="blog-list">
+      <div class="loading">Loading posts…</div>
     </div>
   </div>
 
@@ -558,6 +597,7 @@
         loadProductManager();
         loadSiteImages();
         loadStoreSettings();
+        loadBlogPosts();
       })
       .catch(function(){
         gateError.style.display = 'block';
@@ -1771,6 +1811,137 @@
       .catch(function(){
         btn.disabled = false;
         msgEl.className = 'settings-save-msg err';
+        msgEl.textContent = 'Could not save — please try again.';
+      });
+  });
+
+  // ---------- Blog ----------
+  var BLOG_POSTS = [];
+  var editingPostId = null;
+
+  function loadBlogPosts(){
+    fetch('/.netlify/functions/blog?admin=1&secret=' + encodeURIComponent(currentSecret()))
+      .then(function(res){ return res.json(); })
+      .then(function(posts){
+        BLOG_POSTS = Array.isArray(posts) ? posts : [];
+        renderBlogList();
+      })
+      .catch(function(){
+        document.getElementById('blog-list').innerHTML = '<div class="empty-state">Could not load posts.</div>';
+      });
+  }
+
+  function fmtBlogDate(iso){
+    if(!iso) return '—';
+    return new Date(iso).toLocaleDateString('en-IN', { day:'2-digit', month:'short', year:'numeric' });
+  }
+
+  function renderBlogList(){
+    var listEl = document.getElementById('blog-list');
+    if(BLOG_POSTS.length === 0){
+      listEl.innerHTML = '<div class="empty-state">No posts yet — click "Write new post" to start.</div>';
+      return;
+    }
+    listEl.innerHTML = BLOG_POSTS.map(function(p){
+      var badgeClass = p.status === 'published' ? 'status-paid' : 'status-pending';
+      var badgeText = p.status === 'published' ? 'Published' : 'Draft';
+      return '' +
+        '<div class="order-card">' +
+          '<div class="order-top">' +
+            '<div>' +
+              '<div class="order-customer">'+p.title+'</div>' +
+              '<div class="order-meta">'+fmtBlogDate(p.updatedAt || p.publishedAt)+' · /blog/'+p.slug+'</div>' +
+            '</div>' +
+            '<span class="status-badge '+badgeClass+'">'+badgeText+'</span>' +
+          '</div>' +
+          '<div class="fulfillment-controls" style="grid-template-columns:1fr auto auto;">' +
+            '<div style="align-self:center; font-size:0.85rem; color:rgba(36,54,35,0.7);">'+(p.excerpt || '')+'</div>' +
+            '<button class="save-order-btn" data-edit-post="'+p.id+'">Edit</button>' +
+            '<button class="save-order-btn" style="background:var(--rosewater-deep);" data-delete-post="'+p.id+'">Delete</button>' +
+          '</div>' +
+        '</div>';
+    }).join('');
+
+    listEl.querySelectorAll('[data-edit-post]').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        openBlogEditor(btn.getAttribute('data-edit-post'));
+      });
+    });
+    listEl.querySelectorAll('[data-delete-post]').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        var id = btn.getAttribute('data-delete-post');
+        if(!confirm('Delete this post permanently? This can\'t be undone.')) return;
+        fetch('/.netlify/functions/blog', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ secret: currentSecret(), action: 'delete', id: id })
+        })
+          .then(function(res){ return res.json(); })
+          .then(function(){ loadBlogPosts(); });
+      });
+    });
+  }
+
+  function openBlogEditor(postId){
+    editingPostId = postId || null;
+    var post = postId ? BLOG_POSTS.find(function(p){ return p.id === postId; }) : null;
+    document.getElementById('blog-title').value = post ? post.title : '';
+    document.getElementById('blog-excerpt').value = post ? (post.excerpt || '') : '';
+    document.getElementById('blog-cover').value = post ? (post.coverImage || '') : '';
+    document.getElementById('blog-body').value = post ? post.body : '';
+    document.getElementById('blog-status').value = post ? post.status : 'draft';
+    document.getElementById('blog-save-msg').textContent = '';
+    document.getElementById('blog-editor').style.display = 'block';
+    document.getElementById('blog-editor').scrollIntoView({ behavior:'smooth', block:'start' });
+  }
+
+  document.getElementById('blog-add-btn').addEventListener('click', function(){
+    openBlogEditor(null);
+  });
+  document.getElementById('blog-cancel-btn').addEventListener('click', function(){
+    document.getElementById('blog-editor').style.display = 'none';
+  });
+
+  document.getElementById('blog-save-btn').addEventListener('click', function(){
+    var title = document.getElementById('blog-title').value.trim();
+    var excerpt = document.getElementById('blog-excerpt').value.trim();
+    var coverImage = document.getElementById('blog-cover').value.trim();
+    var body = document.getElementById('blog-body').value;
+    var status = document.getElementById('blog-status').value;
+    var msgEl = document.getElementById('blog-save-msg');
+    var btn = document.getElementById('blog-save-btn');
+
+    if(!title || !body.trim()){
+      msgEl.className = 'pm-save-msg err';
+      msgEl.textContent = 'Title and content are both required.';
+      return;
+    }
+
+    var post = { title: title, excerpt: excerpt, coverImage: coverImage, body: body, status: status };
+    if(editingPostId) post.id = editingPostId;
+
+    btn.disabled = true;
+    fetch('/.netlify/functions/blog', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ secret: currentSecret(), action: 'upsert', post: post })
+    })
+      .then(function(res){ return res.json(); })
+      .then(function(result){
+        btn.disabled = false;
+        if(result.error){
+          msgEl.className = 'pm-save-msg err';
+          msgEl.textContent = result.error;
+          return;
+        }
+        msgEl.className = 'pm-save-msg ok';
+        msgEl.textContent = 'Saved.';
+        document.getElementById('blog-editor').style.display = 'none';
+        loadBlogPosts();
+      })
+      .catch(function(){
+        btn.disabled = false;
+        msgEl.className = 'pm-save-msg err';
         msgEl.textContent = 'Could not save — please try again.';
       });
   });

@@ -11,6 +11,11 @@
   status = 200
 
 [[redirects]]
+  from = "/blog/:slug"
+  to = "/post.html?slug=:slug"
+  status = 200
+
+[[redirects]]
   from = "/sitemap.xml"
   to = "/.netlify/functions/sitemap"
   status = 200
