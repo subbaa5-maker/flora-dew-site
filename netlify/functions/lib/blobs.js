@@ -52,4 +52,11 @@ function siteImagesStore() {
   return namedStore('site-images');
 }
 
-module.exports = { ordersStore, productImagesStore, productsStore, categoriesStore, settingsStore, siteImagesStore };
+// Stores blog posts (title, slug, excerpt, content, cover image, status,
+// dates) as one JSON array under the key "all" — same pattern as
+// productsStore.
+function blogStore() {
+  return namedStore('blog');
+}
+
+module.exports = { ordersStore, productImagesStore, productsStore, categoriesStore, settingsStore, siteImagesStore, blogStore };
