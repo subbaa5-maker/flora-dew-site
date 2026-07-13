@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Blog — Flora Dew</title>
+<meta name="description" content="Guides and stories on natural skincare, handmade soap, and chemical-free beauty from Flora Dew.">
+<meta name="robots" content="index, follow, max-image-preview:large">
+<link rel="canonical" href="https://www.floradew.in/blog.html">
+<meta name="theme-color" content="#243623">
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Flora Dew">
+<meta property="og:title" content="Flora Dew Blog">
+<meta property="og:description" content="Guides and stories on natural skincare, handmade soap, and chemical-free beauty.">
+<meta property="og:url" content="https://www.floradew.in/blog.html">
+<meta property="og:image" content="https://www.floradew.in/og-image.jpg">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,450;0,9..144,600;1,9..144,450;1,9..144,600&family=Work+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --moss-ink:#243623; --milk-sage:#eef1e6; --milk-sage-2:#e3e8d6;
+    --rosewater:#c4707c; --rosewater-deep:#a5525e; --honey-oil:#c2963a;
+    --fern:#4e6b4c; --paper:#f8f8f3; --line: rgba(36,54,35,0.14);
+    --shadow-soft: 0 20px 40px -24px rgba(36,54,35,0.35);
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{
+    background:var(--milk-sage); color:var(--moss-ink);
+    font-family:'Work Sans', sans-serif; line-height:1.5;
+  }
+  h1,h2,h3{font-family:'Fraunces', serif; font-weight:450; letter-spacing:-0.01em;}
+  a{color:inherit; text-decoration:none;}
+  header{
+    display:flex; justify-content:space-between; align-items:center;
+    padding:22px clamp(20px,5vw,60px);
+  }
+  .logo{display:flex; align-items:center; gap:8px; font-family:'Fraunces',serif; font-size:1.2rem; font-weight:600;}
+  .logo .dot{width:9px;height:9px;border-radius:50%;background:var(--rosewater);}
+  .back-link{font-size:0.85rem; color:rgba(36,54,35,0.65);}
+  main{max-width:900px; margin:0 auto; padding:20px clamp(20px,5vw,40px) 100px;}
+  .blog-hero{text-align:center; padding:20px 0 40px;}
+  .blog-hero h1{font-size:clamp(2rem,4vw,2.6rem); margin-bottom:10px;}
+  .blog-hero p{color:rgba(36,54,35,0.65); font-size:1rem;}
+  .post-grid{display:grid; grid-template-columns:1fr 1fr; gap:22px;}
+  @media (max-width:640px){ .post-grid{grid-template-columns:1fr;} }
+  .post-card{
+    background:var(--paper); border-radius:18px; overflow:hidden;
+    box-shadow:var(--shadow-soft); display:flex; flex-direction:column;
+  }
+  .post-card-cover{
+    width:100%; aspect-ratio:16/9; background:var(--milk-sage-2);
+    background-size:cover; background-position:center;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .post-card-cover svg{width:44px; height:44px; opacity:0.3;}
+  .post-card-body{padding:18px 20px 22px;}
+  .post-card-date{font-size:0.74rem; color:rgba(36,54,35,0.5); text-transform:uppercase; letter-spacing:0.04em; margin-bottom:8px;}
+  .post-card h2{font-size:1.15rem; margin-bottom:8px; line-height:1.3;}
+  .post-card p{font-size:0.88rem; color:rgba(36,54,35,0.72); margin-bottom:12px;}
+  .post-card .read-more{font-size:0.82rem; font-weight:600; color:var(--fern);}
+  .empty-state{text-align:center; padding:60px 20px; color:rgba(36,54,35,0.55);}
+  .loading{text-align:center; padding:60px 20px; color:rgba(36,54,35,0.55);}
+</style>
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-XXBFZ3DWRL"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-XXBFZ3DWRL');
+</script>
+</head>
+<body>
+
+<header>
+  <a href="index.html" class="logo"><span class="dot"></span>Flora Dew</a>
+  <a href="index.html" class="back-link">← Back to Shop</a>
+</header>
+
+<main>
+  <div class="blog-hero">
+    <h1>From the Flora Dew Journal</h1>
+    <p>Notes on natural skincare, ingredients, and handmade craft.</p>
+  </div>
+
+  <div id="post-list">
+    <div class="loading">Loading posts…</div>
+  </div>
+</main>
+
+<script>
+  function fmtDate(iso){
+    if(!iso) return '';
+    var d = new Date(iso);
+    return d.toLocaleDateString('en-IN', { day:'numeric', month:'long', year:'numeric' });
+  }
+
+  fetch('/.netlify/functions/blog')
+    .then(function(res){ return res.json(); })
+    .then(function(posts){
+      var listEl = document.getElementById('post-list');
+      if(!Array.isArray(posts) || posts.length === 0){
+        listEl.innerHTML = '<div class="empty-state">No posts yet — check back soon.</div>';
+        return;
+      }
+      listEl.innerHTML = '<div class="post-grid">' + posts.map(function(p){
+        var cover = p.coverImage
+          ? '<div class="post-card-cover" style="background-image:url(\'' + p.coverImage + '\')"></div>'
+          : '<div class="post-card-cover"><svg viewBox="0 0 24 24" fill="none" stroke="#243623" stroke-width="1.5"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></div>';
+        return '<a class="post-card" href="/blog/' + p.slug + '">' +
+          cover +
+          '<div class="post-card-body">' +
+            '<div class="post-card-date">' + fmtDate(p.publishedAt) + '</div>' +
+            '<h2>' + p.title + '</h2>' +
+            (p.excerpt ? '<p>' + p.excerpt + '</p>' : '') +
+            '<span class="read-more">Read more →</span>' +
+          '</div>' +
+        '</a>';
+      }).join('') + '</div>';
+    })
+    .catch(function(){
+      document.getElementById('post-list').innerHTML = '<div class="empty-state">Could not load posts right now.</div>';
+    });
+</script>
+
+</body>
+</html>

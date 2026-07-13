@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title id="page-title">Loading… — Flora Dew Blog</title>
+<meta name="description" id="page-desc" content="A guide from the Flora Dew journal.">
+<meta name="robots" content="index, follow, max-image-preview:large">
+<link rel="canonical" id="page-canonical" href="https://www.floradew.in/blog.html">
+<meta name="theme-color" content="#243623">
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Flora Dew">
+<meta property="og:title" id="og-title" content="Flora Dew Blog">
+<meta property="og:description" id="og-desc" content="A guide from the Flora Dew journal.">
+<meta property="og:url" id="og-url" content="https://www.floradew.in/blog.html">
+<meta property="og:image" id="og-image" content="https://www.floradew.in/og-image.jpg">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,450;0,9..144,600;1,9..144,450;1,9..144,600&family=Work+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script type="application/ld+json" id="article-schema"></script>
+<style>
+  :root{
+    --moss-ink:#243623; --milk-sage:#eef1e6; --milk-sage-2:#e3e8d6;
+    --rosewater:#c4707c; --rosewater-deep:#a5525e; --honey-oil:#c2963a;
+    --fern:#4e6b4c; --paper:#f8f8f3; --line: rgba(36,54,35,0.14);
+    --shadow-soft: 0 20px 40px -24px rgba(36,54,35,0.35);
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{
+    background:var(--milk-sage); color:var(--moss-ink);
+    font-family:'Work Sans', sans-serif; line-height:1.6;
+  }
+  h1,h2,h3{font-family:'Fraunces', serif; font-weight:450; letter-spacing:-0.01em;}
+  a{color:var(--fern);}
+  header{
+    display:flex; justify-content:space-between; align-items:center;
+    padding:22px clamp(20px,5vw,60px);
+  }
+  .logo{display:flex; align-items:center; gap:8px; font-family:'Fraunces',serif; font-size:1.2rem; font-weight:600; color:var(--moss-ink); text-decoration:none;}
+  .logo .dot{width:9px;height:9px;border-radius:50%;background:var(--rosewater);}
+  .back-link{font-size:0.85rem; color:rgba(36,54,35,0.65); text-decoration:none;}
+  main{max-width:720px; margin:0 auto; padding:20px clamp(20px,5vw,40px) 100px;}
+  .post-loading, .post-error{text-align:center; padding:80px 20px; color:rgba(36,54,35,0.55);}
+  .post-date{font-size:0.78rem; text-transform:uppercase; letter-spacing:0.05em; color:rgba(36,54,35,0.5); margin-bottom:10px;}
+  .post-title{font-size:clamp(1.8rem,4vw,2.4rem); margin-bottom:22px; line-height:1.15;}
+  .post-cover{width:100%; border-radius:18px; margin-bottom:26px; display:block;}
+  .post-body{font-size:1.02rem; color:rgba(36,54,35,0.88);}
+  .post-body p{margin-bottom:18px;}
+  .post-body h2{font-size:1.4rem; margin:30px 0 14px;}
+  .post-body h3{font-size:1.15rem; margin:24px 0 10px;}
+  .post-body ul, .post-body ol{margin:0 0 18px 22px;}
+  .post-body li{margin-bottom:8px;}
+  .post-body img{max-width:100%; border-radius:12px; margin:10px 0;}
+  .post-cta{
+    margin-top:40px; padding:24px; background:var(--paper); border-radius:16px;
+    text-align:center; box-shadow:var(--shadow-soft);
+  }
+  .post-cta a{
+    display:inline-block; margin-top:12px; background:var(--moss-ink); color:var(--milk-sage);
+    padding:12px 26px; border-radius:100px; font-weight:600; font-size:0.9rem; text-decoration:none;
+  }
+</style>
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-XXBFZ3DWRL"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-XXBFZ3DWRL');
+</script>
+</head>
+<body>
+
+<header>
+  <a href="index.html" class="logo"><span class="dot"></span>Flora Dew</a>
+  <a href="blog.html" class="back-link">← Back to Journal</a>
+</header>
+
+<main>
+  <div class="post-loading" id="post-loading">Loading post…</div>
+  <div class="post-error" id="post-error" style="display:none;">
+    We couldn't find that post. <a href="blog.html">Back to the journal</a>
+  </div>
+
+  <div id="post-content" style="display:none;">
+    <div class="post-date" id="post-date"></div>
+    <h1 class="post-title" id="post-title"></h1>
+    <img class="post-cover" id="post-cover" style="display:none;" alt="">
+    <div class="post-body" id="post-body"></div>
+
+    <div class="post-cta">
+      <div>Ready to try our handmade, chemical-free skincare?</div>
+      <a href="index.html">Shop Flora Dew →</a>
+    </div>
+  </div>
+</main>
+
+<script>
+  function slugFromPath(){
+    // Matches the /blog/:slug redirect defined in netlify.toml
+    var parts = window.location.pathname.split('/').filter(Boolean);
+    var idx = parts.indexOf('blog');
+    if(idx !== -1 && parts[idx + 1]) return decodeURIComponent(parts[idx + 1]);
+    // Fallback for direct ?slug= access during local testing
+    return new URLSearchParams(window.location.search).get('slug');
+  }
+
+  function fmtDate(iso){
+    if(!iso) return '';
+    var d = new Date(iso);
+    return d.toLocaleDateString('en-IN', { day:'numeric', month:'long', year:'numeric' });
+  }
+
+  // Body is stored as plain text (typed in Admin) unless it already
+  // contains HTML tags. Blank-line-separated blocks become paragraphs so
+  // a non-technical writer can just type normally.
+  function renderBody(body){
+    if(/<[a-z][\s\S]*>/i.test(body)) return body;
+    return body
+      .split(/\n\s*\n/)
+      .map(function(block){ return '<p>' + block.trim().replace(/\n/g, '<br>') + '</p>'; })
+      .join('');
+  }
+
+  var slug = slugFromPath();
+  if(!slug){
+    document.getElementById('post-loading').style.display = 'none';
+    document.getElementById('post-error').style.display = 'block';
+  } else {
+    fetch('/.netlify/functions/blog?slug=' + encodeURIComponent(slug))
+      .then(function(res){
+        if(!res.ok) throw new Error('not found');
+        return res.json();
+      })
+      .then(function(post){
+        document.getElementById('post-loading').style.display = 'none';
+        document.getElementById('post-content').style.display = 'block';
+
+        document.getElementById('page-title').textContent = post.title + ' — Flora Dew Blog';
+        document.getElementById('page-desc').setAttribute('content', post.excerpt || post.title);
+        document.getElementById('page-canonical').setAttribute('href', 'https://www.floradew.in/blog/' + post.slug);
+        document.getElementById('og-title').setAttribute('content', post.title);
+        document.getElementById('og-desc').setAttribute('content', post.excerpt || post.title);
+        document.getElementById('og-url').setAttribute('content', 'https://www.floradew.in/blog/' + post.slug);
+        if(post.coverImage) document.getElementById('og-image').setAttribute('content', post.coverImage);
+
+        document.getElementById('post-date').textContent = fmtDate(post.publishedAt);
+        document.getElementById('post-title').textContent = post.title;
+        if(post.coverImage){
+          var coverEl = document.getElementById('post-cover');
+          coverEl.src = post.coverImage;
+          coverEl.alt = post.title;
+          coverEl.style.display = 'block';
+        }
+        document.getElementById('post-body').innerHTML = renderBody(post.body);
+
+        document.getElementById('article-schema').textContent = JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "Article",
+          "headline": post.title,
+          "description": post.excerpt || post.title,
+          "datePublished": post.publishedAt,
+          "dateModified": post.updatedAt || post.publishedAt,
+          "author": { "@type": "Organization", "name": "Flora Dew" },
+          "publisher": { "@type": "Organization", "name": "Flora Dew", "logo": { "@type": "ImageObject", "url": "https://www.floradew.in/logo.png" } },
+          "image": post.coverImage || "https://www.floradew.in/og-image.jpg",
+          "mainEntityOfPage": "https://www.floradew.in/blog/" + post.slug
+        });
+      })
+      .catch(function(){
+        document.getElementById('post-loading').style.display = 'none';
+        document.getElementById('post-error').style.display = 'block';
+      });
+  }
+</script>
+
+</body>
+</html>
