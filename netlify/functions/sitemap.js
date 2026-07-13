@@ -11,7 +11,7 @@
 // so it's reachable at the normal https://floradew.in/sitemap.xml URL
 // search engines expect — nothing about the public URL changes.
 
-const { productsStore } = require('./lib/blobs');
+const { productsStore, blogStore } = require('./lib/blobs');
 
 const BASE_URL = 'https://www.floradew.in';
 
@@ -21,6 +21,7 @@ const STATIC_PAGES = [
   { path: '/privacy-policy.html', changefreq: 'yearly', priority: '0.3' },
   { path: '/refund-policy.html', changefreq: 'yearly', priority: '0.4' },
   { path: '/shipping-policy.html', changefreq: 'yearly', priority: '0.4' },
+  { path: '/blog.html', changefreq: 'weekly', priority: '0.6' },
 ];
 
 function escapeXml(str) {
@@ -39,6 +40,15 @@ exports.handler = async function () {
     console.error('sitemap: could not load products, continuing with static pages only', err);
   }
 
+  let posts = [];
+  try {
+    const store = blogStore();
+    const all = await store.get('all', { type: 'json' });
+    if (Array.isArray(all)) posts = all.filter((p) => p.status === 'published');
+  } catch (err) {
+    console.error('sitemap: could not load blog posts, continuing without them', err);
+  }
+
   const urls = [
     ...STATIC_PAGES.map(
       (p) => `  <url>\n    <loc>${escapeXml(BASE_URL + p.path)}</loc>\n    <changefreq>${p.changefreq}</changefreq>\n    <priority>${p.priority}</priority>\n  </url>`
@@ -46,6 +56,10 @@ exports.handler = async function () {
     ...products.map(
       (prod) =>
         `  <url>\n    <loc>${escapeXml(BASE_URL + '/product/' + prod.id)}</loc>\n    <changefreq>weekly</changefreq>\n    <priority>0.8</priority>\n  </url>`
+    ),
+    ...posts.map(
+      (post) =>
+        `  <url>\n    <loc>${escapeXml(BASE_URL + '/blog/' + post.slug)}</loc>\n    <changefreq>monthly</changefreq>\n    <priority>0.6</priority>\n  </url>`
     ),
   ];
 
