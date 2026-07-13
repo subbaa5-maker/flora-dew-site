@@ -59,4 +59,12 @@ function blogStore() {
   return namedStore('blog');
 }
 
-module.exports = { ordersStore, productImagesStore, productsStore, categoriesStore, settingsStore, siteImagesStore, blogStore };
+// Stores one cover-image data-URL per blog post, keyed by post id — same
+// "one image per key" pattern as siteImagesStore. Served as a real image
+// URL by blog-image.js rather than embedded as base64 text, so it works
+// reliably as an og:image for social share previews.
+function blogImagesStore() {
+  return namedStore('blog-images');
+}
+
+module.exports = { ordersStore, productImagesStore, productsStore, categoriesStore, settingsStore, siteImagesStore, blogStore, blogImagesStore };
