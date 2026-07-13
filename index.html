@@ -1587,6 +1587,7 @@
         "@type":"Product",
         "name":prod.name,
         "description":prod.desc,
+        "image":"https://www.floradew.in" + photoUrl(prod.id, 0),
         "brand":{"@type":"Brand","name":"Flora Dew"},
         "category":prod.tag,
         "offers":prod.variants.map(function(v){
@@ -1978,7 +1979,7 @@
   // ---------- Razorpay checkout ----------
   // Test Key ID (public, safe to expose client-side). Swap for your live
   // Key ID once Razorpay KYC is approved (see SETUP.md, Step 10).
-  var RAZORPAY_KEY_ID = 'rzp_live_TCxncMRuzp4ujh';
+  var RAZORPAY_KEY_ID = 'rzp_test_T9WrTgqzLwOq2z';
 
   var modalOverlay = document.getElementById('checkout-modal-overlay');
   var checkoutForm = document.getElementById('checkout-form');
