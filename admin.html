@@ -508,8 +508,20 @@
         <textarea id="blog-excerpt" style="min-height:44px;" placeholder="A quick, honest guide to matching soap ingredients to your skin."></textarea>
       </div>
       <div class="pm-field-full">
-        <label>Cover image URL (optional)</label>
-        <input type="text" id="blog-cover" placeholder="https://... (paste any image URL, or leave blank)">
+        <label>Cover image</label>
+        <div id="blog-cover-preview-wrap" style="display:none; margin-bottom:10px;">
+          <img id="blog-cover-preview" src="" alt="" style="width:160px; height:100px; object-fit:cover; border-radius:10px; border:1px solid var(--line); display:block; margin-bottom:6px;">
+          <button type="button" class="btn" id="blog-cover-remove-btn" style="font-size:0.8rem; padding:6px 14px;">Remove cover image</button>
+        </div>
+        <div id="blog-cover-upload-row">
+          <input type="file" accept="image/*" id="blog-cover-file">
+          <span class="pm-upload-msg" id="blog-cover-msg"></span>
+        </div>
+        <p class="pm-section-note" style="margin:6px 0 0;">Uploading hosts the photo on your own site — more reliable than pasting a link from Google Drive or elsewhere, especially for link previews on WhatsApp/Facebook. New posts need to be saved once (as a Draft is fine) before you can upload a cover.</p>
+        <details style="margin-top:8px;">
+          <summary style="cursor:pointer; font-size:0.8rem; color:rgba(36,54,35,0.6);">Or paste an image URL instead</summary>
+          <input type="text" id="blog-cover" placeholder="https://... (paste any image URL, or leave blank)" style="margin-top:8px;">
+        </details>
       </div>
       <div class="pm-field-full">
         <label>Post content</label>
@@ -1882,6 +1894,18 @@
     });
   }
 
+  function updateBlogCoverPreview(){
+    var url = document.getElementById('blog-cover').value.trim();
+    var wrap = document.getElementById('blog-cover-preview-wrap');
+    var img = document.getElementById('blog-cover-preview');
+    if(url){
+      img.src = url;
+      wrap.style.display = 'block';
+    } else {
+      wrap.style.display = 'none';
+    }
+  }
+
   function openBlogEditor(postId){
     editingPostId = postId || null;
     var post = postId ? BLOG_POSTS.find(function(p){ return p.id === postId; }) : null;
@@ -1891,9 +1915,69 @@
     document.getElementById('blog-body').value = post ? post.body : '';
     document.getElementById('blog-status').value = post ? post.status : 'draft';
     document.getElementById('blog-save-msg').textContent = '';
+    document.getElementById('blog-cover-msg').textContent = '';
+    document.getElementById('blog-cover-file').value = '';
+    document.getElementById('blog-cover-file').disabled = !editingPostId;
+    updateBlogCoverPreview();
     document.getElementById('blog-editor').style.display = 'block';
     document.getElementById('blog-editor').scrollIntoView({ behavior:'smooth', block:'start' });
   }
+
+  document.getElementById('blog-cover').addEventListener('input', updateBlogCoverPreview);
+
+  document.getElementById('blog-cover-file').addEventListener('change', function(e){
+    var file = e.target.files[0];
+    e.target.value = '';
+    if(!file) return;
+    if(!editingPostId){
+      document.getElementById('blog-cover-msg').className = 'pm-upload-msg err';
+      document.getElementById('blog-cover-msg').textContent = 'Save the post first (Draft is fine), then upload a cover.';
+      return;
+    }
+    var msgEl = document.getElementById('blog-cover-msg');
+    msgEl.className = 'pm-upload-msg';
+    msgEl.textContent = 'Uploading…';
+    cropAndResizeFile(file, {
+      defaultRatio: 1200/630,
+      hint: 'Suggested crop for a blog cover / social share image.'
+    }).then(function(dataUrl){
+      if(!dataUrl) { msgEl.textContent = ''; return null; } // cropped cancelled
+      return fetch('/.netlify/functions/blog-image', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ secret: currentSecret(), postId: editingPostId, image: dataUrl })
+      }).then(function(res){ return res.json(); });
+    }).then(function(result){
+      if(!result) return;
+      if(result.error){
+        msgEl.className = 'pm-upload-msg err';
+        msgEl.textContent = result.error;
+        return;
+      }
+      document.getElementById('blog-cover').value = result.url;
+      updateBlogCoverPreview();
+      msgEl.className = 'pm-upload-msg ok';
+      msgEl.textContent = 'Saved. Remember to also click "Save post" below.';
+    }).catch(function(){
+      msgEl.className = 'pm-upload-msg err';
+      msgEl.textContent = 'Upload failed — please try again.';
+    });
+  });
+
+  document.getElementById('blog-cover-remove-btn').addEventListener('click', function(){
+    document.getElementById('blog-cover').value = '';
+    updateBlogCoverPreview();
+    // Also deletes the hosted blob if the cover was one we uploaded — a
+    // harmless no-op if it was an external URL instead, since delete on a
+    // key that was never set just does nothing.
+    if(editingPostId){
+      fetch('/.netlify/functions/blog-image', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ secret: currentSecret(), postId: editingPostId, action: 'delete' })
+      }).catch(function(){});
+    }
+  });
 
   document.getElementById('blog-add-btn').addEventListener('click', function(){
     openBlogEditor(null);
@@ -1936,6 +2020,17 @@
         }
         msgEl.className = 'pm-save-msg ok';
         msgEl.textContent = 'Saved.';
+        if(!editingPostId && result.post){
+          // First save of a new post — keep the editor open and switch
+          // into "editing" mode so the cover upload (which needs a real
+          // post id) becomes available right away, instead of making the
+          // admin re-open the post a second time just to add a cover.
+          editingPostId = result.post.id;
+          document.getElementById('blog-cover-file').disabled = false;
+          msgEl.textContent = 'Saved. You can now upload a cover image below.';
+          loadBlogPosts();
+          return;
+        }
         document.getElementById('blog-editor').style.display = 'none';
         loadBlogPosts();
       })

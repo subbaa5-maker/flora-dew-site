@@ -1313,10 +1313,12 @@
       </div>
       <div>
         <h5>Shop</h5>
-        <a href="#products">Soaps</a>
-        <a href="#products">Hair Oils</a>
-        <a href="#products">Lip Balms</a>
-        <a href="#products">Lip Colour</a>
+        <div id="footer-shop-links">
+          <a href="#products">Soaps</a>
+          <a href="#products">Hair Oils</a>
+          <a href="#products">Lip Balms</a>
+          <a href="#products">Lip Colour</a>
+        </div>
       </div>
       <div>
         <h5>Company</h5>
@@ -1814,6 +1816,25 @@
   // front, and fall back to the built-in defaults if that fails for any
   // reason — the rest of the page (cart, checkout) depends on PRODUCTS
   // being final and stable before anything renders.
+  // Keeps the footer's "Shop" column in sync with whatever catalogues
+  // actually exist in Admin (it used to be 4 hardcoded links that drifted
+  // out of sync as catalogues were added/renamed). Clicking a link jumps
+  // to the shop and selects that category's tab, the same as clicking the
+  // tab directly would.
+  function renderFooterShopLinks(){
+    var el = document.getElementById('footer-shop-links');
+    if(!el) return;
+    el.innerHTML = CATS.filter(function(c){ return c.id !== 'all'; }).map(function(c){
+      return '<a href="#products" data-cat="'+c.id+'">'+c.label+'</a>';
+    }).join('');
+    el.querySelectorAll('a').forEach(function(a){
+      a.addEventListener('click', function(e){
+        var tab = document.querySelector('.shop-tab[data-cat="'+a.dataset.cat+'"]');
+        if(tab) tab.click();
+      });
+    });
+  }
+
   (function initShop(){
     Promise.all([
       fetch('/.netlify/functions/products').then(function(res){ return res.ok ? res.json() : null; }).catch(function(){ return null; }),
@@ -1826,6 +1847,7 @@
       CATS = [{id:'all', label:'All Products'}].concat(cats);
     }).then(function(){
       renderShop();
+      renderFooterShopLinks();
       loadStoreStatus();
       return loadProductPhotos();
     }).then(function(){

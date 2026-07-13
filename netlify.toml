@@ -12,7 +12,7 @@
 
 [[redirects]]
   from = "/blog/:slug"
-  to = "/post.html?slug=:slug"
+  to = "/.netlify/functions/post-page?slug=:slug"
   status = 200
 
 [[redirects]]

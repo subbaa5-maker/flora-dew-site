@@ -19,6 +19,9 @@ netlify/functions/categories.js       ← stores/serves the catalogue/category l
 netlify/functions/product-images.js   ← stores/serves up to 8 photos per product (admin uploads)
 netlify/functions/site-images.js      ← stores/serves editable Hero/About/Why/Reviews/Footer-logo images
 netlify/functions/store-settings.js   ← holiday/closure toggle read by the storefront + create-order
+netlify/functions/blog.js             ← stores/serves blog posts (admin panel Blog tab)
+netlify/functions/blog-image.js       ← stores/serves one cover image per blog post (admin uploads)
+netlify/functions/post-page.js        ← server-renders /blog/:slug with real per-post SEO/social tags
 ```
 
 ## What's new in this update
@@ -103,6 +106,31 @@ netlify/functions/store-settings.js   ← holiday/closure toggle read by the sto
   key tied to your Razorpay account. If this test key doesn't belong to
   your Razorpay account, generate your own Test Key ID + Secret (Step 2)
   and swap both.
+- **Upload a blog cover image instead of only pasting a URL**: in
+  `admin.html` → **Blog** tab, the post editor now has an upload button
+  (same crop tool as product photos) that hosts the cover on your own
+  site — more reliable than an external link (e.g. Google Drive, which
+  actively blocks the kind of bot traffic social platforms use to fetch
+  link previews). New posts need one save (Draft is fine) before the
+  upload button unlocks, since the image is tied to the post's id. The
+  "paste a URL instead" option is still there if you'd rather use that.
+  New function: `netlify/functions/blog-image.js`.
+- **Footer "Shop" links now match your real catalogues**: previously 4
+  hardcoded links that didn't reflect catalogues added/renamed/removed in
+  Admin. Now pulled live from `categories.js`, and clicking one filters
+  the shop to that category instead of just scrolling down.
+- **Blog posts now show the right title/image when shared**: previously
+  `post.html` filled in the page title, description, and social-preview
+  image (`og:image`) with JavaScript after the page loaded — invisible to
+  most link-preview bots (WhatsApp, Facebook, Slack), which don't run
+  JavaScript, so every post showed the same generic site preview when
+  shared. `/blog/:slug` now routes through a new function that renders
+  the real title/description/image/content into the page from the start.
+  New function: `netlify/functions/post-page.js`; updated the `/blog/:slug`
+  redirect in `netlify.toml` to point to it instead of straight to
+  `post.html`. If you ever redesign `post.html`'s layout or styling,
+  note that `post-page.js` has its own copy of that markup/CSS (documented
+  in a comment at the top of the file) and needs updating to match by hand.
 
 ## Previously added
 - **Checkout form**: pincode auto-fills city + state (India Post public
