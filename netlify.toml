@@ -11,8 +11,8 @@
   status = 200
 
 [[redirects]]
-  from = "/blog/:slug"
-  to = "/.netlify/functions/post-page?slug=:slug"
+  from = "/blog/*"
+  to = "/.netlify/functions/post-page?slug=:splat"
   status = 200
 
 [[redirects]]
