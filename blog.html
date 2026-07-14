@@ -98,6 +98,12 @@
     return d.toLocaleDateString('en-IN', { day:'numeric', month:'long', year:'numeric' });
   }
 
+  function escapeHtml(str){
+    return String(str == null ? '' : str).replace(/[&<>"']/g, function(c){
+      return { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c];
+    });
+  }
+
   fetch('/.netlify/functions/blog')
     .then(function(res){ return res.json(); })
     .then(function(posts){
@@ -108,14 +114,14 @@
       }
       listEl.innerHTML = '<div class="post-grid">' + posts.map(function(p){
         var cover = p.coverImage
-          ? '<div class="post-card-cover" style="background-image:url(\'' + p.coverImage + '\')"></div>'
+          ? '<div class="post-card-cover" style="background-image:url(\'' + escapeHtml(p.coverImage) + '\')"></div>'
           : '<div class="post-card-cover"><svg viewBox="0 0 24 24" fill="none" stroke="#243623" stroke-width="1.5"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></div>';
-        return '<a class="post-card" href="/blog/' + p.slug + '">' +
+        return '<a class="post-card" href="/blog/' + encodeURIComponent(p.slug || '') + '">' +
           cover +
           '<div class="post-card-body">' +
-            '<div class="post-card-date">' + fmtDate(p.publishedAt) + '</div>' +
-            '<h2>' + p.title + '</h2>' +
-            (p.excerpt ? '<p>' + p.excerpt + '</p>' : '') +
+            '<div class="post-card-date">' + escapeHtml(fmtDate(p.publishedAt)) + '</div>' +
+            '<h2>' + escapeHtml(p.title) + '</h2>' +
+            (p.excerpt ? '<p>' + escapeHtml(p.excerpt) + '</p>' : '') +
             '<span class="read-more">Read more →</span>' +
           '</div>' +
         '</a>';
