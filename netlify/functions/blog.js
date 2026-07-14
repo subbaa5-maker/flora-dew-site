@@ -49,6 +49,35 @@ function summaryOf(post) {
   return { id, title, slug, excerpt, coverImage: coverImage || null, status, publishedAt: publishedAt || null, updatedAt };
 }
 
+// Self-healing: some posts (e.g. ones seeded directly into storage rather
+// than created via the Admin editor) can end up with no `slug` field, or —
+// after manual edits — a slug that collides with another post's. Either
+// case makes the public blog listing render a link that goes nowhere
+// (clicking it 302s back to /blog.html because post-page.js has no slug
+// to look up). Rather than relying on every code path that creates/edits
+// a post to always set a valid slug, we check for and fix this once,
+// right before any posts are returned to a caller — so the bug can't
+// resurface no matter how a post's data was created.
+function backfillMissingSlugs(posts) {
+  const seen = new Set();
+  let changed = false;
+  posts.forEach((p) => {
+    let base = slugify(p.slug || p.title);
+    let candidate = base || 'post';
+    let n = 2;
+    while (seen.has(candidate) || (candidate !== p.slug && posts.some((other) => other !== p && other.slug === candidate))) {
+      candidate = (base || 'post') + '-' + n;
+      n++;
+    }
+    if (candidate !== p.slug) {
+      p.slug = candidate;
+      changed = true;
+    }
+    seen.add(candidate);
+  });
+  return changed;
+}
+
 exports.handler = async function (event) {
   const store = blogStore();
   const params = event.queryStringParameters || {};
@@ -57,6 +86,10 @@ exports.handler = async function (event) {
     try {
       let posts = await store.get('all', { type: 'json' });
       if (!Array.isArray(posts)) posts = [];
+
+      if (backfillMissingSlugs(posts)) {
+        await store.setJSON('all', posts);
+      }
 
       const isAdmin = params.admin === '1' && process.env.ADMIN_SECRET && params.secret === process.env.ADMIN_SECRET;
 
