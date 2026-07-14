@@ -233,7 +233,18 @@ function notFoundPage() {
 }
 
 exports.handler = async function (event) {
-  const slug = (event.queryStringParameters || {}).slug;
+  // Normally the slug arrives via the query string, forwarded by the
+  // netlify.toml redirect rule for /blog/*. As a safety net — in case a
+  // future redirect-config change or Netlify quirk ever stops that
+  // forwarding from working — also fall back to pulling it directly off
+  // the request path itself, e.g. "/blog/how-to-pick-a-soap" or
+  // "/.netlify/functions/post-page/how-to-pick-a-soap".
+  let slug = (event.queryStringParameters || {}).slug;
+  if (!slug && event.path) {
+    const parts = event.path.split('/').filter(Boolean);
+    const last = parts[parts.length - 1];
+    if (last && last !== 'post-page') slug = decodeURIComponent(last);
+  }
   if (!slug) {
     return { statusCode: 302, headers: { Location: '/blog.html' }, body: '' };
   }
