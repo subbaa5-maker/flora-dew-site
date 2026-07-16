@@ -245,7 +245,8 @@
     display:flex; align-items:center; justify-content:center;
     min-height:380px;
   }
-  .soap-stage svg{width:100%; height:auto; max-width:420px;}
+  .soap-stage svg{width:100%; height:auto; max-width:420px; display:none;}
+  .soap-stage.no-hero-photo svg{display:block;}
   .float-tag{
     position:absolute;
     background:var(--paper);
@@ -267,7 +268,6 @@
   /* Admin-uploaded hero photo — hidden until one is set, then replaces
      the default illustration */
   .soap-stage img.hero-photo-img{display:none; opacity:0; transition:opacity 0.35s ease;}
-  .soap-stage.has-hero-photo img.hero-photo-img.loaded ~ svg{display:none;}
   .soap-stage.has-hero-photo img.hero-photo-img{
     display:block; width:100%; max-width:420px; height:380px;
     border-radius:24px; object-fit:cover; box-shadow:var(--shadow-soft);
@@ -1821,10 +1821,11 @@
     function applyImages(images){
       images = images || {};
 
+      var heroStage = document.getElementById('hero-photo-stage');
+      var heroImg = document.getElementById('hero-photo-img');
       if(images.hero){
-        var heroStage = document.getElementById('hero-photo-stage');
-        var heroImg = document.getElementById('hero-photo-img');
         if(heroStage && heroImg && heroImg.src !== images.hero){
+          heroStage.classList.remove('no-hero-photo');
           heroImg.classList.remove('loaded');
           heroImg.addEventListener('load', function onLoad(){
             heroImg.classList.add('loaded');
@@ -1833,6 +1834,10 @@
           heroImg.src = images.hero;
           heroStage.classList.add('has-hero-photo');
         }
+      } else if(heroStage){
+        // No hero photo has ever been set (not a loading gap, a confirmed
+        // absence) — fall back to the default illustration.
+        heroStage.classList.add('no-hero-photo');
       }
       if(images.about){
         var missionWrap = document.getElementById('mission-photo-wrap');
