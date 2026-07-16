@@ -19,3 +19,8 @@
   from = "/sitemap.xml"
   to = "/.netlify/functions/sitemap"
   status = 200
+
+[[redirects]]
+  from = "/product-feed.csv"
+  to = "/.netlify/functions/product-feed"
+  status = 200
