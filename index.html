@@ -843,12 +843,22 @@
   .testimonials{
     padding:clamp(70px,10vw,110px) 0;
   }
+  .t-carousel{
+    position:relative;
+  }
   .t-grid{
-    display:grid;
-    grid-template-columns:repeat(3,1fr);
+    display:flex;
     gap:22px;
+    overflow-x:auto;
+    scroll-snap-type:x mandatory;
+    -webkit-overflow-scrolling:touch;
+    padding:4px 4px 14px;
+    margin:0 -4px;
+    scrollbar-width:thin;
   }
   .t-card{
+    flex:0 0 clamp(250px,80vw,320px);
+    scroll-snap-align:start;
     border:1px solid var(--line);
     border-radius:18px;
     padding:26px;
@@ -871,6 +881,19 @@
     display:flex; align-items:center; justify-content:center;
     color:white; font-family:'Fraunces',serif; font-size:0.9rem;
   }
+  .t-nav{
+    display:flex; gap:10px; justify-content:flex-end; margin:-8px 0 20px;
+  }
+  .t-nav button{
+    width:40px; height:40px; border-radius:50%;
+    border:1px solid var(--line); background:var(--paper);
+    color:var(--moss-ink); font-size:1.1rem; cursor:pointer;
+    display:flex; align-items:center; justify-content:center;
+    transition:background 0.2s ease, opacity 0.2s ease;
+  }
+  .t-nav button:hover{background:var(--milk-sage);}
+  .t-nav button:disabled{opacity:0.35; cursor:default;}
+  .t-nav button:disabled:hover{background:var(--paper);}
 
   /* ---------- CTA banner ---------- */
   .cta-banner{
@@ -927,7 +950,6 @@
     .mission-grid{grid-template-columns:1fr;}
     .product-grid{grid-template-columns:1fr 1fr;}
     .badge-grid{grid-template-columns:1fr 1fr;}
-    .t-grid{grid-template-columns:1fr;}
     .footer-grid{grid-template-columns:1fr 1fr;}
     .contact-grid{grid-template-columns:1fr;}
   }
@@ -1048,7 +1070,7 @@
         </div>
         <div>
           <blockquote>The same care we give the people we love, we put into everything we make.</blockquote>
-<p class="mission-foot">We handcraft our soaps, hair oil, and lip balms from natural ingredients — gentle on skin, gentle on the earth, and free from harsh chemicals. Made in small batches, tested on real routines, never on animals.</p>
+          <p class="mission-foot">We handcraft our soaps, hair oil, and lip balms from natural ingredients — gentle on skin, gentle on the earth, and free from harsh chemicals. Made in small batches, tested on real routines, never on animals.</p>
         </div>
       </div>
       <div class="mission-photo" id="mission-photo-wrap">
@@ -1098,25 +1120,92 @@
       <div class="section-photo" id="reviews-photo-wrap">
         <img id="reviews-photo-img" alt="Flora Dew customers">
       </div>
-      <div class="t-grid">
-        <div class="t-card">
-          <div class="stars">★★★★★</div>
-          <p class="quote">"My skin stopped feeling tight after switching to the neem soap. Small change, big difference."</p>
-          <div class="who"><span class="avatar">A</span> Aditi R.</div>
+      <div class="t-carousel">
+        <div class="t-nav">
+          <button type="button" id="t-prev" aria-label="Previous reviews">←</button>
+          <button type="button" id="t-next" aria-label="Next reviews">→</button>
         </div>
-        <div class="t-card">
-          <div class="stars">★★★★★</div>
-          <p class="quote">"The hair oil doesn't leave that heavy residue I hated in other brands. Just clean, healthy shine."</p>
-          <div class="who"><span class="avatar">R</span> Rohan K.</div>
-        </div>
-        <div class="t-card">
-          <div class="stars">★★★★★</div>
-          <p class="quote">"Lip balm lives in every bag I own now. Melts in instantly and actually lasts the day."</p>
-          <div class="who"><span class="avatar">S</span> Sana M.</div>
+        <div class="t-grid" id="t-grid">
+          <div class="t-card">
+            <div class="stars">★★★★★</div>
+            <p class="quote">"My skin stopped feeling tight after switching to the neem soap. Small change, big difference."</p>
+            <div class="who"><span class="avatar">A</span> Aditi R.</div>
+          </div>
+          <div class="t-card">
+            <div class="stars">★★★★★</div>
+            <p class="quote">"The hair oil doesn't leave that heavy residue I hated in other brands. Just clean, healthy shine."</p>
+            <div class="who"><span class="avatar">R</span> Rohan K.</div>
+          </div>
+          <div class="t-card">
+            <div class="stars">★★★★★</div>
+            <p class="quote">"Lip balm lives in every bag I own now. Melts in instantly and actually lasts the day."</p>
+            <div class="who"><span class="avatar">S</span> Sana M.</div>
+          </div>
+          <div class="t-card">
+            <div class="stars">★★★★★</div>
+            <p class="quote">"I ordered the Flora Dew Aloe Vera Soap online and I'm really happy with it. It deeply moisturizes my dry skin."</p>
+            <div class="who"><span class="avatar">A</span> Ambika</div>
+          </div>
+          <div class="t-card">
+            <div class="stars">★★★★★</div>
+            <p class="quote">"I love that it is made with natural ingredients — it gives me peace of mind knowing I am not putting harsh chemicals on my skin. Definitely a product I will keep coming back to. Highly recommended!"</p>
+            <div class="who"><span class="avatar">P</span> Pramukh</div>
+          </div>
+          <div class="t-card">
+            <div class="stars">★★★★★</div>
+            <p class="quote">"Best lip balm ever! Long-lasting, heals dry lips, natural, with a lovely pink tint. Flora Dew nailed it!"</p>
+            <div class="who"><span class="avatar">M</span> Mayangana</div>
+          </div>
+          <div class="t-card">
+            <div class="stars">★★★★★</div>
+            <p class="quote">"I initially bought it with a gift pack for a friend and it's so good. Very gentle and I have seen my son's dry skin, specially after the bath, improved and hydrated. He is into swimming and I have seen good results including my niece's who is into sports. It is worth the price — and safe for kids."</p>
+            <div class="who"><span class="avatar">S</span> Snigdha</div>
+          </div>
+          <div class="t-card">
+            <div class="stars">★★★★★</div>
+            <p class="quote">"This soap feels very natural with minimal chemicals, which is something I really appreciate. It's gentle on the skin and gives a clean, earthy feel. Those who enjoy a foamy wash might find it a little different from regular soaps. Personally I like the idea that it's mild and safe."</p>
+            <div class="who"><span class="avatar">S</span> Sangeetha A.</div>
+          </div>
+          <div class="t-card">
+            <div class="stars">★★★★★</div>
+            <p class="quote">"Love the product. I have used this and it feels so natural and fresh."</p>
+            <div class="who"><span class="avatar">M</span> Mamtha</div>
+          </div>
         </div>
       </div>
     </div>
   </section>
+
+  <script>
+  (function(){
+    var grid = document.getElementById('t-grid');
+    var prev = document.getElementById('t-prev');
+    var next = document.getElementById('t-next');
+    if(!grid || !prev || !next) return;
+
+    function cardStep(){
+      var card = grid.querySelector('.t-card');
+      if(!card) return 300;
+      var style = getComputedStyle(grid);
+      var gap = parseFloat(style.columnGap || style.gap || 22) || 22;
+      return card.getBoundingClientRect().width + gap;
+    }
+    function updateButtons(){
+      var max = grid.scrollWidth - grid.clientWidth - 2;
+      prev.disabled = grid.scrollLeft <= 2;
+      next.disabled = grid.scrollLeft >= max;
+    }
+    prev.addEventListener('click', function(){
+      grid.scrollBy({ left: -cardStep(), behavior: 'smooth' });
+    });
+    next.addEventListener('click', function(){
+      grid.scrollBy({ left: cardStep(), behavior: 'smooth' });
+    });
+    grid.addEventListener('scroll', updateButtons, { passive: true });
+    window.addEventListener('resize', updateButtons);
+    updateButtons();
+  })();
+  </script>
 
   <!-- CTA -->
   <div class="cta-banner">
