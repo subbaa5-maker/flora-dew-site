@@ -163,8 +163,8 @@ function renderPostPage(post) {
 <body>
 
 <header>
-  <a href="index.html" class="logo"><span class="dot"></span>Flora Dew</a>
-  <a href="blog.html" class="back-link">← Back to Journal</a>
+  <a href="/" class="logo"><span class="dot"></span>Flora Dew</a>
+  <a href="/blog.html" class="back-link">← Back to Journal</a>
 </header>
 
 <main>
@@ -176,7 +176,7 @@ function renderPostPage(post) {
 
     <div class="post-cta">
       <div>Ready to try our handmade, chemical-free skincare?</div>
-      <a href="index.html">Shop Flora Dew →</a>
+      <a href="/">Shop Flora Dew →</a>
     </div>
   </div>
 </main>
