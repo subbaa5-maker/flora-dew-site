@@ -14,7 +14,11 @@
 //   RAZORPAY_KEY_SECRET
 
 const Razorpay = require('razorpay');
-const { ordersStore, settingsStore } = require('./lib/blobs');
+const { ordersStore, settingsStore, productsStore, couponsStore } = require('./lib/blobs');
+
+function normalizeCode(code) {
+  return String(code || '').trim().toUpperCase();
+}
 
 exports.handler = async function (event) {
   if (event.httpMethod !== 'POST') {
@@ -36,7 +40,7 @@ exports.handler = async function (event) {
       };
     }
 
-    const { amount, currency, customer, items } = JSON.parse(event.body || '{}');
+    const { amount, currency, customer, items, couponCode } = JSON.parse(event.body || '{}');
 
     if (!amount || amount <= 0) {
       return { statusCode: 400, body: JSON.stringify({ error: 'Invalid amount' }) };
@@ -48,13 +52,54 @@ exports.handler = async function (event) {
       return { statusCode: 400, body: JSON.stringify({ error: 'Cart is empty' }) };
     }
 
+    // Re-check stock server-side against the live catalog — the "Add to
+    // cart"/"Buy" buttons are already disabled for out-of-stock items,
+    // but this stops someone from placing an order anyway by calling the
+    // API directly (e.g. a stale page left open, or a cart added before
+    // the item went out of stock).
+    try {
+      const products = (await productsStore().get('all', { type: 'json' })) || [];
+      const byId = {};
+      products.forEach((p) => { byId[p.id] = p; });
+      const outOfStockItem = items.find((it) => it.id && byId[it.id] && byId[it.id].inStock === false);
+      if (outOfStockItem) {
+        return {
+          statusCode: 409,
+          body: JSON.stringify({ error: `"${outOfStockItem.name}" just went out of stock — please remove it from your cart to continue.`, outOfStock: true }),
+        };
+      }
+    } catch (err) {
+      console.error('create-order: stock check failed, continuing without it', err);
+    }
+
+    // Re-validate any coupon code server-side — never trust a discount
+    // amount computed in the browser. `amount` above is the cart subtotal
+    // in paise; discountPaise is subtracted from it to get what's actually
+    // charged.
+    let couponApplied = null;
+    let discountPaise = 0;
+    if (couponCode) {
+      try {
+        const coupons = (await couponsStore().get('all', { type: 'json' })) || [];
+        const wanted = normalizeCode(couponCode);
+        const match = coupons.find((c) => normalizeCode(c.code) === wanted);
+        if (match) {
+          discountPaise = Math.min(Math.round(Number(match.amountOff) * 100), amount);
+          couponApplied = match.code;
+        }
+      } catch (err) {
+        console.error('create-order: coupon lookup failed, continuing without discount', err);
+      }
+    }
+    const finalAmount = amount - discountPaise;
+
     const razorpay = new Razorpay({
       key_id: process.env.RAZORPAY_KEY_ID,
       key_secret: process.env.RAZORPAY_KEY_SECRET,
     });
 
     const order = await razorpay.orders.create({
-      amount: Math.round(amount), // amount in paise, e.g. ₹100 = 10000
+      amount: Math.round(finalAmount), // amount in paise, e.g. ₹100 = 10000
       currency: currency || 'INR',
       receipt: 'flora_dew_' + Date.now(),
     });
@@ -68,7 +113,10 @@ exports.handler = async function (event) {
       fulfillmentStatus: 'pending', // pending -> accepted -> shipped -> delivered
       courier: null,
       awb: null,
-      amount: amount,
+      amount: finalAmount,
+      subtotal: amount,
+      discount: discountPaise,
+      couponCode: couponApplied,
       currency: currency || 'INR',
       customer: customer,
       items: items,
