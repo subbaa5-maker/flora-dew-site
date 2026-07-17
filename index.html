@@ -2169,8 +2169,12 @@
       }
       couponApplyBtn.disabled = true;
       couponMsgEl.className = 'coupon-msg'; couponMsgEl.textContent = 'Checking…';
-      fetch('/.netlify/functions/coupons?code=' + encodeURIComponent(code))
-        .then(function(res){ return res.json(); })
+fetch('/.netlify/functions/coupons', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ action: 'validate', code: code, subtotal: cartSubtotal() })
+})        
+  .then(function(res){ return res.json(); })
         .then(function(result){
           couponApplyBtn.disabled = false;
           if(!result || !result.valid){
