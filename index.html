@@ -2272,14 +2272,13 @@
   }
 
   function openCheckoutModal(){
-    function openCheckoutModal(){
     if(CART.length === 0) return;
     resetCoupon();
     renderOrderSummary();
     prefillCustomerForm();
     modalOverlay.classList.add('open');
   }
-  }
+  
   function closeCheckoutModal(){
     modalOverlay.classList.remove('open');
   }
