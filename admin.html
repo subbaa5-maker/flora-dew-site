@@ -1470,7 +1470,7 @@
     }
     listEl.innerHTML = COUPONS.map(function(c){
       return '' +
-        '<div class="cat-row" data-code="'+escapeHtml(c.code)+'">' +
+        '<div class="cat-row" data-code="'+escapeHtml(c.code)+'" data-id="'+escapeHtml(c.id)+'">' +
           '<span class="cat-row-id" style="font-weight:700; color:var(--moss-ink, inherit);">'+escapeHtml(c.code)+'</span>' +
           '<span style="flex:1;">₹'+c.amountOff+' off</span>' +
           '<button type="button" class="cat-row-delete-btn">Delete</button>' +
