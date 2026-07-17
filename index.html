@@ -2184,10 +2184,10 @@ fetch('/.netlify/functions/coupons', {
             renderOrderSummary();
             return;
           }
-          appliedCoupon = { code: result.code, amountOff: result.amountOff };
-          couponInput.value = result.code;
-          couponMsgEl.className = 'coupon-msg ok';
-          couponMsgEl.textContent = '"' + result.code + '" applied — ₹' + result.amountOff + ' off.';
+          appliedCoupon = { code: result.coupon.code, amountOff: result.coupon.amountOff };
+couponInput.value = result.coupon.code;
+couponMsgEl.className = 'coupon-msg ok';
+couponMsgEl.textContent = '"' + result.coupon.code + '" applied — ₹' + result.coupon.amountOff + ' off.';
           renderOrderSummary();
         })
         .catch(function(){
