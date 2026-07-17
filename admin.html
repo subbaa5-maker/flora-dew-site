@@ -434,6 +434,7 @@
     <button class="tab-btn active" data-tab="orders">Orders</button>
     <button class="tab-btn" data-tab="products">Products</button>
     <button class="tab-btn" data-tab="catalogues">Catalogues</button>
+    <button class="tab-btn" data-tab="coupons">Coupons</button>
     <button class="tab-btn" data-tab="images">Site Images</button>
     <button class="tab-btn" data-tab="blog">Blog</button>
     <button class="tab-btn" data-tab="settings">Store Status</button>
@@ -487,6 +488,18 @@
       <button type="button" class="btn btn-primary" id="cat-add-btn">+ Add catalogue</button>
     </div>
     <span class="pm-upload-msg pm-save-msg" id="cat-add-msg"></span>
+  </div>
+  <div class="tab-panel" id="tab-coupons">
+    <div class="pm-section-note">Fixed-amount discount codes customers can enter at checkout (e.g. WELCOME10 → ₹100 off). No expiry or usage limit — a coupon works until you delete it here.</div>
+    <div id="coupon-list" class="cat-list">
+      <div class="loading">Loading coupons…</div>
+    </div>
+    <div class="cat-add-row">
+      <input type="text" id="coupon-new-code" placeholder="Code, e.g. WELCOME10" style="text-transform:uppercase;">
+      <input type="number" id="coupon-new-amount" placeholder="₹ off, e.g. 100" min="1" step="1" style="max-width:140px;">
+      <button type="button" class="btn btn-primary" id="coupon-add-btn">+ Add coupon</button>
+    </div>
+    <span class="pm-upload-msg pm-save-msg" id="coupon-add-msg"></span>
   </div>
 
   <div class="tab-panel" id="tab-images">
@@ -610,6 +623,7 @@
         loadSiteImages();
         loadStoreSettings();
         loadBlogPosts();
+        loadCoupons();
       })
       .catch(function(){
         gateError.style.display = 'block';
@@ -908,6 +922,7 @@
   var MAX_IMAGES_PER_PRODUCT = 35;
 
   var CATEGORIES = []; // [{id,label}], loaded from the server — see loadCategories()
+  var COUPONS = []; // [{code,amountOff}], loaded from the server — see loadCoupons()
 
   function categoryOptions(){
     return CATEGORIES.map(function(c){ return { v:c.id, l:c.label }; });
@@ -946,6 +961,18 @@
     }).catch(function(){
       CATEGORIES = [];
     });
+  }
+  
+  function loadCoupons(){
+    return fetch('/.netlify/functions/coupons?secret=' + encodeURIComponent(currentSecret()))
+      .then(function(res){ return res.json(); })
+      .then(function(coupons){
+        COUPONS = Array.isArray(coupons) ? coupons : [];
+        renderCouponsManager();
+      }).catch(function(){
+        COUPONS = [];
+        renderCouponsManager();
+      });
   }
 
   // product-images.js returns METADATA only ({ variant } per photo, keyed
@@ -1424,6 +1451,91 @@
           inputEl.value = '';
           msgEl.className = 'pm-upload-msg pm-save-msg'; msgEl.textContent = '';
           afterCategoriesChanged(result.categories);
+        })
+        .catch(function(err){
+          msgEl.className = 'pm-upload-msg pm-save-msg err'; msgEl.textContent = (err && err.message) || 'Could not add — please try again.';
+        });
+    });
+  }
+  // =====================================================================
+  // Coupons manager — add and remove fixed-amount discount codes.
+  // Lives in the "coupons" backend function, separate from products.
+  // =====================================================================
+  function renderCouponsManager(){
+    var listEl = document.getElementById('coupon-list');
+    if(!listEl) return;
+    if(!COUPONS.length){
+      listEl.innerHTML = '<div class="empty-state">No coupons yet.</div>';
+      return;
+    }
+    listEl.innerHTML = COUPONS.map(function(c){
+      return '' +
+        '<div class="cat-row" data-code="'+escapeHtml(c.code)+'">' +
+          '<span class="cat-row-id" style="font-weight:700; color:var(--moss-ink, inherit);">'+escapeHtml(c.code)+'</span>' +
+          '<span style="flex:1;">₹'+c.amountOff+' off</span>' +
+          '<button type="button" class="cat-row-delete-btn">Delete</button>' +
+          '<span class="cat-row-msg"></span>' +
+        '</div>';
+    }).join('');
+  }
+
+  var couponListEl = document.getElementById('coupon-list');
+  if(couponListEl){
+    couponListEl.addEventListener('click', function(e){
+      var row = e.target.closest('.cat-row');
+      if(!row) return;
+      var code = row.dataset.code;
+      var msgEl = row.querySelector('.cat-row-msg');
+
+      if(e.target.closest('.cat-row-delete-btn')){
+        if(!confirm('Delete the coupon "'+code+'"? Customers will no longer be able to use it.')) return;
+        fetch('/.netlify/functions/coupons', {
+          method:'POST',
+          headers:{ 'Content-Type':'application/json' },
+          body: JSON.stringify({ secret: currentSecret(), action:'delete', code: code })
+        })
+          .then(function(res){ return res.json(); })
+          .then(function(result){
+            if(!result || !result.success) throw new Error((result && result.error) || 'Could not delete.');
+            COUPONS = result.coupons || [];
+            renderCouponsManager();
+          })
+          .catch(function(err){
+            msgEl.className = 'cat-row-msg err'; msgEl.textContent = (err && err.message) || 'Could not delete — please try again.';
+          });
+        return;
+      }
+    });
+  }
+
+  var couponAddBtn = document.getElementById('coupon-add-btn');
+  if(couponAddBtn){
+    couponAddBtn.addEventListener('click', function(){
+      var codeEl = document.getElementById('coupon-new-code');
+      var amountEl = document.getElementById('coupon-new-amount');
+      var msgEl = document.getElementById('coupon-add-msg');
+      var code = codeEl.value.trim();
+      var amountOff = parseFloat(amountEl.value);
+      if(!code){
+        msgEl.className = 'pm-upload-msg pm-save-msg err'; msgEl.textContent = 'Enter a coupon code.'; return;
+      }
+      if(!amountOff || amountOff <= 0){
+        msgEl.className = 'pm-upload-msg pm-save-msg err'; msgEl.textContent = 'Enter a discount amount greater than ₹0.'; return;
+      }
+      msgEl.className = 'pm-upload-msg pm-save-msg'; msgEl.textContent = 'Adding…';
+      fetch('/.netlify/functions/coupons', {
+        method:'POST',
+        headers:{ 'Content-Type':'application/json' },
+        body: JSON.stringify({ secret: currentSecret(), action:'upsert', coupon:{ code:code, amountOff:amountOff } })
+      })
+        .then(function(res){ return res.json(); })
+        .then(function(result){
+          if(!result || !result.success) throw new Error((result && result.error) || 'Could not add coupon.');
+          codeEl.value = '';
+          amountEl.value = '';
+          msgEl.className = 'pm-upload-msg pm-save-msg'; msgEl.textContent = '';
+          COUPONS = result.coupons || [];
+          renderCouponsManager();
         })
         .catch(function(err){
           msgEl.className = 'pm-upload-msg pm-save-msg err'; msgEl.textContent = (err && err.message) || 'Could not add — please try again.';
