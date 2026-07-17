@@ -1485,6 +1485,7 @@
       var row = e.target.closest('.cat-row');
       if(!row) return;
       var code = row.dataset.code;
+      var id = row.dataset.id;
       var msgEl = row.querySelector('.cat-row-msg');
 
       if(e.target.closest('.cat-row-delete-btn')){
@@ -1492,7 +1493,7 @@
         fetch('/.netlify/functions/coupons', {
           method:'POST',
           headers:{ 'Content-Type':'application/json' },
-          body: JSON.stringify({ secret: currentSecret(), action:'delete', code: code })
+          body: JSON.stringify({ secret: currentSecret(), action:'delete', id: id })
         })
           .then(function(res){ return res.json(); })
           .then(function(result){
