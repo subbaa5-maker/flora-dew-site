@@ -18,7 +18,7 @@
 
 const crypto = require('crypto');
 const { ordersStore } = require('./lib/blobs');
-const { sendEmail, renderOrderRows, orderTotal } = require('./lib/email');
+const { sendEmail, renderOrderRows, orderTotal, renderDiscountRow } = require('./lib/email');
 const { createZohoInvoiceForOrder } = require('./lib/zoho');
 
 exports.handler = async function (event) {
@@ -68,8 +68,10 @@ exports.handler = async function (event) {
       await store.setJSON(razorpay_order_id, order);
     }
 
-    const total = orderTotal(order.items);
-    const rows = renderOrderRows(order.items);
+   const total = orderTotal(order.items);
+    const discountRupees = order.discount ? Math.round(order.discount) / 100 : 0;
+    const totalPaid = order.amount ? Math.round(order.amount) / 100 : (total - discountRupees);
+    const rows = renderOrderRows(order.items) + renderDiscountRow(order);
     const addressBlock = `${order.customer.address}, ${order.customer.city}, ${order.customer.state} - ${order.customer.pincode}`;
 
     await sendEmail({
@@ -80,7 +82,7 @@ exports.handler = async function (event) {
           <h2>Thank you, ${order.customer.name}!</h2>
           <p>Your order has been received and payment confirmed.</p>
           <table style="width:100%;border-collapse:collapse;">${rows}</table>
-          <p><strong>Total paid: ₹${total}</strong></p>
+          <p><strong>Total paid: ₹${totalPaid}</strong></p>
           <p>Shipping to: ${addressBlock}</p>
           <p>Order ID: ${razorpay_order_id}<br>Payment ID: ${razorpay_payment_id}</p>
           <p>Track your order anytime at <a href="https://floradew.in/track.html">floradew.in/track.html</a> using this Order ID and your email.</p>
@@ -91,12 +93,12 @@ exports.handler = async function (event) {
 
     await sendEmail({
       to: process.env.STORE_EMAIL || 'hello@floradew.in',
-      subject: `New order from ${order.customer.name} — ₹${total}`,
+      subject: `New order from ${order.customer.name} — ₹${totalPaid}`,
       html: `
         <div style="font-family:sans-serif;color:#243623;">
           <h2>New paid order</h2>
           <table style="width:100%;border-collapse:collapse;">${rows}</table>
-          <p><strong>Total: ₹${total}</strong></p>
+          <p><strong>Total: ₹${totalPaid}</strong></p>
           <p><strong>Customer:</strong> ${order.customer.name} · ${order.customer.phone} · ${order.customer.email}</p>
           <p><strong>Ship to:</strong> ${addressBlock}</p>
           <p>Payment ID: ${razorpay_payment_id} · Order ID: ${razorpay_order_id}</p>
