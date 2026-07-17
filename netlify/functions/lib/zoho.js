@@ -205,13 +205,13 @@ async function createInvoice(customerId, order) {
     return item;
   });
 
-  const created = await zohoFetch('/invoices', {
+const created = await zohoFetch('/invoices', {
     method: 'POST',
     body: JSON.stringify({
       customer_id: customerId,
       line_items,
       reference_number: order.orderId,
-      notes: `Payment ID: ${order.paymentId || ''}`,
+      notes: order.couponCode ? `Payment ID: ${order.paymentId || ''} · Coupon: ${order.couponCode}` : `Payment ID: ${order.paymentId || ''}`,
       // Website prices already include GST (e.g. ₹159 is the final price
       // the customer paid). Without this flag, Zoho treats `rate` as
       // pre-tax and adds GST on top, inflating the total (e.g. ₹166.96
@@ -219,6 +219,12 @@ async function createInvoice(customerId, order) {
       // breakdown out of the inclusive rate instead, so the invoice total
       // matches what was actually charged.
       is_inclusive_tax: true,
+      // A flat rupee amount taken off the invoice total when a coupon was
+      // applied at checkout (see create-order.js). Applied after tax so
+      // the invoice total matches the discounted amount actually charged
+      // via Razorpay. Double-check this against a real test invoice —
+      // Zoho's own discount/tax interaction rules apply here.
+      ...(order.discount ? { discount: Math.round(order.discount) / 100, is_discount_before_tax: false } : {}),
     }),
   });
 
