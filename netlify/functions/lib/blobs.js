@@ -45,11 +45,6 @@ function settingsStore() {
   return namedStore('settings');
 }
 
-// Stores coupon definitions (saved under key "all").
-function couponsStore() {
-  return namedStore('coupons');
-}
-
 // Stores one image data-URL per named site section ("slot"): hero, about,
 // why, reviews, footerLogo. One image per slot (not an array), unlike
 // productImagesStore.
@@ -72,14 +67,4 @@ function blogImagesStore() {
   return namedStore('blog-images');
 }
 
-module.exports = {
-  ordersStore,
-  productImagesStore,
-  productsStore,
-  categoriesStore,
-  settingsStore,
-  couponsStore,
-  siteImagesStore,
-  blogStore,
-  blogImagesStore
-};
+module.exports = { ordersStore, productImagesStore, productsStore, categoriesStore, settingsStore, siteImagesStore, blogStore, blogImagesStore };
