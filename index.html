@@ -2262,7 +2262,7 @@
     fetch('/.netlify/functions/create-order', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ amount: amountPaise, currency: 'INR', customer: customer, items: items })
+      body: JSON.stringify({ amount: amountPaise, currency: 'INR', customer: customer, items: items, couponCode: window.appliedCoupon ? window.appliedCoupon.code : null })
     })
       .then(function(res){ return res.json(); })
       .then(function(order){
@@ -2276,7 +2276,7 @@
 
         var rzp = new Razorpay({
           key: RAZORPAY_KEY_ID,
-          amount: amountPaise,
+          amount: order.amount,
           currency: 'INR',
           name: 'Flora Dew',
           description: 'Order payment',
