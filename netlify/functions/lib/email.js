@@ -38,4 +38,14 @@ function orderTotal(items) {
   return items.reduce((sum, it) => sum + it.price * it.qty, 0);
 }
 
-module.exports = { sendEmail, renderOrderRows, orderTotal };
+// One extra HTML row for the discount, shown between the item rows and
+// the total — only when the order actually had a coupon applied.
+function renderDiscountRow(order) {
+  if (!order || !order.discount) return '';
+  const rupees = Math.round(order.discount) / 100;
+  const label = order.couponCode ? `Coupon (${order.couponCode})` : 'Coupon discount';
+  return `<tr><td style="padding:4px 8px;">${label}</td><td></td><td style="padding:4px 8px;">−₹${rupees}</td></tr>`;
+}
+
+module.exports = { sendEmail, renderOrderRows, orderTotal, renderDiscountRow };
+
