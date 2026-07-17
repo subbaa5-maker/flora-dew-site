@@ -692,6 +692,24 @@
   }
   .modal-order-summary .mos-row{display:flex; justify-content:space-between; padding:3px 0;}
   .modal-order-summary .mos-total{font-weight:700; border-top:1px solid var(--line); margin-top:6px; padding-top:8px;}
+  .modal-order-summary .mos-discount{color:var(--fern);}
+  .coupon-row{display:flex; gap:8px; margin-bottom:6px;}
+  .coupon-row input{
+    flex:1; min-width:0;
+    border:1px solid var(--line); border-radius:100px;
+    padding:10px 16px; font-size:0.85rem;
+    text-transform:uppercase;
+  }
+  .coupon-row input::placeholder{text-transform:none;}
+  .coupon-row button{
+    background:none; border:1px solid var(--moss-ink); color:var(--moss-ink);
+    border-radius:100px; padding:10px 18px; font-size:0.85rem; font-weight:600;
+    white-space:nowrap; cursor:pointer;
+  }
+  .coupon-row button:disabled{opacity:0.5; cursor:default;}
+  .coupon-msg{font-size:0.8rem; margin:0 0 14px; min-height:1em;}
+  .coupon-msg.err{color:#a33;}
+  .coupon-msg.ok{color:var(--fern);}
   .saved-customer-note{
     background:rgba(78,107,76,0.12);
     border:1px solid rgba(78,107,76,0.3);
@@ -1308,6 +1326,11 @@
     <p class="modal-sub">We need this to ship your order and send your payment receipt.</p>
 
     <div class="modal-order-summary" id="modal-order-summary"></div>
+    <div class="coupon-row" id="coupon-row">
+      <input type="text" id="coupon-input" placeholder="Coupon code (optional)" autocomplete="off" autocapitalize="characters">
+      <button type="button" class="btn" id="coupon-apply-btn">Apply</button>
+    </div>
+    <div class="coupon-msg" id="coupon-msg"></div>
 
     <div class="saved-customer-note" id="saved-customer-note" style="display:none;">
       Welcome back! We've filled in your saved details.
@@ -2104,6 +2127,72 @@
 
   var modalOverlay = document.getElementById('checkout-modal-overlay');
   var checkoutForm = document.getElementById('checkout-form');
+  // ---- Coupon code (fixed amount off) ----
+  var appliedCoupon = null; // { code, amountOff } in rupees, or null
+  var couponInput = document.getElementById('coupon-input');
+  var couponApplyBtn = document.getElementById('coupon-apply-btn');
+  var couponMsgEl = document.getElementById('coupon-msg');
+
+  function discountRupees(){
+    if(!appliedCoupon) return 0;
+    return Math.min(appliedCoupon.amountOff, cartSubtotal());
+  }
+
+  function renderOrderSummary(){
+    var summaryEl = document.getElementById('modal-order-summary');
+    var subtotal = cartSubtotal();
+    var rows = CART.map(function(item){
+      var prod = PRODUCTS[item.pidx];
+      var variant = prod.variants[item.vidx];
+      return '<div class="mos-row"><span>'+prod.name+' ('+variant.l+') × '+item.qty+'</span><span>₹'+(variant.p*item.qty)+'</span></div>';
+    }).join('');
+    var discount = discountRupees();
+    if(discount > 0){
+      rows += '<div class="mos-row mos-discount"><span>Coupon ('+appliedCoupon.code+')</span><span>−₹'+discount+'</span></div>';
+    }
+    rows += '<div class="mos-row mos-total"><span>Total</span><span>₹'+(subtotal - discount)+'</span></div>';
+    summaryEl.innerHTML = rows;
+  }
+
+  function resetCoupon(){
+    appliedCoupon = null;
+    if(couponInput) couponInput.value = '';
+    if(couponMsgEl){ couponMsgEl.className = 'coupon-msg'; couponMsgEl.textContent = ''; }
+  }
+
+  if(couponApplyBtn){
+    couponApplyBtn.addEventListener('click', function(){
+      var code = (couponInput.value || '').trim();
+      if(!code){
+        couponMsgEl.className = 'coupon-msg err'; couponMsgEl.textContent = 'Enter a coupon code.';
+        return;
+      }
+      couponApplyBtn.disabled = true;
+      couponMsgEl.className = 'coupon-msg'; couponMsgEl.textContent = 'Checking…';
+      fetch('/.netlify/functions/coupons?code=' + encodeURIComponent(code))
+        .then(function(res){ return res.json(); })
+        .then(function(result){
+          couponApplyBtn.disabled = false;
+          if(!result || !result.valid){
+            appliedCoupon = null;
+            couponMsgEl.className = 'coupon-msg err';
+            couponMsgEl.textContent = (result && result.error) || 'That coupon code isn\'t valid.';
+            renderOrderSummary();
+            return;
+          }
+          appliedCoupon = { code: result.code, amountOff: result.amountOff };
+          couponInput.value = result.code;
+          couponMsgEl.className = 'coupon-msg ok';
+          couponMsgEl.textContent = '"' + result.code + '" applied — ₹' + result.amountOff + ' off.';
+          renderOrderSummary();
+        })
+        .catch(function(){
+          couponApplyBtn.disabled = false;
+          couponMsgEl.className = 'coupon-msg err';
+          couponMsgEl.textContent = 'Could not check that code — please try again.';
+        });
+    });
+  }
 
   // ---- Pincode -> auto-fill city & state (India Post public API) ----
   (function(){
@@ -2183,16 +2272,13 @@
   }
 
   function openCheckoutModal(){
+    function openCheckoutModal(){
     if(CART.length === 0) return;
-    var summaryEl = document.getElementById('modal-order-summary');
-    var rows = CART.map(function(item){
-      var prod = PRODUCTS[item.pidx];
-      var variant = prod.variants[item.vidx];
-      return '<div class="mos-row"><span>'+prod.name+' ('+variant.l+') × '+item.qty+'</span><span>₹'+(variant.p*item.qty)+'</span></div>';
-    }).join('');
-    summaryEl.innerHTML = rows + '<div class="mos-row mos-total"><span>Total</span><span>₹'+cartSubtotal()+'</span></div>';
+    resetCoupon();
+    renderOrderSummary();
     prefillCustomerForm();
     modalOverlay.classList.add('open');
+  }
   }
   function closeCheckoutModal(){
     modalOverlay.classList.remove('open');
@@ -2262,7 +2348,7 @@
     fetch('/.netlify/functions/create-order', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ amount: amountPaise, currency: 'INR', customer: customer, items: items })
+      body: JSON.stringify({ amount: amountPaise, currency: 'INR', customer: customer, items: items, couponCode: appliedCoupon ? appliedCoupon.code : undefined })
     })
       .then(function(res){ return res.json(); })
       .then(function(order){
@@ -2274,9 +2360,14 @@
           return;
         }
 
+        // Charge exactly what the server computed (subtotal minus any
+        // validated coupon discount) — never the browser's own math —
+        // so the Razorpay widget always matches what's actually charged.
+        var chargeAmount = order.amount;
+
         var rzp = new Razorpay({
           key: RAZORPAY_KEY_ID,
-          amount: amountPaise,
+          amount: chargeAmount,
           currency: 'INR',
           name: 'Flora Dew',
           description: 'Order payment',
@@ -2293,6 +2384,7 @@
                   saveCustomer(customer);
                   CART = [];
                   renderCart();
+                  resetCoupon();
                   closeCheckoutModal();
                   checkoutForm.reset();
                   alert('Payment successful! Thank you, ' + customer.name + '.\n\nOrder ID: ' + order.id + '\n\nTrack your order anytime at:\nfloradew.in/track.html\n(using this Order ID + your email)');
