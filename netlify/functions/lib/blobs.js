@@ -59,6 +59,12 @@ function blogStore() {
   return namedStore('blog');
 }
 
+// Stores discount coupons (code + fixed amount off, in rupees) as one
+// JSON array under the key "all" — same pattern as productsStore.
+function couponsStore() {
+  return namedStore('coupons');
+}
+
 // Stores one cover-image data-URL per blog post, keyed by post id — same
 // "one image per key" pattern as siteImagesStore. Served as a real image
 // URL by blog-image.js rather than embedded as base64 text, so it works
@@ -67,4 +73,4 @@ function blogImagesStore() {
   return namedStore('blog-images');
 }
 
-module.exports = { ordersStore, productImagesStore, productsStore, categoriesStore, settingsStore, siteImagesStore, blogStore, blogImagesStore };
+module.exports = { ordersStore, productImagesStore, productsStore, categoriesStore, settingsStore, siteImagesStore, blogStore, blogImagesStore, couponsStore };
