@@ -210,6 +210,25 @@
     return new URLSearchParams(window.location.search).get(name);
   }
 
+  // Keep this in sync with the identical map in index.html. Google/Pinterest
+  // need a real Google Product Taxonomy (GPC) path here, not our internal
+  // tag — see https://support.google.com/merchants/answer/6324436
+  var GPC_TAXONOMY = {
+    soap: 'Health & Beauty > Personal Care > Cosmetics > Bath & Body > Bar Soap',
+    oil: 'Health & Beauty > Personal Care > Hair Care',
+    balm: 'Health & Beauty > Personal Care > Cosmetics > Skin Care > Lip Balms & Treatments > Lip Balms',
+    lipstick: 'Health & Beauty > Personal Care > Cosmetics > Makeup > Lip Makeup > Lipstick'
+  };
+  function gpcFor(catId){ return GPC_TAXONOMY[catId] || 'Health & Beauty > Personal Care > Cosmetics'; }
+
+  // Slugify must match the server-side version in netlify/functions/products.js
+  // (used only as a fallback lookup below, in case a product's URL id and
+  // its live catalog id have drifted apart — see chat for why that happens).
+  function slugify(s){
+    return String(s || '').toLowerCase().trim()
+      .replace(/[^a-z0-9]+/g, '-').replace(/(^-+)|(-+$)/g, '').slice(0, 60);
+  }
+
   var productId = qs('id');
   var prod = null;
   var allImages = []; // [{ variant }, ...] metadata for this product, as returned by product-images
@@ -230,13 +249,16 @@
   function normalizeProductImages(arr){
     return (Array.isArray(arr) ? arr : []).map(normalizeProductImage).filter(Boolean);
   }
+  // Always keyed by the MATCHED product's live id (prod.id), not the raw
+  // URL query param — those can differ when the fallback slug lookup
+  // below kicks in, and images are stored under the live id.
   function photoUrl(index){
-    return '/.netlify/functions/product-image?productId=' + encodeURIComponent(productId) + '&index=' + index;
+    return '/.netlify/functions/product-image?productId=' + encodeURIComponent(prod.id) + '&index=' + index;
   }
   // og:image and JSON-LD are read by crawlers with no page context, so
   // they need a fully-qualified URL rather than a relative one.
   function absolutePhotoUrl(index){
-    return 'https://www.floradew.in/.netlify/functions/product-image?productId=' + encodeURIComponent(productId) + '&index=' + index;
+    return 'https://www.floradew.in/.netlify/functions/product-image?productId=' + encodeURIComponent(prod.id) + '&index=' + index;
   }
 
   // A size's own tagged photos take priority; if it has none, fall back
@@ -257,20 +279,31 @@
   } else {
     Promise.all([
       fetch('/.netlify/functions/products').then(function(r){ return r.ok ? r.json() : []; }).catch(function(){ return []; }),
-      fetch('/.netlify/functions/categories').then(function(r){ return r.ok ? r.json() : []; }).catch(function(){ return []; }),
-      fetch('/.netlify/functions/product-images?productId=' + encodeURIComponent(productId)).then(function(r){ return r.ok ? r.json() : {}; }).catch(function(){ return {}; })
+      fetch('/.netlify/functions/categories').then(function(r){ return r.ok ? r.json() : []; }).catch(function(){ return []; })
     ]).then(function(results){
       var products = results[0] || [];
       var categories = results[1] || [];
-      var imagesByProduct = results[2] || {};
 
       prod = products.find(function(p){ return p.id === productId; });
+      // Fallback: if the URL's id doesn't exactly match any product's
+      // live id (e.g. the catalog's slug changed after this link/feed
+      // entry was generated), try matching by the slugified product
+      // name instead of showing a dead "couldn't find that product" page.
+      if(!prod){ prod = products.find(function(p){ return slugify(p.name) === productId; }); }
       if(!prod){ showError(); return; }
 
-      allImages = normalizeProductImages(imagesByProduct[prod.id]);
-      photoIndices = photosForVariant(allImages, prod.variants[variantIndex].l);
-      var catObj = categories.find(function(c){ return c.id === prod.cat; });
-      renderProduct(catObj ? catObj.label : prod.cat);
+      // Images are stored and fetched by the LIVE product id (prod.id),
+      // which only equals the URL's id when the fallback above wasn't
+      // needed — fetching this before resolving prod would silently
+      // return no photos whenever the two ids differ.
+      return fetch('/.netlify/functions/product-images?productId=' + encodeURIComponent(prod.id))
+        .then(function(r){ return r.ok ? r.json() : {}; }).catch(function(){ return {}; })
+        .then(function(imagesByProduct){
+          allImages = normalizeProductImages(imagesByProduct[prod.id]);
+          photoIndices = photosForVariant(allImages, prod.variants[variantIndex].l);
+          var catObj = categories.find(function(c){ return c.id === prod.cat; });
+          renderProduct(catObj ? catObj.label : prod.cat);
+        });
     }).catch(function(){ showError(); });
   }
 
@@ -299,6 +332,8 @@
       "@context":"https://schema.org", "@type":"Product",
       "name":prod.name, "description":prod.desc,
       "image": photoIndices.length ? photoIndices.map(absolutePhotoUrl) : undefined,
+      "brand":{"@type":"Brand","name":"Flora Dew"},
+      "category":gpcFor(prod.cat),
       "offers":{
         "@type":"AggregateOffer", "priceCurrency":"INR",
         "lowPrice": Math.min.apply(null, prod.variants.map(function(v){return v.p;})),

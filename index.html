@@ -1575,6 +1575,22 @@
     {id:'lipstick', label:'Lip Colour'}
   ];
 
+  // Google/Pinterest require the "category" field in Product structured
+  // data to be a real path from Google's Product Taxonomy (GPC), not an
+  // arbitrary internal label like "Bathing" or "Haircare" — that mismatch
+  // is what triggers "google_product_category values are missing/invalid"
+  // warnings in Merchant Center and Pinterest catalog ingestion. Keyed by
+  // our internal category id (stable), not by the free-text product tag.
+  // Verify/refine leaf categories at:
+  // https://support.google.com/merchants/answer/6324436
+  var GPC_TAXONOMY = {
+    soap: 'Health & Beauty > Personal Care > Cosmetics > Bath & Body > Bar Soap',
+    oil: 'Health & Beauty > Personal Care > Hair Care',
+    balm: 'Health & Beauty > Personal Care > Cosmetics > Skin Care > Lip Balms & Treatments > Lip Balms',
+    lipstick: 'Health & Beauty > Personal Care > Cosmetics > Makeup > Lip Makeup > Lipstick'
+  };
+  function gpcFor(catId){ return GPC_TAXONOMY[catId] || 'Health & Beauty > Personal Care > Cosmetics'; }
+
   // The live catalogue/category list — starts out equal to the built-in
   // defaults above, then gets replaced with whatever's actually stored
   // in Admin (see initShop() near the bottom), same pattern as PRODUCTS.
@@ -1690,7 +1706,7 @@
         "description":prod.desc,
         "image":"https://www.floradew.in" + photoUrl(prod.id, 0),
         "brand":{"@type":"Brand","name":"Flora Dew"},
-        "category":prod.tag,
+        "category":gpcFor(prod.cat),
         "offers":prod.variants.map(function(v){
           return {
             "@type":"Offer",
