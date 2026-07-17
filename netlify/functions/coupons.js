@@ -1,10 +1,10 @@
 // netlify/functions/coupons.js
 //
-// Manages discount coupons (code, type, value, limits) so the shop owner
-// can create/edit/remove coupons from the admin dashboard without a code
-// deploy, and so the storefront checkout can validate a code and show the
-// discount before payment. Stored as one JSON array under the key "all" —
-// same pattern as products.js / categories.js.
+// Manages discount coupons (code + flat amount off, in rupees) so the
+// shop owner can create/edit/remove coupons from the admin dashboard
+// without a code deploy, and so the storefront checkout can validate a
+// code and show the discount before payment. Stored as one JSON array
+// under the key "all" — same pattern as products.js / categories.js.
 //
 // GET  /.netlify/functions/coupons?secret=...
 //      -> admin-only, returns the full coupon array (including inactive/
@@ -30,11 +30,6 @@
 //
 // Required Netlify environment variable:
 //   ADMIN_SECRET
-//
-// Note: this file expects a `couponsStore` export from ./lib/blobs.js.
-// That's a small follow-up addition to lib/blobs.js (same one-line
-// pattern as the other stores there) — let me know when you're ready for
-// that step.
 
 const { couponsStore } = require('./lib/blobs');
 
@@ -54,17 +49,11 @@ function normalizeCode(code) {
 function validateCoupon(c) {
   if (!c || typeof c !== 'object') return 'Invalid coupon data';
   if (!c.code || !String(c.code).trim()) return 'Coupon code is required';
-  if (!['percent', 'flat'].includes(c.type)) return 'Choose a valid discount type';
-  const valueNum = Number(c.value);
-  if (isNaN(valueNum) || valueNum <= 0) return 'Discount value must be a positive number';
-  if (c.type === 'percent' && valueNum > 100) return 'Percentage discount cannot exceed 100';
+  const amountOffNum = Number(c.amountOff);
+  if (isNaN(amountOffNum) || amountOffNum <= 0) return 'Amount off must be a positive number';
   if (c.minOrder !== null && c.minOrder !== undefined && c.minOrder !== '') {
     const minNum = Number(c.minOrder);
     if (isNaN(minNum) || minNum < 0) return 'Minimum order must be a non-negative number';
-  }
-  if (c.maxDiscount !== null && c.maxDiscount !== undefined && c.maxDiscount !== '') {
-    const maxNum = Number(c.maxDiscount);
-    if (isNaN(maxNum) || maxNum <= 0) return 'Maximum discount must be a positive number';
   }
   if (c.usageLimit !== null && c.usageLimit !== undefined && c.usageLimit !== '') {
     const limitNum = Number(c.usageLimit);
@@ -76,19 +65,10 @@ function validateCoupon(c) {
   return null;
 }
 
-// Computes the discount for a given coupon + cart subtotal. Shared by the
-// "validate" action here and reusable later by create-order.js /
-// verify-payment.js if they want to re-derive the same number server-side.
+// Computes the discount for a given coupon + cart subtotal (both in
+// rupees). Never discounts more than the order is worth.
 function computeDiscount(coupon, subtotal) {
-  let discount = coupon.type === 'percent'
-    ? Math.round((subtotal * coupon.value) / 100)
-    : Math.round(coupon.value);
-  if (coupon.type === 'percent' && coupon.maxDiscount) {
-    discount = Math.min(discount, coupon.maxDiscount);
-  }
-  // Never discount more than the order is worth.
-  discount = Math.min(discount, subtotal);
-  return Math.max(discount, 0);
+  return Math.max(Math.min(Math.round(Number(coupon.amountOff)), subtotal), 0);
 }
 
 exports.handler = async function (event) {
@@ -149,7 +129,7 @@ exports.handler = async function (event) {
           statusCode: 200,
           body: JSON.stringify({
             valid: true,
-            coupon: { id: found.id, code: found.code, type: found.type, value: found.value },
+            coupon: { id: found.id, code: found.code, amountOff: found.amountOff },
             discount,
           }),
         };
@@ -199,10 +179,8 @@ exports.handler = async function (event) {
       const cleanCoupon = {
         id: couponId,
         code: normalizedCode,
-        type: coupon.type,
-        value: Number(coupon.value),
+        amountOff: Number(coupon.amountOff),
         minOrder: (coupon.minOrder === null || coupon.minOrder === undefined || coupon.minOrder === '') ? 0 : Number(coupon.minOrder),
-        maxDiscount: (coupon.maxDiscount === null || coupon.maxDiscount === undefined || coupon.maxDiscount === '') ? null : Number(coupon.maxDiscount),
         usageLimit: (coupon.usageLimit === null || coupon.usageLimit === undefined || coupon.usageLimit === '') ? null : Number(coupon.usageLimit),
         // Usage count is server-managed — never trust a value sent from
         // Admin for this; keep whatever was already recorded.
