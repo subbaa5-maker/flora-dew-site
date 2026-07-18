@@ -157,6 +157,7 @@
   }
   .status-paid{background:rgba(78,107,76,0.15); color:var(--fern);}
   .status-pending{background:rgba(194,150,58,0.18); color:var(--honey-oil);}
+  .status-rejected{background:rgba(165,82,94,0.15); color:var(--rosewater-deep);}
   .fulfillment-badge{
     font-size:0.72rem; font-weight:700; text-transform:uppercase; letter-spacing:0.04em;
     padding:5px 12px; border-radius:100px;
@@ -437,6 +438,7 @@
     <button class="tab-btn" data-tab="coupons">Coupons</button>
     <button class="tab-btn" data-tab="images">Site Images</button>
     <button class="tab-btn" data-tab="blog">Blog</button>
+    <button class="tab-btn" data-tab="testimonials">Testimonials<span id="testimonials-pending-badge"></span></button>
     <button class="tab-btn" data-tab="settings">Store Status</button>
   </div>
 
@@ -566,6 +568,13 @@
     </div>
   </div>
 
+  <div class="tab-panel" id="tab-testimonials">
+    <div class="pm-section-note">Customer-submitted reviews from the "Leave a review" form on the shop. Approve the ones you want live on the homepage, reject the rest, and edit typos before approving if needed. Approved reviews appear newest-first, above the built-in default reviews.</div>
+    <div id="testimonial-list">
+      <div class="loading">Loading testimonials…</div>
+    </div>
+  </div>
+
   <div class="tab-panel" id="tab-settings">
     <div class="settings-card">
       <h3>Holiday / temporary closure</h3>
@@ -632,6 +641,7 @@
         loadStoreSettings();
         loadBlogPosts();
         loadCoupons();
+        loadTestimonials();
       })
       .catch(function(){
         gateError.style.display = 'block';
@@ -2082,6 +2092,118 @@
           .then(function(){ loadBlogPosts(); });
       });
     });
+  }
+
+  // =====================================================================
+  // Testimonials moderation
+  // =====================================================================
+  var TESTIMONIALS = [];
+
+  function loadTestimonials(){
+    fetch('/.netlify/functions/testimonials?admin=1&secret=' + encodeURIComponent(currentSecret()))
+      .then(function(res){ return res.json(); })
+      .then(function(list){
+        TESTIMONIALS = Array.isArray(list) ? list : [];
+        renderTestimonialList();
+      })
+      .catch(function(){
+        document.getElementById('testimonial-list').innerHTML = '<div class="empty-state">Could not load testimonials.</div>';
+      });
+  }
+
+  function fmtTestimonialDate(iso){
+    if(!iso) return '—';
+    return new Date(iso).toLocaleDateString('en-IN', { day:'2-digit', month:'short', year:'numeric' });
+  }
+
+  function testimonialStars(rating){
+    var n = Math.min(5, Math.max(1, rating || 5));
+    return '★★★★★'.slice(0, n) + '☆☆☆☆☆'.slice(0, 5 - n);
+  }
+
+  function renderTestimonialList(){
+    var listEl = document.getElementById('testimonial-list');
+    var badge = document.getElementById('testimonials-pending-badge');
+    var pendingCount = TESTIMONIALS.filter(function(t){ return t.status === 'pending'; }).length;
+    if(badge) badge.textContent = pendingCount ? ' (' + pendingCount + ')' : '';
+
+    if(TESTIMONIALS.length === 0){
+      listEl.innerHTML = '<div class="empty-state">No reviews submitted yet.</div>';
+      return;
+    }
+
+    listEl.innerHTML = TESTIMONIALS.map(function(t){
+      var badgeClass = t.status === 'approved' ? 'status-paid' : (t.status === 'rejected' ? 'status-rejected' : 'status-pending');
+      var badgeText = t.status === 'approved' ? 'Approved' : (t.status === 'rejected' ? 'Rejected' : 'Pending');
+      var photoHtml = t.photo ? '<img src="'+t.photo+'" alt="" style="width:72px; height:72px; object-fit:cover; border-radius:10px; border:1px solid var(--line); margin-bottom:10px; display:block;">' : '';
+      var approveBtn = t.status !== 'approved' ? '<button class="save-order-btn" data-approve="'+t.id+'">Approve</button>' : '';
+      var rejectBtn = t.status !== 'rejected' ? '<button class="save-order-btn" style="background:var(--honey-oil);" data-reject="'+t.id+'">Reject</button>' : '';
+      return '' +
+        '<div class="order-card" data-testimonial-card="'+t.id+'">' +
+          '<div class="order-top">' +
+            '<div>' +
+              '<div class="order-customer"><input type="text" data-field="name" value="'+String(t.name||'').replace(/"/g,'&quot;')+'" style="font-family:inherit; font-size:1rem; font-weight:700; border:1px solid transparent; background:none; padding:2px 4px; width:auto;" maxlength="60"></div>' +
+              '<div class="order-meta">Submitted '+fmtTestimonialDate(t.createdAt)+' · <span style="color:var(--honey-oil);">'+testimonialStars(t.rating)+'</span></div>' +
+            '</div>' +
+            '<span class="status-badge '+badgeClass+'">'+badgeText+'</span>' +
+          '</div>' +
+          photoHtml +
+          '<textarea data-field="quote" style="width:100%; min-height:60px; font-family:inherit; font-size:0.88rem; border:1px solid var(--line); border-radius:8px; padding:8px;" maxlength="600">'+String(t.quote||'')+'</textarea>' +
+          '<div class="fulfillment-controls" style="grid-template-columns:1fr auto auto auto; margin-top:10px;">' +
+            '<span class="pm-upload-msg pm-save-msg" data-save-msg></span>' +
+            approveBtn +
+            rejectBtn +
+            '<button class="save-order-btn" style="background:var(--rosewater-deep);" data-delete="'+t.id+'">Delete</button>' +
+          '</div>' +
+        '</div>';
+    }).join('');
+
+    function editedFields(card){
+      return {
+        name: card.querySelector('[data-field="name"]').value.trim(),
+        quote: card.querySelector('[data-field="quote"]').value.trim(),
+      };
+    }
+
+    listEl.querySelectorAll('[data-approve]').forEach(function(btn){
+      btn.addEventListener('click', function(){ moderateTestimonial(btn.getAttribute('data-approve'), 'approved', btn); });
+    });
+    listEl.querySelectorAll('[data-reject]').forEach(function(btn){
+      btn.addEventListener('click', function(){ moderateTestimonial(btn.getAttribute('data-reject'), 'rejected', btn); });
+    });
+    listEl.querySelectorAll('[data-delete]').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        var id = btn.getAttribute('data-delete');
+        if(!confirm('Delete this review permanently? This can\'t be undone.')) return;
+        fetch('/.netlify/functions/testimonials', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ secret: currentSecret(), action: 'delete', id: id })
+        })
+          .then(function(res){ return res.json(); })
+          .then(function(){ loadTestimonials(); });
+      });
+    });
+
+    function moderateTestimonial(id, status, btn){
+      var card = listEl.querySelector('[data-testimonial-card="'+id+'"]');
+      var fields = card ? editedFields(card) : {};
+      var msgEl = card ? card.querySelector('[data-save-msg]') : null;
+      if(msgEl){ msgEl.className = 'pm-upload-msg pm-save-msg'; msgEl.textContent = 'Saving…'; }
+      fetch('/.netlify/functions/testimonials', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ secret: currentSecret(), action: 'moderate', id: id, status: status, name: fields.name, quote: fields.quote })
+      })
+        .then(function(res){ return res.json(); })
+        .then(function(result){
+          if(!result || !result.success) throw new Error((result && result.error) || 'Could not update.');
+          loadTestimonials();
+        })
+        .catch(function(err){
+          if(msgEl){ msgEl.className = 'pm-upload-msg pm-save-msg err'; msgEl.textContent = (err && err.message) || 'Could not update.'; }
+        });
+    }
   }
 
   function updateBlogCoverPreview(){

@@ -22,9 +22,24 @@ netlify/functions/store-settings.js   ← holiday/closure toggle read by the sto
 netlify/functions/blog.js             ← stores/serves blog posts (admin panel Blog tab)
 netlify/functions/blog-image.js       ← stores/serves one cover image per blog post (admin uploads)
 netlify/functions/post-page.js        ← server-renders /blog/:slug with real per-post SEO/social tags
+netlify/functions/testimonials.js     ← customer review submissions + admin moderation (approve/reject)
+netlify/functions/testimonial-image.js← stores/serves one optional photo per customer review
 ```
 
 ## What's new in this update
+- **Customer testimonials, with photos**: a "★ Leave a review" button
+  under the Reviews section on the homepage opens a form where customers
+  enter their name, a star rating, a short review, and an optional photo.
+  Submissions are **not** shown on the site immediately — they land in
+  `admin.html` → new **Testimonials** tab (the tab shows a pending count,
+  e.g. "Testimonials (3)") where you can Approve, Reject, or Delete each
+  one, and lightly edit the name/text before approving (e.g. to fix a
+  typo). Approved reviews appear on the homepage newest-first, ahead of
+  the original nine launch reviews (which stay on as a permanent
+  baseline so the section is never empty). Basic spam protection is
+  built in (a hidden honeypot field bots tend to fill in). New functions:
+  `netlify/functions/testimonials.js`, `netlify/functions/testimonial-image.js`.
+
 - **Full product management from the admin panel**: in `admin.html` →
   **Products** tab, you can now add a brand new product, or edit an
   existing one's name, category, badge/tag, description, key ingredients,

@@ -914,6 +914,47 @@
   .t-nav button:disabled{opacity:0.35; cursor:default;}
   .t-nav button:disabled:hover{background:var(--paper);}
 
+  .t-card .t-photo{
+    display:block; width:100%; height:170px; object-fit:cover;
+    border-radius:12px; margin-bottom:16px;
+  }
+  .t-leave-review-row{
+    display:flex; justify-content:center; margin-top:30px;
+  }
+  .t-leave-review-row .btn{
+    border-radius:100px; padding:13px 26px; font-size:0.9rem; font-weight:600;
+    border:1px solid var(--line); background:var(--paper); cursor:pointer;
+  }
+  .t-leave-review-row .btn:hover{background:var(--milk-sage);}
+
+  /* Star-rating picker used in the "Leave a review" form */
+  .star-picker{display:flex; gap:6px; font-size:1.6rem; line-height:1;}
+  .star-picker button{
+    background:none; border:none; cursor:pointer; padding:2px;
+    color:rgba(36,54,35,0.25); transition:color 0.15s ease;
+  }
+  .star-picker button.on{color:var(--honey-oil);}
+
+  .t-photo-upload-preview{
+    display:none; margin-top:10px; align-items:center; gap:12px;
+  }
+  .t-photo-upload-preview.active{display:flex;}
+  .t-photo-upload-preview img{
+    width:64px; height:64px; object-fit:cover; border-radius:10px;
+    border:1px solid var(--line);
+  }
+  .t-photo-upload-preview button{
+    background:none; border:1px solid var(--line); border-radius:100px;
+    padding:6px 14px; font-size:0.78rem; cursor:pointer;
+  }
+  .t-form-msg{font-size:0.85rem; margin-top:10px;}
+  .t-form-msg.err{color:var(--rosewater-deep);}
+  .t-form-msg.ok{color:var(--fern);}
+  /* Honeypot field — present in the DOM for bots to fill in, invisible
+     and unreachable for real visitors (off-screen, not display:none,
+     since some bots skip fields hidden that way). */
+  .t-hp-field{position:absolute; left:-9999px; top:-9999px;}
+
   /* ---------- CTA banner ---------- */
   .cta-banner{
     margin:0 clamp(20px,5vw,56px) clamp(70px,9vw,110px);
@@ -1144,63 +1185,121 @@
           <button type="button" id="t-prev" aria-label="Previous reviews">←</button>
           <button type="button" id="t-next" aria-label="Next reviews">→</button>
         </div>
-        <div class="t-grid" id="t-grid">
-          <div class="t-card">
-            <div class="stars">★★★★★</div>
-            <p class="quote">"My skin stopped feeling tight after switching to the neem soap. Small change, big difference."</p>
-            <div class="who"><span class="avatar">A</span> Aditi R.</div>
-          </div>
-          <div class="t-card">
-            <div class="stars">★★★★★</div>
-            <p class="quote">"The hair oil doesn't leave that heavy residue I hated in other brands. Just clean, healthy shine."</p>
-            <div class="who"><span class="avatar">R</span> Rohan K.</div>
-          </div>
-          <div class="t-card">
-            <div class="stars">★★★★★</div>
-            <p class="quote">"Lip balm lives in every bag I own now. Melts in instantly and actually lasts the day."</p>
-            <div class="who"><span class="avatar">S</span> Sana M.</div>
-          </div>
-          <div class="t-card">
-            <div class="stars">★★★★★</div>
-            <p class="quote">"I ordered the Flora Dew Aloe Vera Soap online and I'm really happy with it. It deeply moisturizes my dry skin."</p>
-            <div class="who"><span class="avatar">A</span> Ambika</div>
-          </div>
-          <div class="t-card">
-            <div class="stars">★★★★★</div>
-            <p class="quote">"I love that it is made with natural ingredients — it gives me peace of mind knowing I am not putting harsh chemicals on my skin. Definitely a product I will keep coming back to. Highly recommended!"</p>
-            <div class="who"><span class="avatar">P</span> Pramukh</div>
-          </div>
-          <div class="t-card">
-            <div class="stars">★★★★★</div>
-            <p class="quote">"Best lip balm ever! Long-lasting, heals dry lips, natural, with a lovely pink tint. Flora Dew nailed it!"</p>
-            <div class="who"><span class="avatar">M</span> Mayangana</div>
-          </div>
-          <div class="t-card">
-            <div class="stars">★★★★★</div>
-            <p class="quote">"I initially bought it with a gift pack for a friend and it's so good. Very gentle and I have seen my son's dry skin, specially after the bath, improved and hydrated. He is into swimming and I have seen good results including my niece's who is into sports. It is worth the price — and safe for kids."</p>
-            <div class="who"><span class="avatar">S</span> Snigdha</div>
-          </div>
-          <div class="t-card">
-            <div class="stars">★★★★★</div>
-            <p class="quote">"This soap feels very natural with minimal chemicals, which is something I really appreciate. It's gentle on the skin and gives a clean, earthy feel. Those who enjoy a foamy wash might find it a little different from regular soaps. Personally I like the idea that it's mild and safe."</p>
-            <div class="who"><span class="avatar">S</span> Sangeetha A.</div>
-          </div>
-          <div class="t-card">
-            <div class="stars">★★★★★</div>
-            <p class="quote">"Love the product. I have used this and it feels so natural and fresh."</p>
-            <div class="who"><span class="avatar">M</span> Mamtha</div>
-          </div>
-        </div>
+        <div class="t-grid" id="t-grid"></div>
+      </div>
+      <div class="t-leave-review-row">
+        <button type="button" class="btn" id="t-leave-review-btn">★ Leave a review</button>
       </div>
     </div>
   </section>
 
+  <!-- LEAVE A REVIEW MODAL -->
+  <div class="modal-overlay" id="review-modal-overlay">
+    <div class="checkout-modal" role="dialog" aria-modal="true" aria-labelledby="review-modal-title">
+      <h3 id="review-modal-title">Leave a review</h3>
+      <p class="modal-sub">Tell other customers about your experience — photos welcome. Reviews are checked before they go live.</p>
+
+      <form id="review-form" novalidate>
+        <div class="form-field">
+          <label for="review-name">Your name</label>
+          <input type="text" id="review-name" maxlength="60" placeholder="e.g. Aditi R." required>
+        </div>
+        <div class="form-field">
+          <label>Rating</label>
+          <div class="star-picker" id="review-star-picker">
+            <button type="button" data-star="1" aria-label="1 star">★</button>
+            <button type="button" data-star="2" aria-label="2 stars">★</button>
+            <button type="button" data-star="3" aria-label="3 stars">★</button>
+            <button type="button" data-star="4" aria-label="4 stars">★</button>
+            <button type="button" data-star="5" aria-label="5 stars">★</button>
+          </div>
+          <input type="hidden" id="review-rating" value="0">
+        </div>
+        <div class="form-field">
+          <label for="review-quote">Your review</label>
+          <textarea id="review-quote" maxlength="600" placeholder="What did you use, and how did it work for you?" required></textarea>
+        </div>
+        <div class="form-field">
+          <label for="review-photo-file">Photo (optional)</label>
+          <input type="file" accept="image/*" id="review-photo-file">
+          <div class="t-photo-upload-preview" id="review-photo-preview-wrap">
+            <img id="review-photo-preview" src="" alt="">
+            <button type="button" id="review-photo-remove-btn">Remove photo</button>
+          </div>
+        </div>
+        <!-- Honeypot: leave this input alone, real visitors never see it -->
+        <div class="form-field t-hp-field" aria-hidden="true">
+          <label for="review-website">Website</label>
+          <input type="text" id="review-website" name="website" tabindex="-1" autocomplete="off">
+        </div>
+
+        <div class="t-form-msg" id="review-form-msg"></div>
+
+        <div class="modal-actions">
+          <button type="button" class="modal-cancel" id="review-cancel-btn">Cancel</button>
+          <button type="submit" class="modal-submit" id="review-submit-btn">Submit review</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <script>
   (function(){
+    var DEFAULT_TESTIMONIALS = [
+      { name:'Aditi R.', rating:5, quote:'My skin stopped feeling tight after switching to the neem soap. Small change, big difference.' },
+      { name:'Rohan K.', rating:5, quote:'The hair oil doesn\'t leave that heavy residue I hated in other brands. Just clean, healthy shine.' },
+      { name:'Sana M.', rating:5, quote:'Lip balm lives in every bag I own now. Melts in instantly and actually lasts the day.' },
+      { name:'Ambika', rating:5, quote:'I ordered the Flora Dew Aloe Vera Soap online and I\'m really happy with it. It deeply moisturizes my dry skin.' },
+      { name:'Pramukh', rating:5, quote:'I love that it is made with natural ingredients — it gives me peace of mind knowing I am not putting harsh chemicals on my skin. Definitely a product I will keep coming back to. Highly recommended!' },
+      { name:'Mayangana', rating:5, quote:'Best lip balm ever! Long-lasting, heals dry lips, natural, with a lovely pink tint. Flora Dew nailed it!' },
+      { name:'Snigdha', rating:5, quote:'I initially bought it with a gift pack for a friend and it\'s so good. Very gentle and I have seen my son\'s dry skin, specially after the bath, improved and hydrated. He is into swimming and I have seen good results including my niece\'s who is into sports. It is worth the price — and safe for kids.' },
+      { name:'Sangeetha A.', rating:5, quote:'This soap feels very natural with minimal chemicals, which is something I really appreciate. It\'s gentle on the skin and gives a clean, earthy feel. Those who enjoy a foamy wash might find it a little different from regular soaps. Personally I like the idea that it\'s mild and safe.' },
+      { name:'Mamtha', rating:5, quote:'Love the product. I have used this and it feels so natural and fresh.' }
+    ];
+
+    function escapeHtml(s){
+      return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){
+        return { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c];
+      });
+    }
+
+    function starString(rating){
+      var n = Math.min(5, Math.max(1, rating || 5));
+      return '★★★★★'.slice(0, n) + '☆☆☆☆☆'.slice(0, 5 - n);
+    }
+
+    function cardHtml(t){
+      var initial = (t.name || '?').trim().charAt(0).toUpperCase() || '?';
+      var photoHtml = t.photo ? '<img class="t-photo" src="'+escapeHtml(t.photo)+'" alt="Photo shared by '+escapeHtml(t.name)+'" loading="lazy">' : '';
+      return '' +
+        '<div class="t-card">' +
+          photoHtml +
+          '<div class="stars">'+starString(t.rating)+'</div>' +
+          '<p class="quote">"'+escapeHtml(t.quote)+'"</p>' +
+          '<div class="who"><span class="avatar">'+escapeHtml(initial)+'</span> '+escapeHtml(t.name)+'</div>' +
+        '</div>';
+    }
+
+    function renderCards(liveTestimonials){
+      var grid = document.getElementById('t-grid');
+      if(!grid) return;
+      var all = (liveTestimonials || []).concat(DEFAULT_TESTIMONIALS);
+      grid.innerHTML = all.map(cardHtml).join('');
+      updateNavButtons();
+    }
+
+    // Render the curated defaults immediately so the section is never
+    // empty while the live fetch below is in flight, then swap in real
+    // customer reviews (newest first) ahead of them once loaded.
+    renderCards([]);
+    fetch('/.netlify/functions/testimonials')
+      .then(function(res){ return res.ok ? res.json() : []; })
+      .then(function(live){ if(Array.isArray(live) && live.length) renderCards(live); })
+      .catch(function(){ /* keep the defaults already shown */ });
+
     var grid = document.getElementById('t-grid');
     var prev = document.getElementById('t-prev');
     var next = document.getElementById('t-next');
-    if(!grid || !prev || !next) return;
 
     function cardStep(){
       var card = grid.querySelector('.t-card');
@@ -1209,20 +1308,175 @@
       var gap = parseFloat(style.columnGap || style.gap || 22) || 22;
       return card.getBoundingClientRect().width + gap;
     }
-    function updateButtons(){
+    function updateNavButtons(){
+      if(!grid || !prev || !next) return;
       var max = grid.scrollWidth - grid.clientWidth - 2;
       prev.disabled = grid.scrollLeft <= 2;
       next.disabled = grid.scrollLeft >= max;
     }
-    prev.addEventListener('click', function(){
-      grid.scrollBy({ left: -cardStep(), behavior: 'smooth' });
-    });
-    next.addEventListener('click', function(){
-      grid.scrollBy({ left: cardStep(), behavior: 'smooth' });
-    });
-    grid.addEventListener('scroll', updateButtons, { passive: true });
-    window.addEventListener('resize', updateButtons);
-    updateButtons();
+    if(grid && prev && next){
+      prev.addEventListener('click', function(){
+        grid.scrollBy({ left: -cardStep(), behavior: 'smooth' });
+      });
+      next.addEventListener('click', function(){
+        grid.scrollBy({ left: cardStep(), behavior: 'smooth' });
+      });
+      grid.addEventListener('scroll', updateNavButtons, { passive: true });
+      window.addEventListener('resize', updateNavButtons);
+    }
+
+    // ---------------------------------------------------------------
+    // "Leave a review" modal
+    // ---------------------------------------------------------------
+    var overlay = document.getElementById('review-modal-overlay');
+    var openBtn = document.getElementById('t-leave-review-btn');
+    var cancelBtn = document.getElementById('review-cancel-btn');
+    var form = document.getElementById('review-form');
+    var starPicker = document.getElementById('review-star-picker');
+    var ratingInput = document.getElementById('review-rating');
+    var photoFile = document.getElementById('review-photo-file');
+    var photoPreviewWrap = document.getElementById('review-photo-preview-wrap');
+    var photoPreviewImg = document.getElementById('review-photo-preview');
+    var photoRemoveBtn = document.getElementById('review-photo-remove-btn');
+    var msgEl = document.getElementById('review-form-msg');
+    var submitBtn = document.getElementById('review-submit-btn');
+    var pendingPhotoDataUrl = null;
+
+    function openReviewModal(){
+      if(!overlay) return;
+      overlay.classList.add('open');
+      document.body.style.overflow = 'hidden';
+    }
+    function closeReviewModal(){
+      if(!overlay) return;
+      overlay.classList.remove('open');
+      document.body.style.overflow = '';
+    }
+    if(openBtn) openBtn.addEventListener('click', openReviewModal);
+    if(cancelBtn) cancelBtn.addEventListener('click', closeReviewModal);
+    if(overlay) overlay.addEventListener('click', function(e){ if(e.target === overlay) closeReviewModal(); });
+
+    if(starPicker){
+      var starBtns = Array.prototype.slice.call(starPicker.querySelectorAll('button'));
+      function paintStars(n){
+        starBtns.forEach(function(b){
+          b.classList.toggle('on', parseInt(b.getAttribute('data-star'), 10) <= n);
+        });
+      }
+      starBtns.forEach(function(b){
+        b.addEventListener('click', function(){
+          var n = parseInt(b.getAttribute('data-star'), 10);
+          ratingInput.value = String(n);
+          paintStars(n);
+        });
+      });
+    }
+
+    // Resize + compress an uploaded photo in-browser before sending it,
+    // same reasoning as the admin photo uploads — phone photos are often
+    // several MB straight out of the camera.
+    function resizeDataUrl(dataUrl, maxDim, quality){
+      return new Promise(function(resolve, reject){
+        var img = new Image();
+        img.onload = function(){
+          var w = img.width, h = img.height;
+          if(w > h && w > maxDim){ h = Math.round(h * (maxDim / w)); w = maxDim; }
+          else if(h > maxDim){ w = Math.round(w * (maxDim / h)); h = maxDim; }
+          var canvas = document.createElement('canvas');
+          canvas.width = w; canvas.height = h;
+          canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+          resolve(canvas.toDataURL('image/jpeg', quality));
+        };
+        img.onerror = reject;
+        img.src = dataUrl;
+      });
+    }
+    function readFileAsDataUrl(file){
+      return new Promise(function(resolve, reject){
+        var reader = new FileReader();
+        reader.onload = function(){ resolve(reader.result); };
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+    }
+
+    if(photoFile){
+      photoFile.addEventListener('change', function(){
+        var file = photoFile.files && photoFile.files[0];
+        if(!file) return;
+        readFileAsDataUrl(file)
+          .then(function(raw){ return resizeDataUrl(raw, 1000, 0.8); })
+          .then(function(resized){
+            pendingPhotoDataUrl = resized;
+            photoPreviewImg.src = resized;
+            photoPreviewWrap.classList.add('active');
+          })
+          .catch(function(){
+            msgEl.className = 't-form-msg err';
+            msgEl.textContent = 'Could not read that photo — please try a different file.';
+          });
+      });
+    }
+    if(photoRemoveBtn){
+      photoRemoveBtn.addEventListener('click', function(){
+        pendingPhotoDataUrl = null;
+        photoFile.value = '';
+        photoPreviewWrap.classList.remove('active');
+      });
+    }
+
+    function resetReviewForm(){
+      form.reset();
+      ratingInput.value = '0';
+      if(starPicker) starPicker.querySelectorAll('button').forEach(function(b){ b.classList.remove('on'); });
+      pendingPhotoDataUrl = null;
+      photoPreviewWrap.classList.remove('active');
+      msgEl.className = 't-form-msg';
+      msgEl.textContent = '';
+    }
+
+    if(form){
+      form.addEventListener('submit', function(e){
+        e.preventDefault();
+        var name = document.getElementById('review-name').value.trim();
+        var quote = document.getElementById('review-quote').value.trim();
+        var rating = parseInt(ratingInput.value, 10) || 0;
+        var website = document.getElementById('review-website').value;
+
+        if(!name){ msgEl.className = 't-form-msg err'; msgEl.textContent = 'Please enter your name.'; return; }
+        if(!rating){ msgEl.className = 't-form-msg err'; msgEl.textContent = 'Please choose a star rating.'; return; }
+        if(quote.length < 10){ msgEl.className = 't-form-msg err'; msgEl.textContent = 'Please write a few words about your experience.'; return; }
+
+        submitBtn.disabled = true;
+        msgEl.className = 't-form-msg'; msgEl.textContent = 'Submitting…';
+
+        fetch('/.netlify/functions/testimonials', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'submit',
+            name: name,
+            rating: rating,
+            quote: quote,
+            photo: pendingPhotoDataUrl || undefined,
+            website: website
+          })
+        })
+          .then(function(res){ return res.json(); })
+          .then(function(result){
+            submitBtn.disabled = false;
+            if(!result || !result.success) throw new Error((result && result.error) || 'Could not submit your review.');
+            msgEl.className = 't-form-msg ok';
+            msgEl.textContent = 'Thanks! Your review will appear here once it\'s been checked.';
+            setTimeout(function(){ closeReviewModal(); resetReviewForm(); }, 1800);
+          })
+          .catch(function(err){
+            submitBtn.disabled = false;
+            msgEl.className = 't-form-msg err';
+            msgEl.textContent = (err && err.message) || 'Could not submit your review — please try again.';
+          });
+      });
+    }
   })();
   </script>
 
