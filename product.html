@@ -210,6 +210,23 @@
     return new URLSearchParams(window.location.search).get(name);
   }
 
+  // Normally 'id' arrives via the query string, forwarded by the
+  // netlify.toml redirect for /product/*. As a safety net — in case a
+  // future redirect-config change ever stops that forwarding entirely —
+  // also fall back to reading it straight off the URL path itself, e.g.
+  // "/product/kesar-oats-soap". This is a different failure mode from
+  // the slugify() fallback below: this one covers "no id arrived at
+  // all", that one covers "an id arrived but no longer matches any
+  // product's live id".
+  function resolveProductId(){
+    var fromQuery = qs('id');
+    if(fromQuery) return fromQuery;
+    var parts = window.location.pathname.split('/').filter(Boolean);
+    var last = parts[parts.length - 1];
+    if(last && last !== 'product.html') return decodeURIComponent(last);
+    return null;
+  }
+
   // Keep this in sync with the identical map in index.html. Google/Pinterest
   // need a real Google Product Taxonomy (GPC) path here, not our internal
   // tag — see https://support.google.com/merchants/answer/6324436
@@ -229,7 +246,7 @@
       .replace(/[^a-z0-9]+/g, '-').replace(/(^-+)|(-+$)/g, '').slice(0, 60);
   }
 
-  var productId = qs('id');
+  var productId = resolveProductId();
   var prod = null;
   var allImages = []; // [{ variant }, ...] metadata for this product, as returned by product-images
   var photoIndices = []; // positions in allImages matching the selected variant — see photosForVariant()
