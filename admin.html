@@ -490,14 +490,22 @@
     <span class="pm-upload-msg pm-save-msg" id="cat-add-msg"></span>
   </div>
   <div class="tab-panel" id="tab-coupons">
-    <div class="pm-section-note">Fixed-amount discount codes customers can enter at checkout (e.g. WELCOME10 → ₹100 off). No expiry or usage limit — a coupon works until you delete it here.</div>
+    <div class="pm-section-note">Fixed-amount discount codes customers can enter at checkout (e.g. WELCOME10 → ₹100 off). All limits below are enforced on the server, so they can't be bypassed by editing the page.</div>
     <div id="coupon-list" class="cat-list">
       <div class="loading">Loading coupons…</div>
     </div>
-    <div class="cat-add-row">
+    <div class="cat-add-row" style="flex-wrap:wrap;">
       <input type="text" id="coupon-new-code" placeholder="Code, e.g. WELCOME10" style="text-transform:uppercase;">
       <input type="number" id="coupon-new-amount" placeholder="₹ off, e.g. 100" min="1" step="1" style="max-width:140px;">
+      <input type="number" id="coupon-new-min-order" placeholder="Min order ₹ (optional)" min="0" step="1" style="max-width:170px;">
+      <input type="number" id="coupon-new-max-order" placeholder="Max order ₹ (optional)" min="0" step="1" style="max-width:170px;">
+      <input type="number" id="coupon-new-usage-limit" placeholder="Total use limit (optional)" min="1" step="1" style="max-width:180px;">
+      <input type="date" id="coupon-new-expires" title="Expires on (optional)" style="max-width:160px;">
+      <label style="display:flex; align-items:center; gap:6px; font-size:0.88rem; white-space:nowrap;">
+        <input type="checkbox" id="coupon-new-once-per-customer" style="width:auto;"> Once per customer
+      </label>
       <button type="button" class="btn btn-primary" id="coupon-add-btn">+ Add coupon</button>
+      <button type="button" class="btn" id="coupon-cancel-edit-btn" style="display:none;">Cancel edit</button>
     </div>
     <span class="pm-upload-msg pm-save-msg" id="coupon-add-msg"></span>
   </div>
@@ -1458,9 +1466,25 @@
     });
   }
   // =====================================================================
-  // Coupons manager — add and remove fixed-amount discount codes.
+  // Coupons manager — add, edit, and remove fixed-amount discount codes,
+  // with optional min/max order value, total usage limit, expiry, and a
+  // once-per-customer restriction (tracked server-side by email).
   // Lives in the "coupons" backend function, separate from products.
   // =====================================================================
+  var editingCouponId = null;
+
+  function describeCoupon(c){
+    var bits = [];
+    if(c.minOrder) bits.push('min. order ₹' + c.minOrder);
+    if(c.maxOrder) bits.push('max. order ₹' + c.maxOrder);
+    if(c.usageLimit) bits.push((c.usedCount || 0) + ' / ' + c.usageLimit + ' used');
+    else if(c.usedCount) bits.push(c.usedCount + ' used');
+    if(c.oncePerCustomer) bits.push('once per customer');
+    if(c.expiresAt) bits.push('expires ' + new Date(c.expiresAt + 'T00:00:00').toLocaleDateString('en-IN', { day:'2-digit', month:'short', year:'numeric' }));
+    if(c.active === false) bits.push('inactive');
+    return bits.join(' · ');
+  }
+
   function renderCouponsManager(){
     var listEl = document.getElementById('coupon-list');
     if(!listEl) return;
@@ -1469,10 +1493,12 @@
       return;
     }
     listEl.innerHTML = COUPONS.map(function(c){
+      var details = describeCoupon(c);
       return '' +
         '<div class="cat-row" data-code="'+escapeHtml(c.code)+'" data-id="'+escapeHtml(c.id)+'">' +
           '<span class="cat-row-id" style="font-weight:700; color:var(--moss-ink, inherit);">'+escapeHtml(c.code)+'</span>' +
-          '<span style="flex:1;">₹'+c.amountOff+' off</span>' +
+          '<span style="flex:1;">₹'+c.amountOff+' off' + (details ? ' <span style="color:rgba(36,54,35,0.55); font-size:0.85em;">— '+details+'</span>' : '') + '</span>' +
+          '<button type="button" class="cat-row-edit-btn">Edit</button>' +
           '<button type="button" class="cat-row-delete-btn">Delete</button>' +
           '<span class="cat-row-msg"></span>' +
         '</div>';
@@ -1500,21 +1526,62 @@
             if(!result || !result.success) throw new Error((result && result.error) || 'Could not delete.');
             COUPONS = result.coupons || [];
             renderCouponsManager();
+            if(editingCouponId === id) cancelCouponEdit();
           })
           .catch(function(err){
             msgEl.className = 'cat-row-msg err'; msgEl.textContent = (err && err.message) || 'Could not delete — please try again.';
           });
         return;
       }
+
+      if(e.target.closest('.cat-row-edit-btn')){
+        var coupon = COUPONS.find(function(c){ return c.id === id; });
+        if(!coupon) return;
+        editingCouponId = id;
+        document.getElementById('coupon-new-code').value = coupon.code;
+        document.getElementById('coupon-new-amount').value = coupon.amountOff;
+        document.getElementById('coupon-new-min-order').value = coupon.minOrder || '';
+        document.getElementById('coupon-new-max-order').value = coupon.maxOrder || '';
+        document.getElementById('coupon-new-usage-limit').value = coupon.usageLimit || '';
+        document.getElementById('coupon-new-expires').value = coupon.expiresAt || '';
+        document.getElementById('coupon-new-once-per-customer').checked = !!coupon.oncePerCustomer;
+        document.getElementById('coupon-add-btn').textContent = 'Update coupon';
+        document.getElementById('coupon-cancel-edit-btn').style.display = 'inline-block';
+        document.getElementById('coupon-new-code').scrollIntoView({ behavior:'smooth', block:'center' });
+        return;
+      }
     });
   }
+
+  function cancelCouponEdit(){
+    editingCouponId = null;
+    document.getElementById('coupon-new-code').value = '';
+    document.getElementById('coupon-new-amount').value = '';
+    document.getElementById('coupon-new-min-order').value = '';
+    document.getElementById('coupon-new-max-order').value = '';
+    document.getElementById('coupon-new-usage-limit').value = '';
+    document.getElementById('coupon-new-expires').value = '';
+    document.getElementById('coupon-new-once-per-customer').checked = false;
+    document.getElementById('coupon-add-btn').textContent = '+ Add coupon';
+    document.getElementById('coupon-cancel-edit-btn').style.display = 'none';
+    document.getElementById('coupon-add-msg').className = 'pm-upload-msg pm-save-msg';
+    document.getElementById('coupon-add-msg').textContent = '';
+  }
+  var couponCancelEditBtn = document.getElementById('coupon-cancel-edit-btn');
+  if(couponCancelEditBtn) couponCancelEditBtn.addEventListener('click', cancelCouponEdit);
 
   var couponAddBtn = document.getElementById('coupon-add-btn');
   if(couponAddBtn){
     couponAddBtn.addEventListener('click', function(){
       var codeEl = document.getElementById('coupon-new-code');
       var amountEl = document.getElementById('coupon-new-amount');
+      var minOrderEl = document.getElementById('coupon-new-min-order');
+      var maxOrderEl = document.getElementById('coupon-new-max-order');
+      var usageLimitEl = document.getElementById('coupon-new-usage-limit');
+      var expiresEl = document.getElementById('coupon-new-expires');
+      var oncePerCustomerEl = document.getElementById('coupon-new-once-per-customer');
       var msgEl = document.getElementById('coupon-add-msg');
+
       var code = codeEl.value.trim();
       var amountOff = parseFloat(amountEl.value);
       if(!code){
@@ -1523,23 +1590,33 @@
       if(!amountOff || amountOff <= 0){
         msgEl.className = 'pm-upload-msg pm-save-msg err'; msgEl.textContent = 'Enter a discount amount greater than ₹0.'; return;
       }
-      msgEl.className = 'pm-upload-msg pm-save-msg'; msgEl.textContent = 'Adding…';
+
+      var coupon = {
+        code: code,
+        amountOff: amountOff,
+        minOrder: minOrderEl.value ? parseFloat(minOrderEl.value) : null,
+        maxOrder: maxOrderEl.value ? parseFloat(maxOrderEl.value) : null,
+        usageLimit: usageLimitEl.value ? parseInt(usageLimitEl.value, 10) : null,
+        expiresAt: expiresEl.value || null,
+        oncePerCustomer: oncePerCustomerEl.checked
+      };
+      if(editingCouponId) coupon.id = editingCouponId;
+
+      msgEl.className = 'pm-upload-msg pm-save-msg'; msgEl.textContent = editingCouponId ? 'Updating…' : 'Adding…';
       fetch('/.netlify/functions/coupons', {
         method:'POST',
         headers:{ 'Content-Type':'application/json' },
-        body: JSON.stringify({ secret: currentSecret(), action:'upsert', coupon:{ code:code, amountOff:amountOff } })
+        body: JSON.stringify({ secret: currentSecret(), action:'upsert', coupon: coupon })
       })
         .then(function(res){ return res.json(); })
         .then(function(result){
-          if(!result || !result.success) throw new Error((result && result.error) || 'Could not add coupon.');
-          codeEl.value = '';
-          amountEl.value = '';
-          msgEl.className = 'pm-upload-msg pm-save-msg'; msgEl.textContent = '';
+          if(!result || !result.success) throw new Error((result && result.error) || 'Could not save coupon.');
           COUPONS = result.coupons || [];
           renderCouponsManager();
+          cancelCouponEdit();
         })
         .catch(function(err){
-          msgEl.className = 'pm-upload-msg pm-save-msg err'; msgEl.textContent = (err && err.message) || 'Could not add — please try again.';
+          msgEl.className = 'pm-upload-msg pm-save-msg err'; msgEl.textContent = (err && err.message) || 'Could not save — please try again.';
         });
     });
   }

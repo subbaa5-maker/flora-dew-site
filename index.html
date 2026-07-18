@@ -2172,7 +2172,7 @@
 fetch('/.netlify/functions/coupons', {
   method: 'POST',
   headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({ action: 'validate', code: code, subtotal: cartSubtotal() })
+  body: JSON.stringify({ action: 'validate', code: code, subtotal: cartSubtotal(), email: (document.getElementById('cf-email') || {}).value || '' })
 })        
   .then(function(res){ return res.json(); })
         .then(function(result){
@@ -2359,7 +2359,7 @@ couponMsgEl.textContent = '"' + result.coupon.code + '" applied — ₹' + resul
         submitBtn.textContent = 'Continue to payment →';
 
         if(order.error){
-          alert((order.storeClosed || order.outOfStock) ? order.error : 'Could not start checkout. Please try again in a moment.');
+          alert((order.storeClosed || order.outOfStock || order.couponError) ? order.error : 'Could not start checkout. Please try again in a moment.');
           return;
         }
 
