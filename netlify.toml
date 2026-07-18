@@ -6,9 +6,9 @@
   node_bundler = "esbuild"
 
 [[redirects]]
-  from = "/product/:id"
-  to = "/product.html?id=:id"
-  status = 301
+  from = "/product/*"
+  to = "/product.html?id=:splat"
+  status = 200
 
 [[redirects]]
   from = "/blog/*"
