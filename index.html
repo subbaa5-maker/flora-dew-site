@@ -2638,6 +2638,29 @@ couponMsgEl.textContent = '"' + result.coupon.code + '" applied — ₹' + resul
               .then(function(res){ return res.json(); })
               .then(function(result){
                 if(result.verified){
+                  // GA4 ecommerce conversion event — required for Google Ads
+                  // (Shopping/Performance Max) and any other ad platform to
+                  // measure actual purchases rather than just page views.
+                  // Fired here (payment verified server-side) rather than
+                  // from the Razorpay widget's own success callback, so it
+                  // only counts real, confirmed payments.
+                  if(typeof gtag === 'function'){
+                    gtag('event', 'purchase', {
+                      transaction_id: order.id,
+                      value: chargeAmount / 100,
+                      currency: 'INR',
+                      coupon: appliedCoupon ? appliedCoupon.code : undefined,
+                      items: items.map(function(it){
+                        return {
+                          item_id: it.id,
+                          item_name: it.name,
+                          item_variant: it.variant,
+                          price: it.price,
+                          quantity: it.qty
+                        };
+                      })
+                    });
+                  }
                   saveCustomer(customer);
                   CART = [];
                   renderCart();
