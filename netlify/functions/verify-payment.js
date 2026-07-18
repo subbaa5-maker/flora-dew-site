@@ -20,6 +20,7 @@ const crypto = require('crypto');
 const { ordersStore } = require('./lib/blobs');
 const { sendEmail, renderOrderRows, orderTotal, renderDiscountRow } = require('./lib/email');
 const { createZohoInvoiceForOrder } = require('./lib/zoho');
+const { redeemCoupon } = require('./coupons');
 
 exports.handler = async function (event) {
   if (event.httpMethod !== 'POST') {
@@ -57,6 +58,20 @@ exports.handler = async function (event) {
     order.paymentId = razorpay_payment_id;
     order.paidAt = new Date().toISOString();
     await store.setJSON(razorpay_order_id, order);
+
+    // Only now — on confirmed payment, not at create-order.js time — count
+    // this coupon as used. create-order.js runs on every checkout attempt,
+    // including abandoned ones, so incrementing there would burn down a
+    // usage-limited (or once-per-customer) coupon even for orders that
+    // never actually completed.
+    if (order.couponId) {
+      try {
+        await redeemCoupon(order.couponId, order.customer.email);
+      } catch (err) {
+        // Never let coupon bookkeeping block a successful, already-paid order.
+        console.error('verify-payment: could not record coupon redemption', err);
+      }
+    }
 
     // Auto-generate and email a Zoho Invoice for this order. Best-effort —
     // if Zoho isn't configured or the API call fails, this returns null and

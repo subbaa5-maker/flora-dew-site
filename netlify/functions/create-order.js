@@ -15,10 +15,7 @@
 
 const Razorpay = require('razorpay');
 const { ordersStore, settingsStore, productsStore, couponsStore } = require('./lib/blobs');
-
-function normalizeCode(code) {
-  return String(code || '').trim().toUpperCase();
-}
+const { checkCouponRules, normalizeCode } = require('./coupons');
 
 exports.handler = async function (event) {
   if (event.httpMethod !== 'POST') {
@@ -73,23 +70,40 @@ exports.handler = async function (event) {
     }
 
     // Re-validate any coupon code server-side — never trust a discount
-    // amount computed in the browser. `amount` above is the cart subtotal
-    // in paise; discountPaise is subtracted from it to get what's actually
-    // charged.
+    // amount computed in the browser, and never trust that a coupon is
+    // still active/in-date/under its limits just because the browser
+    // says it applied one earlier in the same session. `amount` above is
+    // the cart subtotal in paise; discountPaise is subtracted from it to
+    // get what's actually charged.
     let couponApplied = null;
+    let couponIdApplied = null;
     let discountPaise = 0;
     if (couponCode) {
+      let coupons = [];
       try {
-        const coupons = (await couponsStore().get('all', { type: 'json' })) || [];
-        const wanted = normalizeCode(couponCode);
-        const match = coupons.find((c) => normalizeCode(c.code) === wanted);
-        if (match) {
-          discountPaise = Math.min(Math.round(Number(match.amountOff) * 100), amount);
-          couponApplied = match.code;
-        }
+        coupons = (await couponsStore().get('all', { type: 'json' })) || [];
       } catch (err) {
-        console.error('create-order: coupon lookup failed, continuing without discount', err);
+        console.error('create-order: coupon lookup failed', err);
       }
+      const wanted = normalizeCode(couponCode);
+      const match = coupons.find((c) => normalizeCode(c.code) === wanted);
+
+      if (!match) {
+        return { statusCode: 400, body: JSON.stringify({ error: 'This coupon code does not exist', couponError: true }) };
+      }
+
+      // customer.email is always known by this point (required above),
+      // unlike the earlier "Apply" step in the checkout modal — so this
+      // is the one place the once-per-customer rule is actually
+      // guaranteed to be enforced, regardless of what happened client-side.
+      const ruleError = checkCouponRules(match, amount / 100, customer.email);
+      if (ruleError) {
+        return { statusCode: 400, body: JSON.stringify({ error: ruleError, couponError: true }) };
+      }
+
+      discountPaise = Math.min(Math.round(Number(match.amountOff) * 100), amount);
+      couponApplied = match.code;
+      couponIdApplied = match.id;
     }
     const finalAmount = amount - discountPaise;
 
@@ -117,6 +131,7 @@ exports.handler = async function (event) {
       subtotal: amount,
       discount: discountPaise,
       couponCode: couponApplied,
+      couponId: couponIdApplied,
       currency: currency || 'INR',
       customer: customer,
       items: items,
