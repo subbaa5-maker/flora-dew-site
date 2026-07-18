@@ -31,8 +31,26 @@ const FALLBACK_IMAGE = BASE_URL + '/og-image.jpg';
 const HEADERS = [
   'id', 'title', 'description', 'link', 'image_link',
   'price', 'sale_price', 'availability', 'brand', 'condition',
-  'item_group_id', 'identifier_exists',
+  'item_group_id', 'identifier_exists', 'google_product_category', 'product_type',
 ];
+
+// Verified against Google's official product taxonomy — these are real,
+// existing category paths (not guesses), which matters because Pinterest
+// and Google Merchant Center both validate google_product_category
+// against that exact taxonomy and will warn/reject values that don't
+// match a real leaf category.
+const GOOGLE_PRODUCT_CATEGORY = {
+  soap: 'Health & Beauty > Personal Care > Cosmetics > Bath & Body > Bar Soap',
+  oil: 'Health & Beauty > Personal Care > Hair Care',
+  balm: 'Health & Beauty > Personal Care > Cosmetics > Skin Care > Lip Balms & Treatments > Lip Balms',
+  lipstick: 'Health & Beauty > Personal Care > Cosmetics > Makeup > Lip Makeup > Lipstick',
+};
+const PRODUCT_TYPE = {
+  soap: 'Soaps > Bathing',
+  oil: 'Hair Oil > Haircare',
+  balm: 'Lip Balms > Lip Care',
+  lipstick: 'Lip Colour > Lipstick',
+};
 
 function csvField(value) {
   const s = value === null || value === undefined ? '' : String(value);
@@ -88,6 +106,9 @@ exports.handler = async function () {
     const availability = product.inStock === false ? 'out of stock' : 'in stock';
     const link = BASE_URL + '/product/' + product.id;
 
+    const gpc = GOOGLE_PRODUCT_CATEGORY[product.cat] || 'Health & Beauty > Personal Care';
+    const productType = PRODUCT_TYPE[product.cat] || 'Personal Care';
+
     for (const variant of product.variants || []) {
       const id = product.id + '--' + slugifyLabel(variant.l);
       const title = product.name + (variant.l ? ' (' + variant.l + ')' : '');
@@ -106,6 +127,8 @@ exports.handler = async function () {
         'new',
         product.id,
         'no', // identifier_exists: we don't track GTIN/MPN for handmade goods
+        gpc,
+        productType,
       ]));
     }
   }
