@@ -73,4 +73,22 @@ function blogImagesStore() {
   return namedStore('blog-images');
 }
 
-module.exports = { ordersStore, productImagesStore, productsStore, categoriesStore, settingsStore, siteImagesStore, blogStore, blogImagesStore, couponsStore };
+// Stores customer-submitted testimonials (name, rating, quote, moderation
+// status, whether a photo was attached) as one JSON array under the key
+// "all" — same pattern as productsStore/blogStore. The actual photo bytes
+// live separately in testimonialImagesStore, so this list stays small and
+// fast to load even as photos pile up.
+function testimonialsStore() {
+  return namedStore('testimonials');
+}
+
+// Stores one photo data-URL per testimonial, keyed by testimonial id —
+// same "one image per key, served as real bytes" pattern as
+// blogImagesStore, used so photo testimonials work as normal <img> tags
+// with proper caching instead of bloating the testimonials JSON list
+// with embedded base64.
+function testimonialImagesStore() {
+  return namedStore('testimonial-images');
+}
+
+module.exports = { ordersStore, productImagesStore, productsStore, categoriesStore, settingsStore, siteImagesStore, blogStore, blogImagesStore, couponsStore, testimonialsStore, testimonialImagesStore };
