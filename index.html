@@ -1882,11 +1882,15 @@
   // https://support.google.com/merchants/answer/6324436
   var GPC_TAXONOMY = {
     soap: 'Health & Beauty > Personal Care > Cosmetics > Bath & Body > Bar Soap',
-    oil: 'Health & Beauty > Personal Care > Hair Care',
+    // "Hair Care" alone is a real category but not a leaf — it has real
+    // subcategories, and Google/Pinterest doesn't have a dedicated "Hair
+    // Oil" leaf, so "Hair Styling Products" is the correct deepest match
+    // (confirmed leaf, no further subcategories).
+    oil: 'Health & Beauty > Personal Care > Hair Care > Hair Styling Products',
     balm: 'Health & Beauty > Personal Care > Cosmetics > Skin Care > Lip Balms & Treatments > Lip Balms',
     lipstick: 'Health & Beauty > Personal Care > Cosmetics > Makeup > Lip Makeup > Lipstick'
   };
-  function gpcFor(catId){ return GPC_TAXONOMY[catId] || 'Health & Beauty > Personal Care > Cosmetics'; }
+  function gpcFor(catId){ return GPC_TAXONOMY[catId] || 'Health & Beauty > Personal Care > Cosmetics > Bath & Body > Bar Soap'; }
 
   // The live catalogue/category list — starts out equal to the built-in
   // defaults above, then gets replaced with whatever's actually stored
