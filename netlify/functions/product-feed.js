@@ -29,7 +29,7 @@ const BASE_URL = 'https://www.floradew.in';
 const FALLBACK_IMAGE = BASE_URL + '/og-image.jpg';
 
 const HEADERS = [
-  'id', 'title', 'description', 'link', 'image_link',
+  'id', 'title', 'description', 'link', 'image_link', 'additional_image_link',
   'price', 'sale_price', 'availability', 'brand', 'condition',
   'item_group_id', 'identifier_exists', 'google_product_category', 'product_type',
 ];
@@ -96,12 +96,20 @@ exports.handler = async function () {
     // First saved photo (if any) is used as the primary image for every
     // variant of this product — Admin's photo tagging supports
     // variant-specific photos, but a feed needs one clear "main" image
-    // per row, so we keep this simple and consistent.
+    // per row, so we keep this simple and consistent. Every OTHER saved
+    // photo goes into additional_image_link (comma-separated URLs, per
+    // Google/Meta's feed spec) so WhatsApp/Meta's catalog and Google
+    // Merchant Center can show a full photo gallery, not just one shot.
     let imageLink = FALLBACK_IMAGE;
+    let additionalImageLinks = '';
     try {
       const images = await imagesStore.get(product.id, { type: 'json' });
       if (Array.isArray(images) && images.length > 0) {
         imageLink = BASE_URL + '/.netlify/functions/product-image?productId=' + encodeURIComponent(product.id) + '&index=0';
+        additionalImageLinks = images
+          .slice(1, 11) // Google/Meta cap additional images at 10-20; 10 is safely within both
+          .map((_, i) => BASE_URL + '/.netlify/functions/product-image?productId=' + encodeURIComponent(product.id) + '&index=' + (i + 1))
+          .join(',');
       }
     } catch (err) {
       // Missing/broken image metadata for one product shouldn't break
@@ -130,6 +138,7 @@ exports.handler = async function () {
         product.desc || product.name,
         link,
         imageLink,
+        additionalImageLinks,
         (hasDiscount ? variant.m : variant.p).toFixed(2) + ' INR',
         hasDiscount ? variant.p.toFixed(2) + ' INR' : '',
         availability,
