@@ -22,6 +22,15 @@
 //                         var is only the fallback for older products
 //                         that haven't been given a rate yet.
 //
+//   ZOHO_PAYMENT_MODE     Optional. Which Zoho payment mode to record
+//                         against each invoice so it shows as Paid
+//                         instead of eventually going Overdue (Zoho has
+//                         no other way of knowing Razorpay collected the
+//                         money outside Zoho). Defaults to "banktransfer"
+//                         if unset. Must exactly match a payment mode
+//                         name enabled in Settings > Payments > Payment
+//                         Modes in this Zoho org.
+//
 //   All rates used (per-product or this fallback) must exactly match a
 //   tax rate already configured in Zoho Invoice under Settings > Taxes —
 //   we look up the matching tax_id by percentage rather than hardcoding
@@ -231,6 +240,36 @@ const created = await zohoFetch('/invoices', {
   return created.invoice;
 }
 
+// Records a payment against the invoice in Zoho, for the full invoice
+// total, dated to when the order was actually paid via Razorpay. Without
+// this, Zoho has no way of knowing the invoice was paid — Razorpay
+// collects the money entirely outside Zoho — so the invoice just sits
+// there as a normal open/sent invoice and eventually flips to "Overdue"
+// once its due date passes, even though the order was paid from day one.
+//
+// payment_mode must be one of the modes enabled in this Zoho org under
+// Settings > Payments > Payment Modes. "banktransfer" is one of Zoho's
+// built-in defaults and is used here as a reasonable stand-in for
+// "collected online via Razorpay" — if this org has a custom payment
+// mode specifically for Razorpay/online payments, set ZOHO_PAYMENT_MODE
+// to match its exact name and that will be used instead.
+async function recordPaymentForInvoice(customerId, invoice, order) {
+  const paymentMode = process.env.ZOHO_PAYMENT_MODE || 'banktransfer';
+  const paymentDate = (order.paidAt || new Date().toISOString()).slice(0, 10); // Zoho wants YYYY-MM-DD
+
+  await zohoFetch('/customerpayments', {
+    method: 'POST',
+    body: JSON.stringify({
+      customer_id: customerId,
+      payment_mode: paymentMode,
+      amount: invoice.total,
+      date: paymentDate,
+      reference_number: order.paymentId || order.orderId,
+      invoices: [{ invoice_id: invoice.invoice_id, amount_applied: invoice.total }],
+    }),
+  });
+}
+
 // Emails the invoice to the customer via Zoho's own send endpoint (this
 // uses Zoho's configured "from" address and email template, separate from
 // the Resend receipt email in lib/email.js).
@@ -252,6 +291,17 @@ async function createZohoInvoiceForOrder(order) {
   try {
     const contactId = await findOrCreateContact(order.customer);
     const invoice = await createInvoice(contactId, order);
+
+    // Best-effort on its own: if recording the payment fails (e.g. a
+    // payment_mode mismatch), the invoice itself still exists and was
+    // still emailed — it just won't show as Paid in Zoho until fixed
+    // manually. Logged clearly so this doesn't fail silently.
+    try {
+      await recordPaymentForInvoice(contactId, invoice, order);
+    } catch (paymentErr) {
+      console.error('recordPaymentForInvoice error (invoice created but not marked paid):', paymentErr);
+    }
+
     await emailInvoice(invoice.invoice_id, order.customer.email);
 
     return { invoiceId: invoice.invoice_id, invoiceNumber: invoice.invoice_number };
