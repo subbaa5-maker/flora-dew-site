@@ -8,14 +8,18 @@
 //
 // GET  /.netlify/functions/testimonials
 //      -> public, returns every APPROVED testimonial (newest-approved
-//         first): { id, name, rating, quote, photo (url|null), createdAt }.
+//         first): { id, name, rating, quote, photo (url|null), productId
+//         (string|null), createdAt }. `productId` links a review to one
+//         product (matches products.js's id) so product.html can compute
+//         a per-product AggregateRating; null/omitted means it's a
+//         general review not about one specific product.
 //
 // GET  /.netlify/functions/testimonials?admin=1&secret=...
 //      -> admin-only, returns EVERY testimonial (pending first, then
 //         approved, then rejected) for the Admin moderation queue.
 //
 // POST /.netlify/functions/testimonials
-//      body: { action:"submit", name, rating, quote, photo?, website? }
+//      body: { action:"submit", name, rating, quote, photo?, productId?, website? }
 //      -> PUBLIC. Creates a new testimonial with status "pending" — it
 //         will not appear on the storefront until approved in Admin.
 //         `website` is an anti-spam honeypot field: real visitors never
@@ -25,9 +29,11 @@
 //
 // POST /.netlify/functions/testimonials
 //      body: { secret, action:"moderate", id, status:"approved"|"rejected",
-//              name?, rating?, quote? }
+//              name?, rating?, quote?, productId? }
 //      -> admin-only. Sets the moderation status, optionally applying
-//         light edits (e.g. fixing a typo) at the same time.
+//         light edits (e.g. fixing a typo, or correcting/adding which
+//         product this review is about) at the same time. Pass
+//         productId:"" to clear it back to "general review".
 //
 // POST /.netlify/functions/testimonials  (action:"delete")
 //      body: { secret, action:"delete", id }
@@ -52,6 +58,7 @@ function summaryOf(t) {
     rating,
     quote,
     photo: t.hasPhoto ? 'https://www.floradew.in/.netlify/functions/testimonial-image?id=' + encodeURIComponent(id) : null,
+    productId: t.productId || null,
     createdAt,
   };
 }
@@ -133,6 +140,13 @@ exports.handler = async function (event) {
           hasPhoto = true;
         }
 
+        // Optional — which product this review is about, so it can later
+        // feed that product's AggregateRating schema. Not validated
+        // against the live catalog: a since-renamed/deleted product id
+        // just means the review quietly stops matching anything rather
+        // than failing to submit.
+        const productId = clean(body.productId, 80) || null;
+
         let all = await store.get('all', { type: 'json' });
         if (!Array.isArray(all)) all = [];
 
@@ -143,7 +157,7 @@ exports.handler = async function (event) {
           await testimonialImagesStore().set(id, photo);
         }
 
-        all.push({ id, name, rating, quote, hasPhoto, status: 'pending', createdAt: now });
+        all.push({ id, name, rating, quote, hasPhoto, productId, status: 'pending', createdAt: now });
         await store.setJSON('all', all);
 
         return { statusCode: 200, body: JSON.stringify({ success: true }) };
@@ -185,6 +199,7 @@ exports.handler = async function (event) {
           name: body.name !== undefined ? clean(body.name, 60) || existing.name : existing.name,
           quote: body.quote !== undefined ? clean(body.quote, 600) || existing.quote : existing.quote,
           rating: body.rating !== undefined ? Math.min(5, Math.max(1, parseInt(body.rating, 10) || existing.rating)) : existing.rating,
+          productId: body.productId !== undefined ? (clean(body.productId, 80) || null) : existing.productId,
           status: body.status,
           moderatedAt: now,
         };
