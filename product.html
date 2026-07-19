@@ -296,10 +296,12 @@
   } else {
     Promise.all([
       fetch('/.netlify/functions/products').then(function(r){ return r.ok ? r.json() : []; }).catch(function(){ return []; }),
-      fetch('/.netlify/functions/categories').then(function(r){ return r.ok ? r.json() : []; }).catch(function(){ return []; })
+      fetch('/.netlify/functions/categories').then(function(r){ return r.ok ? r.json() : []; }).catch(function(){ return []; }),
+      fetch('/.netlify/functions/testimonials').then(function(r){ return r.ok ? r.json() : []; }).catch(function(){ return []; })
     ]).then(function(results){
       var products = results[0] || [];
       var categories = results[1] || [];
+      var allTestimonials = results[2] || [];
 
       prod = products.find(function(p){ return p.id === productId; });
       // Fallback: if the URL's id doesn't exactly match any product's
@@ -308,6 +310,13 @@
       // name instead of showing a dead "couldn't find that product" page.
       if(!prod){ prod = products.find(function(p){ return slugify(p.name) === productId; }); }
       if(!prod){ showError(); return; }
+
+      // Only reviews explicitly tagged (in Admin → Testimonials) to this
+      // exact product feed into its AggregateRating / Review schema —
+      // general/untagged reviews are real, but Google's structured data
+      // guidelines require reviews shown on a product to be about that
+      // specific product, not the brand overall.
+      var productReviews = allTestimonials.filter(function(t){ return t.productId === prod.id; });
 
       // Images are stored and fetched by the LIVE product id (prod.id),
       // which only equals the URL's id when the fallback above wasn't
@@ -319,7 +328,7 @@
           allImages = normalizeProductImages(imagesByProduct[prod.id]);
           photoIndices = photosForVariant(allImages, prod.variants[variantIndex].l);
           var catObj = categories.find(function(c){ return c.id === prod.cat; });
-          renderProduct(catObj ? catObj.label : prod.cat);
+          renderProduct(catObj ? catObj.label : prod.cat, productReviews);
         });
     }).catch(function(){ showError(); });
   }
@@ -329,7 +338,7 @@
     document.getElementById('pd-error').style.display = 'block';
   }
 
-  function renderProduct(catLabel){
+  function renderProduct(catLabel, productReviews){
     document.getElementById('pd-loading').style.display = 'none';
     document.getElementById('pd-content').style.display = 'block';
 
@@ -345,7 +354,7 @@
     document.getElementById('og-url').setAttribute('content', canonicalUrl);
     if(photoIndices.length) document.getElementById('og-image').setAttribute('content', absolutePhotoUrl(photoIndices[0]));
 
-    document.getElementById('product-schema').textContent = JSON.stringify({
+    var schema = {
       "@context":"https://schema.org", "@type":"Product",
       "name":prod.name, "description":prod.desc,
       "image": photoIndices.length ? photoIndices.map(absolutePhotoUrl) : undefined,
@@ -357,7 +366,37 @@
         "highPrice": Math.max.apply(null, prod.variants.map(function(v){return v.p;})),
         "availability": prod.inStock === false ? "https://schema.org/OutOfStock" : "https://schema.org/InStock"
       }
-    });
+    };
+
+    // AggregateRating/Review only get added once there's at least one
+    // real, approved review tagged to this exact product — Google's
+    // structured data guidelines require ratings shown on a product to
+    // reflect genuine reviews of that product, not placeholder/borrowed
+    // data. This naturally "switches on" star ratings in search results
+    // as real reviews come in, with no code change needed later.
+    if(productReviews && productReviews.length){
+      var sum = productReviews.reduce(function(acc, r){ return acc + (r.rating || 0); }, 0);
+      var avg = sum / productReviews.length;
+      schema.aggregateRating = {
+        "@type": "AggregateRating",
+        "ratingValue": Math.round(avg * 10) / 10,
+        "reviewCount": productReviews.length
+      };
+      // Cap how many full Review entries we embed — the aggregate above
+      // is what actually drives the search-result stars; this is extra
+      // supporting detail, not something that needs every review ever
+      // submitted.
+      schema.review = productReviews.slice(0, 10).map(function(r){
+        return {
+          "@type": "Review",
+          "reviewRating": { "@type": "Rating", "ratingValue": r.rating },
+          "author": { "@type": "Person", "name": r.name },
+          "reviewBody": r.quote
+        };
+      });
+    }
+
+    document.getElementById('product-schema').textContent = JSON.stringify(schema);
 
     document.getElementById('pd-crumb-cat').textContent = catLabel;
     document.getElementById('pd-crumb-name').textContent = prod.name;

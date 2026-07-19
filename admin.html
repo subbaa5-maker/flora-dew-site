@@ -636,12 +636,11 @@
         gate.style.display = 'none';
         dashboard.style.display = 'block';
         renderAll();
-        loadProductManager();
+        loadProductManager().then(loadTestimonials);
         loadSiteImages();
         loadStoreSettings();
         loadBlogPosts();
         loadCoupons();
-        loadTestimonials();
       })
       .catch(function(){
         gateError.style.display = 'block';
@@ -2138,6 +2137,9 @@
       var photoHtml = t.photo ? '<img src="'+t.photo+'" alt="" style="width:72px; height:72px; object-fit:cover; border-radius:10px; border:1px solid var(--line); margin-bottom:10px; display:block;">' : '';
       var approveBtn = t.status !== 'approved' ? '<button class="save-order-btn" data-approve="'+t.id+'">Approve</button>' : '';
       var rejectBtn = t.status !== 'rejected' ? '<button class="save-order-btn" style="background:var(--honey-oil);" data-reject="'+t.id+'">Reject</button>' : '';
+      var productOptions = '<option value="">General / not about one product</option>' + (PRODUCTS || []).map(function(p){
+        return '<option value="'+p.id+'"'+(p.id === t.productId ? ' selected' : '')+'>'+p.name.replace(/</g,'&lt;')+'</option>';
+      }).join('');
       return '' +
         '<div class="order-card" data-testimonial-card="'+t.id+'">' +
           '<div class="order-top">' +
@@ -2149,8 +2151,13 @@
           '</div>' +
           photoHtml +
           '<textarea data-field="quote" style="width:100%; min-height:60px; font-family:inherit; font-size:0.88rem; border:1px solid var(--line); border-radius:8px; padding:8px;" maxlength="600">'+String(t.quote||'')+'</textarea>' +
-          '<div class="fulfillment-controls" style="grid-template-columns:1fr auto auto auto; margin-top:10px;">' +
+          '<div style="margin-top:8px;">' +
+            '<label style="font-size:0.76rem; color:rgba(36,54,35,0.6); display:block; margin-bottom:4px;">Which product is this about? (used for star ratings in search results)</label>' +
+            '<select data-field="productId" style="width:100%; font-family:inherit; font-size:0.85rem; border:1px solid var(--line); border-radius:8px; padding:7px;">'+productOptions+'</select>' +
+          '</div>' +
+          '<div class="fulfillment-controls" style="grid-template-columns:1fr auto auto auto auto; margin-top:10px;">' +
             '<span class="pm-upload-msg pm-save-msg" data-save-msg></span>' +
+            '<button class="save-order-btn" style="background:var(--line); color:var(--ink);" data-save="'+t.id+'">Save</button>' +
             approveBtn +
             rejectBtn +
             '<button class="save-order-btn" style="background:var(--rosewater-deep);" data-delete="'+t.id+'">Delete</button>' +
@@ -2162,9 +2169,17 @@
       return {
         name: card.querySelector('[data-field="name"]').value.trim(),
         quote: card.querySelector('[data-field="quote"]').value.trim(),
+        productId: card.querySelector('[data-field="productId"]').value,
       };
     }
 
+    listEl.querySelectorAll('[data-save]').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        var id = btn.getAttribute('data-save');
+        var t = TESTIMONIALS.filter(function(x){ return x.id === id; })[0];
+        moderateTestimonial(id, t ? t.status : 'pending', btn);
+      });
+    });
     listEl.querySelectorAll('[data-approve]').forEach(function(btn){
       btn.addEventListener('click', function(){ moderateTestimonial(btn.getAttribute('data-approve'), 'approved', btn); });
     });
@@ -2193,7 +2208,7 @@
       fetch('/.netlify/functions/testimonials', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ secret: currentSecret(), action: 'moderate', id: id, status: status, name: fields.name, quote: fields.quote })
+        body: JSON.stringify({ secret: currentSecret(), action: 'moderate', id: id, status: status, name: fields.name, quote: fields.quote, productId: fields.productId })
       })
         .then(function(res){ return res.json(); })
         .then(function(result){

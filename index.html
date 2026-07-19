@@ -894,6 +894,10 @@
     display:flex; align-items:center; gap:10px;
     font-size:0.85rem; font-weight:600;
   }
+  .t-card .t-product-tag{
+    margin-top:8px; font-size:0.76rem; color:rgba(36,54,35,0.55);
+    padding-left:44px;
+  }
   .avatar{
     width:34px; height:34px; border-radius:50%;
     background:linear-gradient(135deg, var(--rosewater), var(--honey-oil));
@@ -1216,6 +1220,12 @@
           <input type="hidden" id="review-rating" value="0">
         </div>
         <div class="form-field">
+          <label for="review-product">Which product is this about? (optional)</label>
+          <select id="review-product">
+            <option value="">General / overall experience</option>
+          </select>
+        </div>
+        <div class="form-field">
           <label for="review-quote">Your review</label>
           <textarea id="review-quote" maxlength="600" placeholder="What did you use, and how did it work for you?" required></textarea>
         </div>
@@ -1268,15 +1278,24 @@
       return '★★★★★'.slice(0, n) + '☆☆☆☆☆'.slice(0, 5 - n);
     }
 
+    function productNameFor(productId){
+      if(!productId) return null;
+      var match = (window.PRODUCTS || []).filter(function(p){ return p.id === productId; })[0];
+      return match ? match.name : null;
+    }
+
     function cardHtml(t){
       var initial = (t.name || '?').trim().charAt(0).toUpperCase() || '?';
       var photoHtml = t.photo ? '<img class="t-photo" src="'+escapeHtml(t.photo)+'" alt="Photo shared by '+escapeHtml(t.name)+'" loading="lazy">' : '';
+      var productName = productNameFor(t.productId);
+      var productTagHtml = productName ? '<div class="t-product-tag">On '+escapeHtml(productName)+'</div>' : '';
       return '' +
         '<div class="t-card">' +
           photoHtml +
           '<div class="stars">'+starString(t.rating)+'</div>' +
           '<p class="quote">"'+escapeHtml(t.quote)+'"</p>' +
           '<div class="who"><span class="avatar">'+escapeHtml(initial)+'</span> '+escapeHtml(t.name)+'</div>' +
+          productTagHtml +
         '</div>';
     }
 
@@ -1459,6 +1478,7 @@
             rating: rating,
             quote: quote,
             photo: pendingPhotoDataUrl || undefined,
+            productId: document.getElementById('review-product').value || undefined,
             website: website
           })
         })
@@ -2247,12 +2267,27 @@
     }).then(function(){
       renderShop();
       renderFooterShopLinks();
+      populateReviewProductPicker();
       loadStoreStatus();
       return loadProductPhotos();
     }).then(function(){
       handleIncomingAddToCart();
     });
   })();
+
+  // Fills the "Which product is this about?" dropdown in the review
+  // form once the real catalog is loaded, so a review can be tied to a
+  // specific product (used to build that product's AggregateRating
+  // schema — see product.html).
+  function populateReviewProductPicker(){
+    var select = document.getElementById('review-product');
+    if(!select) return;
+    var options = ['<option value="">General / overall experience</option>'];
+    PRODUCTS.forEach(function(p){
+      options.push('<option value="'+p.id+'">'+p.name.replace(/</g,'&lt;')+'</option>');
+    });
+    select.innerHTML = options.join('');
+  }
 
   // If we were sent here from product.html's "Add to cart" button
   // (?add=<productId>&vi=<variantIndex>&qty=<n>), add that item to the

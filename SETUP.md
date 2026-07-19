@@ -40,6 +40,16 @@ netlify/functions/testimonial-image.js← stores/serves one optional photo per c
   built in (a hidden honeypot field bots tend to fill in). New functions:
   `netlify/functions/testimonials.js`, `netlify/functions/testimonial-image.js`.
 
+- **Per-product star ratings in Google search results**: the "Leave a
+  review" form now includes an optional "Which product is this about?"
+  dropdown, and Admin → Testimonials lets you tag (or re-tag) any review
+  to a specific product too. Once a product has one or more *approved*
+  reviews tagged to it, `product.html` automatically adds
+  `aggregateRating` + individual `review` entries to that product's
+  structured data — no further code changes needed as review volume
+  grows. Untagged/general reviews still show on the homepage as before,
+  they just don't feed any one product's rating.
+
 - **Full product management from the admin panel**: in `admin.html` →
   **Products** tab, you can now add a brand new product, or edit an
   existing one's name, category, badge/tag, description, key ingredients,
