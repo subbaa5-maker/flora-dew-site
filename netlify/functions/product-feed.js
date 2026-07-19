@@ -41,7 +41,13 @@ const HEADERS = [
 // match a real leaf category.
 const GOOGLE_PRODUCT_CATEGORY = {
   soap: 'Health & Beauty > Personal Care > Cosmetics > Bath & Body > Bar Soap',
-  oil: 'Health & Beauty > Personal Care > Hair Care',
+  // "Hair Care" alone is a real category (ID 486) but NOT a leaf — it has
+  // real subcategories (Hair Styling Products, Shampoo & Conditioner,
+  // Hair Color, etc.), and Google/Pinterest doesn't have a dedicated
+  // "Hair Oil" leaf. "Hair Styling Products" (ID 1901) is the correct,
+  // deepest match and is itself a confirmed leaf with no further
+  // subcategories.
+  oil: 'Health & Beauty > Personal Care > Hair Care > Hair Styling Products',
   balm: 'Health & Beauty > Personal Care > Cosmetics > Skin Care > Lip Balms & Treatments > Lip Balms',
   lipstick: 'Health & Beauty > Personal Care > Cosmetics > Makeup > Lip Makeup > Lipstick',
 };
@@ -106,7 +112,11 @@ exports.handler = async function () {
     const availability = product.inStock === false ? 'out of stock' : 'in stock';
     const link = BASE_URL + '/product/' + product.id;
 
-    const gpc = GOOGLE_PRODUCT_CATEGORY[product.cat] || 'Health & Beauty > Personal Care';
+    // Fallback only matters if a product's cat doesn't match any key
+    // above (shouldn't normally happen) — kept as a real leaf category
+    // rather than a shallow parent, for the same reason as everything
+    // else in this map.
+    const gpc = GOOGLE_PRODUCT_CATEGORY[product.cat] || 'Health & Beauty > Personal Care > Cosmetics > Bath & Body > Bar Soap';
     const productType = PRODUCT_TYPE[product.cat] || 'Personal Care';
 
     for (const variant of product.variants || []) {
