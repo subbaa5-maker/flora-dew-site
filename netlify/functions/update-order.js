@@ -7,6 +7,14 @@
 // customer their tracking details. When an order transitions to
 // "cancelled", automatically emails the customer a cancellation notice.
 //
+// Also handles permanent order deletion:
+//   POST body: { secret, action:"delete", orderId }
+// Intended for clearing out old test/abandoned orders. Think twice before
+// deleting a PAID order — under Indian GST law, invoices/sales records
+// generally need to be retained for several years, so removing a paid
+// order here also removes the only record of it this system keeps.
+// admin.html's UI warns accordingly before calling this.
+//
 // Required Netlify environment variable:
 //   ADMIN_SECRET
 // Optional (for email):
@@ -23,16 +31,28 @@ exports.handler = async function (event) {
   }
 
   try {
-    const { secret, orderId, fulfillmentStatus, courier, awb } = JSON.parse(event.body || '{}');
+    const body = JSON.parse(event.body || '{}');
+    const { secret, orderId } = body;
 
     if (!process.env.ADMIN_SECRET || secret !== process.env.ADMIN_SECRET) {
       return { statusCode: 401, body: JSON.stringify({ error: 'Unauthorized' }) };
     }
-    if (!orderId || !VALID_STATUSES.includes(fulfillmentStatus)) {
+    if (!orderId) {
       return { statusCode: 400, body: JSON.stringify({ error: 'Invalid request' }) };
     }
 
     const store = ordersStore();
+
+    if (body.action === 'delete') {
+      await store.delete(orderId);
+      return { statusCode: 200, body: JSON.stringify({ success: true }) };
+    }
+
+    const { fulfillmentStatus, courier, awb } = body;
+    if (!VALID_STATUSES.includes(fulfillmentStatus)) {
+      return { statusCode: 400, body: JSON.stringify({ error: 'Invalid request' }) };
+    }
+
     const order = await store.get(orderId, { type: 'json' });
     if (!order) {
       return { statusCode: 404, body: JSON.stringify({ error: 'Order not found' }) };
