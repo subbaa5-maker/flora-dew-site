@@ -174,6 +174,8 @@
   }
   .cancel-order-btn:hover{background:rgba(165,82,94,0.18);}
   .cancel-order-btn:disabled{opacity:0.5; cursor:default;}
+  .order-danger-row{display:flex; gap:10px; flex-wrap:wrap; margin-top:10px;}
+  .order-danger-row .cancel-order-btn{margin-top:0;}
   .badge-group{display:flex; gap:8px; flex-wrap:wrap; align-items:center;}
   .fulfillment-controls{
     margin-top:14px; padding-top:14px; border-top:1px dashed var(--line);
@@ -775,7 +777,10 @@
             '<button class="save-order-btn" data-save-for="'+order.orderId+'">Save</button>' +
           '</div>' +
           '<div class="save-msg" id="'+safeId+'_msg"></div>' +
-          (showCancel ? '<button type="button" class="cancel-order-btn" data-cancel-for="'+order.orderId+'">Cancel Order</button>' : '') +
+          '<div class="order-danger-row">' +
+            (showCancel ? '<button type="button" class="cancel-order-btn" data-cancel-for="'+order.orderId+'">Cancel Order</button>' : '') +
+            '<button type="button" class="cancel-order-btn" style="background:var(--rosewater-deep); color:#fff; border-color:var(--rosewater-deep);" data-delete-order="'+order.orderId+'" data-order-status="'+order.status+'">Delete Order</button>' +
+          '</div>' +
         '</div>';
     }).join('');
 
@@ -871,6 +876,44 @@
               msgEl.className = 'save-msg err';
               msgEl.textContent = 'Could not cancel — please try again.';
             }
+          });
+      });
+    });
+
+    // Wire up Delete Order buttons after render
+    listEl.querySelectorAll('[data-delete-order]').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        var orderId = btn.getAttribute('data-delete-order');
+        var isPaid = btn.getAttribute('data-order-status') === 'paid';
+
+        var warning = isPaid
+          ? 'This order is PAID. Deleting it permanently erases your only record of this sale — including for GST/invoicing purposes, which Indian tax law generally requires you to retain for several years. This cannot be undone.\n\nAre you absolutely sure you want to permanently delete order ' + orderId + '?'
+          : 'Permanently delete order ' + orderId + '? This cannot be undone.';
+
+        if(!confirm(warning)) return;
+        if(isPaid && !confirm('Please confirm again: permanently delete this PAID order and its record?')) return;
+
+        btn.disabled = true;
+        btn.textContent = 'Deleting…';
+
+        fetch('/.netlify/functions/update-order', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ secret: currentSecret(), action: 'delete', orderId: orderId })
+        })
+          .then(function(res){
+            if(!res.ok) throw new Error('delete failed');
+            return res.json();
+          })
+          .then(function(){
+            ALL_ORDERS = ALL_ORDERS.filter(function(o){ return o.orderId !== orderId; });
+            renderStats(ALL_ORDERS);
+            applyFilters();
+          })
+          .catch(function(){
+            btn.disabled = false;
+            btn.textContent = 'Delete Order';
+            alert('Could not delete this order — please try again.');
           });
       });
     });
