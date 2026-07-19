@@ -1960,7 +1960,13 @@
       card.innerHTML =
         '<span class="card-tag">'+prod.tag+'</span>' +
         (outOfStock ? '<span class="oos-badge">Out of stock</span>' : '') +
-        '<a class="card-photo-link" href="product.html?id='+encodeURIComponent(prod.id)+'" aria-label="View '+prod.name+'"><div class="icon-stage" id="icon-stage-'+idx+'">'+ICONS[prod.icon]+'</div></a>' +
+        // Left blank on purpose: filling this with the category icon here
+        // and swapping to the real photo once loadProductPhotos() resolves
+        // caused a visible icon-then-photo flash on every page load.
+        // applyCardPhotos() (called once photos are known, a moment later)
+        // decides whether to show the real photo or fall back to the
+        // icon — so there's only ever one render, not two.
+        '<a class="card-photo-link" href="product.html?id='+encodeURIComponent(prod.id)+'" aria-label="View '+prod.name+'"><div class="icon-stage" id="icon-stage-'+idx+'"></div></a>' +
         '<a class="card-title-link" href="product.html?id='+encodeURIComponent(prod.id)+'"><h3>'+prod.name+'</h3></a>' +
         '<p class="desc">'+prod.desc+'</p>' +
         '<div class="ingredient-row">'+ingHtml+'</div>' +
@@ -2112,6 +2118,7 @@
   function loadProductPhotos(){
     return fetch('/.netlify/functions/product-images')
       .then(function(res){ return res.ok ? res.json() : {}; })
+      .catch(function(){ return {}; }) // network failure — fall through to showing icons below, not a permanently blank stage
       .then(function(imagesByProduct){
         PRODUCT_PHOTOS = {};
         Object.keys(imagesByProduct || {}).forEach(function(pid){ PRODUCT_PHOTOS[pid] = normalizeProductImages(imagesByProduct[pid]); });
